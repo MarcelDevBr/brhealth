@@ -154,6 +154,13 @@ enum Commands {
         /// Código CID-9 (ex: 250, 401, 410, 493, E819).
         code: String,
     },
+
+    /// Limpa os caches temporários analíticos e de teste do BRHealth de forma multiplataforma.
+    CleanCache {
+        /// Executa também 'cargo clean' para limpar a pasta target/ de compilação.
+        #[arg(long, default_value_t = false)]
+        cargo: bool,
+    },
 }
 
 #[tokio::main]
@@ -407,6 +414,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     std::process::exit(1);
                 }
             }
+        }
+
+        Commands::CleanCache { cargo } => {
+            println!("=== BRHealth - Limpeza Multiplataforma de Caches ===");
+            let temp_dir = std::env::temp_dir();
+            let targets = [
+                temp_dir.join("brhealth_cache"),
+                temp_dir.join("brhealth_ffi_cache"),
+                temp_dir.join("brhealth"),
+                PathBuf::from(".brhealth_cache"),
+                PathBuf::from("data/cache"),
+                PathBuf::from("target/hive_cache"),
+                PathBuf::from("cache"),
+            ];
+
+            let mut removed = 0;
+            for path in &targets {
+                if path.exists() {
+                    let res = if path.is_dir() {
+                        std::fs::remove_dir_all(path)
+                    } else {
+                        std::fs::remove_file(path)
+                    };
+                    if res.is_ok() {
+                        println!("✓ Removido: {:?}", path);
+                        removed += 1;
+                    }
+                }
+            }
+
+            if cargo {
+                println!("Executando 'cargo clean'...");
+                match std::process::Command::new("cargo")
+                    .arg("clean")
+                    .status()
+                {
+                    Ok(status) => {
+                        if status.success() {
+                            println!("✓ 'cargo clean' concluído com sucesso.");
+                        } else {
+                            eprintln!("Aviso: 'cargo clean' encerrou com status não-zero.");
+                        }
+                    }
+                    Err(err) => eprintln!("Erro ao executar 'cargo clean': {}", err),
+                }
+            }
+
+            println!("Limpeza concluída com sucesso ({} alvos removidos).", removed);
         }
     }
 
