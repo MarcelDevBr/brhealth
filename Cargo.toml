@@ -4,6 +4,7 @@ members = [
     "crates/brhealth-ffi",
     "crates/brhealth-python",
     "crates/brhealth-jni",
+    "crates/brhealth-cli",
 ]
 resolver = "2"
 
@@ -28,6 +29,8 @@ rayon = "1.10"
 sha2 = "0.10"
 uuid = { version = "1.10", features = ["v4", "serde"] }
 h3o = "0.11"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+bytes = "1.10"
 
 [profile.release]
 opt-level = 3

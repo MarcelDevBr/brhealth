@@ -138,6 +138,21 @@ pub unsafe extern "C" fn brhealth_panama_version(out_buf: *mut c_char, out_len: 
     0
 }
 
+/// Calcula o Retorno sobre Investimento (ROI) em Atenção Primária para Java Panama FFM.
+#[unsafe(no_mangle)]
+pub extern "C" fn brhealth_panama_compute_roi(
+    avoidable_cost: f64,
+    investment: f64,
+    attributable_fraction: f64,
+) -> f64 {
+    brhealth_core::domain::analytics::csap::compute_primary_care_roi(
+        avoidable_cost,
+        investment,
+        attributable_fraction,
+    )
+    .unwrap_or(0.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

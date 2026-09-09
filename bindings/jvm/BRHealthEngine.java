@@ -18,6 +18,7 @@ public final class BRHealthEngine implements AutoCloseable {
     private final MethodHandle calculateDvHandle;
     private final MethodHandle classifyCsapHandle;
     private final MethodHandle latLngToH3Handle;
+    private final MethodHandle computeRoiHandle;
 
     public BRHealthEngine(String libraryPath) {
         this.arena = Arena.ofShared();
@@ -44,6 +45,13 @@ public final class BRHealthEngine implements AutoCloseable {
                 h3Addr,
                 FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_BYTE)
         );
+
+        MemorySegment roiAddr = lookup.find("brhealth_panama_compute_roi")
+                .orElseThrow(() -> new UnsatisfiedLinkError("brhealth_panama_compute_roi not found"));
+        this.computeRoiHandle = linker.downcallHandle(
+                roiAddr,
+                FunctionDescriptor.of(ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE)
+        );
     }
 
     public int calculateIbgeDv(String code6Digits) throws Throwable {
@@ -58,6 +66,10 @@ public final class BRHealthEngine implements AutoCloseable {
 
     public long latLngToH3(double lat, double lng, byte resolution) throws Throwable {
         return (long) latLngToH3Handle.invokeExact(lat, lng, resolution);
+    }
+
+    public double computePrimaryCareRoi(double avoidableCost, double investment, double attributableFraction) throws Throwable {
+        return (double) computeRoiHandle.invokeExact(avoidableCost, investment, attributableFraction);
     }
 
     @Override

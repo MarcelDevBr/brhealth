@@ -10,6 +10,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
+use sha2::{Digest, Sha256};
 
 use crate::domain::ports::outbound::{PortError, TransportPort};
 
@@ -20,6 +21,8 @@ pub struct HttpClientConfig {
     pub timeout: Duration,
     /// User-Agent enviado nas requisições.
     pub user_agent: String,
+    /// Número máximo de tentativas com retries e backoff exponencial.
+    pub max_retries: usize,
 }
 
 impl Default for HttpClientConfig {
@@ -27,6 +30,7 @@ impl Default for HttpClientConfig {
         Self {
             timeout: Duration::from_secs(60),
             user_agent: format!("BRHealth/{} (Scientific Engine)", env!("CARGO_PKG_VERSION")),
+            max_retries: 3,
         }
     }
 }
@@ -35,19 +39,33 @@ impl Default for HttpClientConfig {
 #[derive(Debug, Clone)]
 pub struct AsyncHttpTransport {
     config: HttpClientConfig,
+    client: reqwest::Client,
 }
 
 impl AsyncHttpTransport {
     /// Cria um novo cliente com a configuração fornecida.
-    #[must_use]
-    pub fn new(config: HttpClientConfig) -> Self {
-        Self { config }
+    pub fn new(config: HttpClientConfig) -> Result<Self, PortError> {
+        let client = reqwest::Client::builder()
+            .timeout(config.timeout)
+            .user_agent(&config.user_agent)
+            .build()
+            .map_err(|e| PortError::TransportError(format!("Falha ao construir cliente HTTP: {e}")))?;
+
+        Ok(Self { config, client })
     }
 
     /// Cria um novo cliente com as configurações padrão.
-    #[must_use]
-    pub fn new_default() -> Self {
+    pub fn new_default() -> Result<Self, PortError> {
         Self::new(HttpClientConfig::default())
+    }
+
+    /// Executa o download de um recurso HTTP calculando simultaneamente o hash SHA-256 no voo.
+    pub async fn fetch_with_sha256(&self, uri: &str) -> Result<(Vec<u8>, String), PortError> {
+        let bytes = self.fetch_bytes(uri).await?;
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        let hash = format!("{:x}", hasher.finalize());
+        Ok((bytes, hash))
     }
 }
 
@@ -60,11 +78,59 @@ impl TransportPort for AsyncHttpTransport {
             )));
         }
 
-        // Em ambientes sem rede externa ou durante execuções offline,
-        // valida a sintaxe da URI e informa o status do transporte
-        Err(PortError::TransportError(format!(
-            "HTTP Transport configurado com timeout {:?}, requisição para '{uri}' pendente de rede",
-            self.config.timeout
-        )))
+        let mut last_error = None;
+
+        for attempt in 0..=self.config.max_retries {
+            if attempt > 0 {
+                let backoff = Duration::from_millis(100 * (1 << attempt));
+                tokio::time::sleep(backoff).await;
+            }
+
+            match self.client.get(uri).send().await {
+                Ok(response) => {
+                    let status = response.status();
+                    if status.is_success() {
+                        match response.bytes().await {
+                            Ok(bytes) => return Ok(bytes.to_vec()),
+                            Err(e) => {
+                                last_error = Some(format!("Falha ao ler stream de resposta HTTP: {e}"));
+                            }
+                        }
+                    } else {
+                        last_error = Some(format!("Servidor HTTP retornou status {status} para '{uri}'"));
+                    }
+                }
+                Err(e) => {
+                    last_error = Some(format!("Falha na requisição HTTP para '{uri}': {e}"));
+                }
+            }
+        }
+
+        Err(PortError::TransportError(last_error.unwrap_or_else(|| {
+            format!("Falha ao descarregar recurso HTTP '{uri}' após tentativas")
+        })))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_http_uri_rejected() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let transport = AsyncHttpTransport::new_default().unwrap();
+            let res = transport.fetch_bytes("ftp://ftp.datasus.gov.br/file.dbc").await;
+            assert!(res.is_err());
+        });
+    }
+
+    #[test]
+    fn test_client_config_defaults() {
+        let config = HttpClientConfig::default();
+        assert_eq!(config.max_retries, 3);
+        assert!(config.user_agent.contains("BRHealth"));
+    }
+}
+

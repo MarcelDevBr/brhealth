@@ -201,6 +201,34 @@ impl HealthDataSourceSPI for Era5DataSource {
         let locator = self.resolve_locator(params)?;
         let raw_bytes = context.transport.fetch_bytes(&locator).await?;
 
+        if raw_bytes.is_empty() {
+            return Ok(vec![RecordBatch::new_empty(self.target_schema())]);
+        }
+
+        // 1. Verifica se o payload é um arquivo Apache Parquet (Magic number 'PAR1')
+        if raw_bytes.len() >= 4 && &raw_bytes[0..4] == b"PAR1" {
+            use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+
+            let mem_bytes = bytes::Bytes::from(raw_bytes);
+            let builder = ParquetRecordBatchReaderBuilder::try_new(mem_bytes).map_err(|e| {
+                PortError::TabularDecodeError(format!("Falha ao ler cabeçalho Parquet ERA5: {e}"))
+            })?;
+            let reader = builder.build().map_err(|e| {
+                PortError::TabularDecodeError(format!("Falha ao construir leitor Parquet ERA5: {e}"))
+            })?;
+
+            let mut harmonized_batches = Vec::new();
+            for batch_res in reader {
+                let batch = batch_res.map_err(|e| {
+                    PortError::TabularDecodeError(format!("Erro na leitura de batch Parquet ERA5: {e}"))
+                })?;
+                let harmonized = self.harmonize_batch(&batch)?;
+                harmonized_batches.push(harmonized);
+            }
+            return Ok(harmonized_batches);
+        }
+
+        // 2. Fallback para decodificador DBF
         let decoder = DbfDecoder::new();
         let raw_batch = match decoder.decode_to_record_batch(&raw_bytes) {
             Ok(b) => b,

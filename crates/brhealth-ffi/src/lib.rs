@@ -175,6 +175,189 @@ pub unsafe extern "C" fn brhealth_export_arrow_batch(
     }
 }
 
+/// Handle opaco para o cliente do motor analítico BRHealth.
+pub struct BRHealthClientHandle {
+    pub app_service: std::sync::Arc<brhealth_core::domain::application::BRHealthApplicationService>,
+    pub rt: tokio::runtime::Runtime,
+}
+
+/// Inicializa um cliente nativo do BRHealth com suporte a cache e fontes canônicas registradas.
+///
+/// Retorna ponteiro opaco para `BRHealthClientHandle` ou nulo em caso de falha de alocação de runtime.
+#[unsafe(no_mangle)]
+pub extern "C" fn brhealth_client_create() -> *mut BRHealthClientHandle {
+    use brhealth_core::decoders::dbc::DbcDecompressor;
+    use brhealth_core::domain::application::BRHealthApplicationService;
+    use brhealth_core::domain::source_spi::SourceExecutionContext;
+    use brhealth_core::infrastructure::cache::MemoryCache;
+    use brhealth_core::infrastructure::state::MemorySyncState;
+    use brhealth_core::infrastructure::transport::AsyncFtpTransport;
+    use brhealth_core::sources::{create_pack_brasil, create_pack_global};
+    use brhealth_core::SourceRegistry;
+    use std::sync::Arc;
+
+    let rt = match tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(r) => r,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    let mut registry = SourceRegistry::new();
+    registry.register_pack(create_pack_brasil());
+    registry.register_pack(create_pack_global());
+    let registry = Arc::new(registry);
+
+    let ftp_transport = Arc::new(AsyncFtpTransport::new_datasus());
+    let decompressor = match DbcDecompressor::new() {
+        Ok(d) => Arc::new(d),
+        Err(_) => return std::ptr::null_mut(),
+    };
+    let sync_state = Arc::new(MemorySyncState::new());
+
+    let context = Arc::new(SourceExecutionContext {
+        transport: ftp_transport,
+        decompressor,
+        cache: Arc::new(MemoryCache::new()),
+        state: sync_state.clone(),
+    });
+
+    let app_service = Arc::new(BRHealthApplicationService::new(
+        registry, context, sync_state,
+    ));
+
+    let handle = Box::new(BRHealthClientHandle { app_service, rt });
+    Box::into_raw(handle)
+}
+
+/// Destrói e libera os recursos alocados pelo cliente nativo do BRHealth.
+///
+/// # Safety
+///
+/// `handle` deve ter sido retornado por `brhealth_client_create` e não deve ter sido desalocado anteriormente.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn brhealth_client_destroy(handle: *mut BRHealthClientHandle) {
+    if !handle.is_null() {
+        unsafe {
+            drop(Box::from_raw(handle));
+        }
+    }
+}
+
+/// Consulta dados de mortalidade (DATASUS SIM) exportando diretamente para a Arrow C Data Interface.
+///
+/// # Safety
+///
+/// `handle`, `uf`, `out_array` e `out_schema` devem ser ponteiros válidos e não-nulos.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn brhealth_fetch_mortality(
+    handle: *mut BRHealthClientHandle,
+    uf: *const c_char,
+    year: u32,
+    out_array: *mut FFI_ArrowArray,
+    out_schema: *mut FFI_ArrowSchema,
+) -> i32 {
+    let source_id = match CString::new("datasus_sim") {
+        Ok(s) => s,
+        Err(_) => return BRHEALTH_ERR_INVALID_ARG,
+    };
+    unsafe {
+        brhealth_fetch_source(handle, source_id.as_ptr(), uf, year, out_array, out_schema)
+    }
+}
+
+/// Consulta qualquer fonte registrada do BRHealth por identificador.
+///
+/// # Safety
+///
+/// `handle`, `source_id`, `uf`, `out_array` e `out_schema` devem ser ponteiros válidos e não-nulos.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn brhealth_fetch_source(
+    handle: *mut BRHealthClientHandle,
+    source_id: *const c_char,
+    uf: *const c_char,
+    year: u32,
+    out_array: *mut FFI_ArrowArray,
+    out_schema: *mut FFI_ArrowSchema,
+) -> i32 {
+    use brhealth_core::domain::application::PipelineExecutionOptions;
+    use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
+    use std::collections::HashMap;
+
+    if handle.is_null()
+        || source_id.is_null()
+        || uf.is_null()
+        || out_array.is_null()
+        || out_schema.is_null()
+    {
+        return BRHEALTH_ERR_NULL_PTR;
+    }
+
+    let source_str = match unsafe { CStr::from_ptr(source_id) }.to_str() {
+        Ok(s) => s,
+        Err(_) => return BRHEALTH_ERR_INVALID_ARG,
+    };
+    let uf_str = match unsafe { CStr::from_ptr(uf) }.to_str() {
+        Ok(s) => s,
+        Err(_) => return BRHEALTH_ERR_INVALID_ARG,
+    };
+
+    let params = DataQueryParams {
+        scope: GeographicScope::National {
+            iso_3166_alpha3: "BRA".into(),
+        },
+        jurisdiction_code: Some(uf_str.to_string()),
+        year: year as u16,
+        month: None,
+        extra_filters: HashMap::new(),
+        as_of_snapshot: None,
+    };
+
+    let options = PipelineExecutionOptions {
+        harmonize_ibge: true,
+        assign_h3_resolution: None,
+        h3_coord_columns: None,
+        enrich_csap: false,
+        reference_population: None,
+        persist_to_cache: false,
+        cache_base_path: None,
+    };
+
+    let client = unsafe { &*handle };
+    let app = client.app_service.clone();
+    let source_id_str = source_str.to_string();
+
+    let app_exec = app.clone();
+    let sid_exec = source_id_str.clone();
+    let res = client.rt.block_on(async move {
+        app_exec
+            .execute_full_pipeline(&sid_exec, &params, &options)
+            .await
+    });
+
+    match res {
+        Ok(pipeline_result) => {
+            let batch = if pipeline_result.batches.is_empty() {
+                match app.registry().get(&source_id_str) {
+                    Ok(s) => RecordBatch::new_empty(s.target_schema()),
+                    Err(_) => return BRHEALTH_ERR_INVALID_ARG,
+                }
+            } else {
+                pipeline_result.batches[0].clone()
+            };
+
+            match unsafe {
+                export_record_batch_to_c(&batch, out_array, out_schema)
+            } {
+                Ok(()) => BRHEALTH_SUCCESS,
+                Err(_) => BRHEALTH_ERR_TRANSFORM_FAILED,
+            }
+        }
+        Err(_) => BRHEALTH_ERR_TRANSFORM_FAILED,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -233,5 +416,30 @@ mod tests {
         };
         assert_eq!(status, BRHEALTH_SUCCESS);
         assert!((roi - 1.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_client_lifecycle_c_abi() {
+        let handle = brhealth_client_create();
+        assert!(!handle.is_null());
+
+        let mut array = FFI_ArrowArray::empty();
+        let mut schema = FFI_ArrowSchema::empty();
+
+        // Passando nulo deve retornar erro
+        let res = unsafe {
+            brhealth_fetch_mortality(
+                handle,
+                std::ptr::null(),
+                2022,
+                &mut array as *mut _,
+                &mut schema as *mut _,
+            )
+        };
+        assert_eq!(res, BRHEALTH_ERR_NULL_PTR);
+
+        unsafe {
+            brhealth_client_destroy(handle);
+        }
     }
 }

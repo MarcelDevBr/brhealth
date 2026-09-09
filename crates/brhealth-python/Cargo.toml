@@ -11,8 +11,16 @@ description = "Python bindings for the BRHealth columnar analytics engine via Py
 name = "brhealth"
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]
+
 [dependencies]
 brhealth-core = { path = "../brhealth-core" }
 arrow = { workspace = true }
-pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
+pyo3 = { version = "0.22", features = ["abi3-py310"] }
 tokio = { workspace = true }
+
+[dev-dependencies]
+pyo3 = { version = "0.22", features = ["auto-initialize"] }
+

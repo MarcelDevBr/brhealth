@@ -14,6 +14,9 @@ pub mod ffi;
 pub mod infrastructure;
 pub mod sources;
 
+pub use domain::application::{
+    BRHealthApplicationService, PipelineExecutionOptions, PipelineExecutionResult,
+};
 pub use domain::ports::outbound::PortError;
 pub use domain::provenance::FairManifest;
 pub use domain::registry::SourceRegistry;

@@ -10,10 +10,38 @@
  */
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+
+/// Estrutura canônica de Schema conforme a especificação Apache Arrow C Data Interface.
+struct ArrowSchema {
+    const char* format;
+    const char* name;
+    const char* metadata;
+    int64_t flags;
+    int64_t n_children;
+    ArrowSchema** children;
+    ArrowSchema* dictionary;
+    void (*release)(ArrowSchema*);
+    void* private_data;
+};
+
+/// Estrutura canônica de Array conforme a especificação Apache Arrow C Data Interface.
+struct ArrowArray {
+    int64_t length;
+    int64_t null_count;
+    int64_t offset;
+    int64_t n_buffers;
+    int64_t n_children;
+    const void** buffers;
+    ArrowArray** children;
+    ArrowArray* dictionary;
+    void (*release)(ArrowArray*);
+    void* private_data;
+};
 
 extern "C" {
     const char* brhealth_version();
@@ -25,6 +53,23 @@ extern "C" {
         double investment,
         double attributable_fraction,
         double* out_roi
+    );
+    void* brhealth_client_create();
+    void brhealth_client_destroy(void* handle);
+    int32_t brhealth_fetch_mortality(
+        void* handle,
+        const char* uf,
+        uint32_t year,
+        void* out_array,
+        void* out_schema
+    );
+    int32_t brhealth_fetch_source(
+        void* handle,
+        const char* source_id,
+        const char* uf,
+        uint32_t year,
+        void* out_array,
+        void* out_schema
     );
 }
 
@@ -39,6 +84,67 @@ public:
 };
 
 /**
+ * @brief Gerenciador RAII de lote tabular `RecordBatch` Apache Arrow via C Data Interface.
+ */
+class ArrowRecordBatch {
+private:
+    ArrowArray array_{};
+    ArrowSchema schema_{};
+    bool valid_{false};
+
+public:
+    ArrowRecordBatch() = default;
+
+    ~ArrowRecordBatch() {
+        reset();
+    }
+
+    ArrowRecordBatch(const ArrowRecordBatch&) = delete;
+    ArrowRecordBatch& operator=(const ArrowRecordBatch&) = delete;
+
+    ArrowRecordBatch(ArrowRecordBatch&& other) noexcept {
+        array_ = other.array_;
+        schema_ = other.schema_;
+        valid_ = other.valid_;
+        other.array_ = {};
+        other.schema_ = {};
+        other.valid_ = false;
+    }
+
+    ArrowRecordBatch& operator=(ArrowRecordBatch&& other) noexcept {
+        if (this != &other) {
+            reset();
+            array_ = other.array_;
+            schema_ = other.schema_;
+            valid_ = other.valid_;
+            other.array_ = {};
+            other.schema_ = {};
+            other.valid_ = false;
+        }
+        return *this;
+    }
+
+    void reset() noexcept {
+        if (valid_) {
+            if (array_.release) {
+                array_.release(&array_);
+            }
+            if (schema_.release) {
+                schema_.release(&schema_);
+            }
+            valid_ = false;
+        }
+    }
+
+    ArrowArray* array_ptr() noexcept { return &array_; }
+    ArrowSchema* schema_ptr() noexcept { return &schema_; }
+    void mark_valid() noexcept { valid_ = true; }
+    [[nodiscard]] bool is_valid() const noexcept { return valid_; }
+    [[nodiscard]] int64_t num_rows() const noexcept { return valid_ ? array_.length : 0; }
+    [[nodiscard]] int64_t num_columns() const noexcept { return valid_ ? schema_.n_children : 0; }
+};
+
+/**
  * @brief Retorna a versão canônica compilada da biblioteca nativa BRHealth.
  */
 inline std::string_view version() noexcept {
@@ -48,10 +154,6 @@ inline std::string_view version() noexcept {
 
 /**
  * @brief Calcula o Dígito Verificador (DV) oficial do IBGE pelo algoritmo de Luhn Módulo 10.
- *
- * @param code_6digits Código municipal do IBGE com exatamente 6 dígitos.
- * @return uint8_t Dígito Verificador (0 a 9).
- * @throws EngineException se o código for inválido.
  */
 inline uint8_t calculate_ibge_dv(std::string_view code_6digits) {
     std::string null_terminated(code_6digits);
@@ -65,12 +167,6 @@ inline uint8_t calculate_ibge_dv(std::string_view code_6digits) {
 
 /**
  * @brief Converte coordenadas geodésicas (WGS84) em um índice discreto hexagonal Uber H3.
- *
- * @param lat Latitude (-90.0 a 90.0).
- * @param lon Longitude (-180.0 a 180.0).
- * @param resolution Resolução H3 (0 a 15).
- * @return uint64_t Índice H3 canônico de 64 bits.
- * @throws EngineException se as coordenadas ou resolução forem inválidas.
  */
 inline uint64_t latlng_to_h3(double lat, double lon, uint8_t resolution) {
     uint64_t out_h3 = 0;
@@ -83,10 +179,6 @@ inline uint64_t latlng_to_h3(double lat, double lon, uint8_t resolution) {
 
 /**
  * @brief Classifica um código de diagnóstico CID-10 conforme os 19 grupos da Portaria MS/SAS nº 221/2008.
- *
- * @param cid10 Código diagnóstico da CID-10 (com ou sem ponto).
- * @return std::optional<uint8_t> Grupo CSAP (1 a 19) ou std::nullopt se não for CSAP.
- * @throws EngineException se o código CID for inválido ou malformatado.
  */
 inline std::optional<uint8_t> classify_csap(std::string_view cid10) {
     std::string null_terminated(cid10);
@@ -103,11 +195,6 @@ inline std::optional<uint8_t> classify_csap(std::string_view cid10) {
 
 /**
  * @brief Calcula o Retorno sobre Investimento (ROI) em Saúde Coletiva na Atenção Primária.
- *
- * @param avoidable_cost Custo financeiro hospitalar direto evitável (R$).
- * @param investment Investimento orçamentário aplicado na Estratégia Saúde da Família (R$).
- * @param attributable_fraction Fração de impacto atribuível (0.0 a 1.0).
- * @return double ROI percentual.
  */
 inline double compute_primary_care_roi(
     double avoidable_cost,
@@ -126,5 +213,83 @@ inline double compute_primary_care_roi(
     }
     return out_roi;
 }
+
+/**
+ * @brief Cliente RAII C++20 do motor analítico BRHealth.
+ */
+class Client {
+private:
+    void* handle_{nullptr};
+
+public:
+    Client() {
+        handle_ = brhealth_client_create();
+        if (!handle_) {
+            throw EngineException("Falha ao instanciar o cliente nativo BRHealth");
+        }
+    }
+
+    ~Client() {
+        if (handle_) {
+            brhealth_client_destroy(handle_);
+            handle_ = nullptr;
+        }
+    }
+
+    Client(const Client&) = delete;
+    Client& operator=(const Client&) = delete;
+
+    Client(Client&& other) noexcept : handle_(other.handle_) {
+        other.handle_ = nullptr;
+    }
+
+    Client& operator=(Client&& other) noexcept {
+        if (this != &other) {
+            if (handle_) {
+                brhealth_client_destroy(handle_);
+            }
+            handle_ = other.handle_;
+            other.handle_ = nullptr;
+        }
+        return *this;
+    }
+
+    [[nodiscard]] static std::unique_ptr<Client> create() {
+        return std::make_unique<Client>();
+    }
+
+    /**
+     * @brief Ingesta e processa dados de mortalidade (DATASUS SIM).
+     */
+    ArrowRecordBatch fetch_mortality(std::string_view uf, uint32_t year) {
+        return fetch_source("datasus_sim", uf, year);
+    }
+
+    /**
+     * @brief Ingesta e processa qualquer fonte canônica registrada no motor.
+     */
+    ArrowRecordBatch fetch_source(std::string_view source_id, std::string_view uf, uint32_t year) {
+        if (!handle_) {
+            throw EngineException("Cliente BRHealth inválido ou já destruído");
+        }
+        std::string sid_str(source_id);
+        std::string uf_str(uf);
+
+        ArrowRecordBatch batch;
+        int32_t status = brhealth_fetch_source(
+            handle_,
+            sid_str.c_str(),
+            uf_str.c_str(),
+            year,
+            batch.array_ptr(),
+            batch.schema_ptr()
+        );
+        if (status != 0) {
+            throw EngineException("Falha ao consultar fonte analítica: " + sid_str);
+        }
+        batch.mark_valid();
+        return batch;
+    }
+};
 
 } // namespace brhealth

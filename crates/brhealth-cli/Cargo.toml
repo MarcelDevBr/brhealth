@@ -1,0 +1,24 @@
+# Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+# Licensed under the GNU Affero General Public License v3 (AGPLv3)
+# or a commercial license agreement directly with the author.
+
+[package]
+name = "brhealth-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Interface de linha de comando (CLI) nativa para o motor analítico colunar BRHealth"
+
+[[bin]]
+name = "brhealth"
+path = "src/main.rs"
+
+[dependencies]
+brhealth-core = { path = "../brhealth-core" }
+clap = { version = "4.5", features = ["derive"] }
+tokio = { workspace = true }
+arrow = { workspace = true }
+parquet = { workspace = true }
+serde_json = { workspace = true }

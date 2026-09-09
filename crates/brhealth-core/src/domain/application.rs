@@ -27,6 +27,40 @@ use crate::domain::spatial::h3::append_h3_column;
 use crate::domain::transforms::ibge::harmonize_ibge_code;
 use crate::domain::transforms::ontology::MedicalOntologyHarmonizer;
 
+use crate::infrastructure::storage::hive_parquet::HiveParquetStore;
+
+/// Opções de configuração para o pipeline analítico de ponta a ponta.
+#[derive(Debug, Clone, Default)]
+pub struct PipelineExecutionOptions {
+    /// Se verdadeiro, harmoniza colunas de códigos municipais de 6 para 7 dígitos canônicos.
+    pub harmonize_ibge: bool,
+    /// Se fornecido, calcula e anexa índice espacial discreto Uber H3 na resolução configurada (ex: 8).
+    pub assign_h3_resolution: Option<u8>,
+    /// Nomes das colunas de latitude e longitude no lote para cálculo do H3.
+    pub h3_coord_columns: Option<(String, String)>,
+    /// Se verdadeiro, processa e enriquece internações de morbidade hospitalar (SIH) com CSAP.
+    pub enrich_csap: bool,
+    /// População de referência do município/região para cálculo da Taxa Bruta de CSAP por 10.000 hab.
+    pub reference_population: Option<u64>,
+    /// Se verdadeiro, grava os lotes no cache local Hive-Parquet com time-travel determinístico.
+    pub persist_to_cache: bool,
+    /// Caminho do diretório raiz para persistência do cache Hive-Parquet.
+    pub cache_base_path: Option<std::path::PathBuf>,
+}
+
+/// Resultado consolidado da execução do pipeline analítico.
+#[derive(Debug, Clone)]
+pub struct PipelineExecutionResult {
+    /// Lotes colunares Apache Arrow resultantes do pipeline.
+    pub batches: Vec<RecordBatch>,
+    /// Manifesto FAIR de linhagem científica W3C PROV-O com hashes SHA-256 brutos.
+    pub manifest: FairManifest,
+    /// Sumário executivo e econômico de CSAP (quando aplicável ou solicitado).
+    pub csap_summary: Option<CSAPAnalysisSummary>,
+    /// Identificador do snapshot histórico gravado no cache Hive-Parquet.
+    pub persisted_snapshot_id: Option<String>,
+}
+
 /// Serviço central de aplicação que implementa as portas *Inbound*.
 #[derive(Clone)]
 pub struct BRHealthApplicationService {
@@ -55,6 +89,86 @@ impl BRHealthApplicationService {
     #[must_use]
     pub fn registry(&self) -> &Arc<SourceRegistry> {
         &self.registry
+    }
+
+    /// Retorna a referência ao contexto de execução de fontes.
+    #[must_use]
+    pub fn context(&self) -> &Arc<SourceExecutionContext> {
+        &self.context
+    }
+
+    /// Executa o pipeline analítico de ponta a ponta:
+    /// Ingestão $\to$ Descompressão $\to$ Harmonização IBGE $\to$ Indexação H3 $\to$ Enriquecimento CSAP $\to$ Cache Hive-Parquet $\to$ Manifesto FAIR W3C PROV-O.
+    pub async fn execute_full_pipeline(
+        &self,
+        source_id: &str,
+        params: &DataQueryParams,
+        options: &PipelineExecutionOptions,
+    ) -> Result<PipelineExecutionResult, PortError> {
+        // 1. Ingestão e decodificação via SPI
+        let raw_batches = self.execute_query(source_id, params).await?;
+
+        // 2. Resolver locator e hash para o manifesto FAIR
+        let source = self.registry.get(source_id)?;
+        let locator = source.resolve_locator(params)?;
+        let raw_bytes_sha256 = self
+            .sync_state
+            .get_snapshot_version(source_id)
+            .unwrap_or_else(|| {
+                use sha2::{Digest, Sha256};
+                let mut hasher = Sha256::new();
+                hasher.update(locator.as_bytes());
+                format!("{:x}", hasher.finalize())
+            });
+
+        // 3. Processamento de transformações colunares em cada lote
+        let mut processed_batches = Vec::with_capacity(raw_batches.len());
+
+        for mut batch in raw_batches {
+            // 3.1 Atribuição espacial H3 (se solicitado)
+            if let (Some(res), Some((lat_col, lon_col))) =
+                (options.assign_h3_resolution, options.h3_coord_columns.as_ref())
+                && batch.column_by_name(lat_col).is_some()
+                && batch.column_by_name(lon_col).is_some()
+            {
+                batch = self.assign_h3_indices(&batch, lat_col, lon_col, res)?;
+            }
+
+            // 3.2 Enriquecimento CSAP (se for dados de AIH/SIH)
+            if options.enrich_csap && batch.column_by_name("main_diagnosis_icd10").is_some() {
+                batch = crate::domain::analytics::csap::enrich_sih_batch_with_csap(&batch)?;
+            }
+
+            processed_batches.push(batch);
+        }
+
+        // 4. Sumário de CSAP (se aplicável)
+        let csap_summary = if options.enrich_csap || source_id.contains("sih") {
+            self.evaluate_hospital_csap(&processed_batches).ok()
+        } else {
+            None
+        };
+
+        // 5. Persistência em cache particionado Hive-Parquet (se configurado)
+        let mut persisted_snapshot_id = None;
+        if let (true, Some(base_path)) = (options.persist_to_cache, options.cache_base_path.as_ref()) {
+            let store = HiveParquetStore::new(base_path)?;
+            let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
+            for batch in &processed_batches {
+                let snap_record = store.save_batch(source_id, uf, params.year as i32, batch)?;
+                persisted_snapshot_id = Some(snap_record.snapshot_id.to_string());
+            }
+        }
+
+        // 6. Emissão do manifesto criptográfico FAIR W3C PROV-O
+        let manifest = self.generate_manifest(&[locator], &[raw_bytes_sha256])?;
+
+        Ok(PipelineExecutionResult {
+            batches: processed_batches,
+            manifest,
+            csap_summary,
+            persisted_snapshot_id,
+        })
     }
 }
 
