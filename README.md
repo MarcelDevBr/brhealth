@@ -131,9 +131,40 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Linhagem científica rastreável com manifestos **W3C PROV-O** em JSON-LD e hashes SHA-256 calculados no voo.
 - Armazenamento particionado em **Apache Hive-Parquet** com suporte a consultas históricas reproduzíveis bit a bit (`as_of_snapshot`).
 
-### 7. Interoperabilidade FFI Zero-Copy
-- Exportação e importação via especificação **Arrow C Data Interface** (`FFI_ArrowArray`, `FFI_ArrowSchema`).
-- Compatibilidade nativa com NumPy, Polars, PyArrow, DuckDB e runtimes modernos sem cópia de dados.
+### 7. Ecossistema Cross-Language e Interoperabilidade Zero-Copy
+- **`crates/brhealth-core`**: Núcleo analítico puro, 21 fontes de dados, schemas Arrow, CSAP, H3, FAIR e decodificadores nativos.
+- **`crates/brhealth-ffi`**: Exportação plana C-ABI e Arrow C Data Interface para integração binária universal.
+- **`crates/brhealth-python`**: Bindings idiomáticos via PyO3 para Python 3.10+ com interoperabilidade direta para Polars e PyArrow.
+- **`crates/brhealth-jni`**: Bindings de alta performance para Java 21+ Project Panama (Foreign Function & Memory API).
+- **`bindings/cpp/include/brhealth.hpp`**: Wrapper moderno C++20 com RAII sobre a C-ABI.
+
+### 8. Mapeamento Universal de Ontologias Médicas
+- Equivalência transversal bidirecional **CID-10 $\leftrightarrow$ CID-11** (OMS).
+- Mapeador de conceitos **SNOMED-CT** para interoperabilidade FHIR R4.
+- Validação estrita de consistência biológica (incompatibilidades anatômicas de sexo e faixas etárias extremas).
+
+### 9. Decodificadores e Conectores de Rede
+- Decodificador vetorial nativo **Apache GeoArrow** (EPSG:4326).
+- Decodificador colunar para matrizes e grades climáticas **NetCDF / ERA5**.
+- Clientes assíncronos **Tokio FTP** (DATASUS) e **HTTP Streaming** com *stream hashing* SHA-256 no voo.
+
+---
+
+## Estrutura do Workspace Cargo
+
+```text
+brhealth/
+├── Cargo.toml                         # Workspace raiz (LTO fat, opt-level 3)
+├── docs/architecture/                 # SDD, Especificações e Casos de Uso
+├── bindings/
+│   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
+│   └── jvm/BRHealthEngine.java        # Interface Java 21 Panama FFM
+└── crates/
+    ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 21 Fontes
+    ├── brhealth-ffi/                  # C-ABI plana e Arrow C Data Interface
+    ├── brhealth-python/               # Bindings PyO3 / Maturin para Python 3.10+
+    └── brhealth-jni/                  # Bindings Panama FFM para JVM
+```
 
 ---
 
@@ -141,16 +172,17 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 
 ### Pré-requisitos
 - Rust 1.85+ (Edição 2024).
+- Python 3.10+ (opcional para bindings Python).
+- JDK 21+ (opcional para bindings Java Panama).
 
 ### Compilação e Testes
 
 ```bash
-# Compilar em modo release com otimizações LTO
-cargo build --release
+# Compilar todo o workspace em modo release
+cargo build --release --workspace
 
-# Executar suíte completa de testes (unitários, integração e doc-tests)
+# Executar suíte completa de testes (67 testes automatizados)
 cargo test --workspace
-cargo test --workspace --doc
 
 # Validar com Clippy estrito (Zero Warnings)
 cargo clippy --workspace --all-targets -- -D warnings
@@ -161,10 +193,35 @@ cargo bench --workspace
 
 ---
 
-## Exemplo de Uso Rápido em Rust
+## Exemplos de Uso
+
+### Python (Polars / PyArrow Zero-Copy)
+
+```python
+import brhealth
+
+# 1. Validação e cálculo canônico do IBGE
+dv = brhealth.calculate_ibge_dv("355030")
+code_7 = brhealth.harmonize_ibge_code("355030")
+print(f"Município: {code_7} (DV: {dv})") # 3550308 (DV: 8)
+
+# 2. Vigilância de CSAP (Portaria MS/SAS 221/2008)
+if brhealth.is_csap("J45.0"):
+    group_id = brhealth.classify_cid10("J45.0")
+    print(f"Internação evitável identificada: Grupo {group_id} (Asma)")
+
+# 3. Mapeamento Transversal CID-10 -> CID-11
+icd11 = brhealth.map_icd10_to_icd11("I10")
+print(f"Hipertensão CID-10 (I10) mapeada para CID-11: {icd11}") # BA00
+
+# 4. Motor Analítico com 21 Fontes de Dados Registradas
+engine = brhealth.Engine()
+print(f"Fontes ativas no catálogo: {engine.source_count()}") # 21
+```
+
+### Rust (Domínio Puro)
 
 ```rust
-use std::sync::Arc;
 use brhealth_core::domain::analytics::csap::{classify_cid10, compute_primary_care_roi, CsapGroup};
 use brhealth_core::domain::transforms::ibge::calculate_ibge_dv;
 use brhealth_core::domain::spatial::coord_to_h3_index;
@@ -182,9 +239,27 @@ fn main() {
     let group = classify_cid10("J45.0");
     assert_eq!(group, Some(CsapGroup::Asma));
 
-    // 4. ROI da Atenção Primária (Economia de R$ 500k com 40% de impacto e custo de R$ 100k na UBS)
+    // 4. ROI da Atenção Primária
     let roi = compute_primary_care_roi(500_000.0, 100_000.0, 0.40).unwrap();
     println!("ROI da Atenção Primária: {:.1}%", roi * 100.0); // 100.0%
+}
+```
+
+### C++20 Moderno
+
+```cpp
+#include "brhealth.hpp"
+#include <iostream>
+
+int main() {
+    std::cout << "BRHealth Engine Version: " << brhealth::version() << "\n";
+    uint8_t dv = brhealth::calculate_ibge_dv("355030");
+    std::cout << "DV São Paulo: " << static_cast<int>(dv) << "\n";
+    auto csap = brhealth::classify_csap("J45");
+    if (csap) {
+        std::cout << "Grupo CSAP: " << static_cast<int>(*csap) << "\n";
+    }
+    return 0;
 }
 ```
 
@@ -192,6 +267,6 @@ fn main() {
 
 ## Licenciamento e Direitos Autorais
 
-Copyright (c) 2024-2026 Marcel &lt;MarcelDevBr&gt; and BRHealth Contributors.
+Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
 
 O projeto é licenciado sob a **GNU Affero General Public License v3 (AGPLv3)** com modelo de duplo licenciamento comercial exclusivo do criador.

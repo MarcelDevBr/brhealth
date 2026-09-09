@@ -277,23 +277,39 @@ Implementação nativa dos critérios da **Portaria MS/SAS nº 221/2008**:
 
 ## 7. Estrutura do Cargo Workspace e Engenharia de Build
 
-### Estrutura de Diretórios
+### Estrutura de Diretórios do Workspace
 ```text
 brhealth/
-├── Cargo.toml
-├── docs/
-│   └── architecture/
-│       └── sdd_brhealth.md
+├── Cargo.toml                         # Workspace raiz e perfis LTO
+├── docs/architecture/                 # Especificações arquiteturais e SDD
+├── bindings/
+│   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
+│   └── jvm/BRHealthEngine.java        # Interface Java 21 Panama FFM
 ├── crates/
-│   ├── brhealth-core/
+│   ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 21 Fontes
 │   │   ├── Cargo.toml
 │   │   └── src/
-│   ├── brhealth-ffi/
-│   │   ├── Cargo.toml
-│   │   └── src/
-│   └── brhealth-python/
-│       ├── Cargo.toml
-│       └── src/
+│   │       ├── domain/
+│   │       │   ├── application.rs     # BRHealthApplicationService
+│   │       │   ├── ports/
+│   │       │   │   ├── inbound.rs     # Driving Ports (Query, Spatial, Prov, CSAP, etc.)
+│   │       │   │   └── outbound.rs    # SPI Traits
+│   │       │   ├── transforms/
+│   │       │   │   ├── ibge.rs        # Luhn Modulo 10 DV & Transições 1970-2026
+│   │       │   │   └── ontology.rs    # CID-10 <-> CID-11, SNOMED & Consistência Biológica
+│   │       │   └── ...
+│   │       ├── decoders/
+│   │       │   ├── blast.rs           # Descompressor Nativo PKWARE DCL (.dbc)
+│   │       │   ├── dbf.rs             # Fast DBF para Arrow RecordBatch
+│   │       │   ├── geoarrow.rs        # Apache GeoArrow Points
+│   │       │   └── netcdf.rs          # Matrizes Climáticas em Grade
+│   │       └── infrastructure/
+│   │           ├── transport/         # Tokio FTP DATASUS, HTTP Streaming, Local File
+│   │           ├── state/             # DiskSyncState (Auditoria de Snapshots)
+│   │           └── storage/           # Hive-Parquet Cache com Time-Travel
+│   ├── brhealth-ffi/                  # C-ABI plana e Arrow C Data Interface
+│   ├── brhealth-python/               # Bindings PyO3 / Maturin para Python 3.10+
+│   └── brhealth-jni/                  # Bindings Java 21+ Project Panama FFM
 └── .agents/
     ├── rules/
     └── skills/
