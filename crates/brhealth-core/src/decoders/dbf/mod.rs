@@ -2,11 +2,10 @@
 // Licensed under the GNU Affero General Public License v3 (AGPLv3)
 // or a commercial license agreement directly with the author.
 
-//! Adaptadores decodificadores de dados brutos (Blast PKWARE DCL, DBF, etc.)
+//! Decodificador colunar de tabelas legadas dBase / DBF para o padrão Apache Arrow.
 
-pub mod blast;
-pub mod dbc;
-pub mod dbf;
+pub mod header;
+pub mod reader;
 
-pub use blast::BlastDecompressor;
-pub use dbc::DbcDecompressor;
+pub use header::{DbfFieldDescriptor, DbfFieldType, DbfHeader};
+pub use reader::DbfDecoder;
