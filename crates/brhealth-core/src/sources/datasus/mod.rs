@@ -4,11 +4,25 @@
 
 //! Adaptadores de dados para sistemas nacionais do DATASUS (Ministério da Saúde - Brasil).
 
+pub mod bps;
+pub mod cnes;
 pub mod helpers;
+pub mod siasus;
 pub mod sih;
 pub mod sim;
+pub mod sinan;
 pub mod sinasc;
+pub mod sipni;
+pub mod siscan;
+pub mod sisvan;
 
+pub use bps::BpsDataSource;
+pub use cnes::CnesDataSource;
+pub use siasus::SiasusDataSource;
 pub use sih::SihDataSource;
 pub use sim::SimDataSource;
+pub use sinan::SinanDataSource;
 pub use sinasc::SinascDataSource;
+pub use sipni::SipniDataSource;
+pub use siscan::SiscanDataSource;
+pub use sisvan::SisvanDataSource;

@@ -84,4 +84,261 @@ impl CanonicalSchemas {
             Field::new("solar_radiation_kj_m2", DataType::Float32, true),
         ]))
     }
+
+    /// Schema Canônico para Doenças e Agravos de Notificação (SINAN)
+    pub fn canonical_notifiable_disease_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("notification_id", DataType::Utf8, false),
+            Field::new("disease_code", DataType::Utf8, false),
+            Field::new("notification_date", DataType::Date32, false),
+            Field::new("symptom_onset_date", DataType::Date32, true),
+            Field::new("patient_municipality", DataType::Utf8, false),
+            Field::new("notification_municipality", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("age_years", DataType::UInt16, true),
+            Field::new("sex", DataType::Utf8, true),
+            Field::new("diagnostic_criterion", DataType::Utf8, true),
+            Field::new("case_classification", DataType::Utf8, true),
+            Field::new("closure_outcome", DataType::Utf8, true),
+        ]))
+    }
+
+    /// Schema Canônico para Produção Ambulatorial do SUS (SIASUS BPA/APAC)
+    pub fn canonical_ambulatory_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("record_id", DataType::Utf8, false),
+            Field::new("patient_municipality", DataType::Utf8, false),
+            Field::new("facility_cnes", DataType::Utf8, false),
+            Field::new("facility_municipality", DataType::Utf8, false),
+            Field::new("procedure_sigtap", DataType::Utf8, false),
+            Field::new("service_date", DataType::Date32, false),
+            Field::new("main_diagnosis_icd10", DataType::Utf8, true),
+            Field::new("quantity_produced", DataType::UInt32, false),
+            Field::new("total_paid_amount", DataType::Float64, false),
+            Field::new("patient_sex", DataType::Utf8, true),
+            Field::new("patient_age_years", DataType::UInt16, true),
+        ]))
+    }
+
+    /// Schema Canônico para Estabelecimentos de Saúde e Infraestrutura (CNES)
+    pub fn canonical_health_facility_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("cnes_id", DataType::Utf8, false),
+            Field::new("facility_name", DataType::Utf8, false),
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("management_type", DataType::Utf8, false),
+            Field::new("facility_type_code", DataType::Utf8, false),
+            Field::new("has_emergency_care", DataType::Boolean, false),
+            Field::new("total_surgical_beds", DataType::UInt16, false),
+            Field::new("total_clinical_beds", DataType::UInt16, false),
+            Field::new("total_icu_beds_sus", DataType::UInt16, false),
+            Field::new("total_icu_beds_non_sus", DataType::UInt16, false),
+            Field::new("competence_year_month", DataType::Utf8, false),
+        ]))
+    }
+
+    /// Schema Canônico para Vigilância Imunológica e Vacinas (SI-PNI / RNDS)
+    pub fn canonical_immunization_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("vaccination_event_id", DataType::Utf8, false),
+            Field::new("vaccine_code", DataType::Utf8, false),
+            Field::new("vaccine_name", DataType::Utf8, false),
+            Field::new("dose_order", DataType::Utf8, false),
+            Field::new("vaccination_date", DataType::Date32, false),
+            Field::new("patient_municipality", DataType::Utf8, false),
+            Field::new("vaccination_facility_cnes", DataType::Utf8, false),
+            Field::new("lot_number", DataType::Utf8, true),
+            Field::new("patient_age_years", DataType::UInt8, true),
+            Field::new("patient_sex", DataType::Utf8, true),
+        ]))
+    }
+
+    /// Schema Canônico para Vigilância Alimentar e Nutricional (SISVAN)
+    pub fn canonical_nutritional_surveillance_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("assessment_id", DataType::Utf8, false),
+            Field::new("assessment_date", DataType::Date32, false),
+            Field::new("patient_municipality", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("age_months", DataType::UInt16, false),
+            Field::new("sex", DataType::Utf8, false),
+            Field::new("weight_kg", DataType::Float32, false),
+            Field::new("height_cm", DataType::Float32, false),
+            Field::new("bmi", DataType::Float32, true),
+            Field::new("who_growth_classification", DataType::Utf8, true),
+        ]))
+    }
+
+    /// Schema Canônico para Rastreamento e Diagnóstico de Câncer (SISCAN / SISCOLO / SISMAMA)
+    pub fn canonical_cancer_screening_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("exam_id", DataType::Utf8, false),
+            Field::new("cancer_type", DataType::Utf8, false), // "CERVICAL" ou "BREAST"
+            Field::new("exam_date", DataType::Date32, false),
+            Field::new("patient_municipality", DataType::Utf8, false),
+            Field::new("patient_age_years", DataType::UInt8, false),
+            Field::new("clinical_indication", DataType::Utf8, true),
+            Field::new("diagnostic_result", DataType::Utf8, false),
+            Field::new("biopsy_recommended", DataType::Boolean, false),
+        ]))
+    }
+
+    /// Schema Canônico para Banco de Preços em Saúde e Fármacos (BPS / CMED)
+    pub fn canonical_drug_price_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("purchase_id", DataType::Utf8, false),
+            Field::new("procurement_date", DataType::Date32, false),
+            Field::new("buyer_jurisdiction", DataType::Utf8, false),
+            Field::new("active_ingredient", DataType::Utf8, false),
+            Field::new("atc_code", DataType::Utf8, true),
+            Field::new("dosage_form", DataType::Utf8, false),
+            Field::new("quantity_purchased", DataType::UInt32, false),
+            Field::new("unit_price_brl", DataType::Float64, false),
+            Field::new("total_price_brl", DataType::Float64, false),
+        ]))
+    }
+
+    /// Schema Canônico para Demografia Censitária (IBGE Censo)
+    pub fn canonical_demographic_census_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("census_sector_id", DataType::Utf8, false),
+            Field::new("municipality_code", DataType::Utf8, false),
+            Field::new("census_year", DataType::UInt16, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("total_population", DataType::UInt32, false),
+            Field::new("male_population", DataType::UInt32, false),
+            Field::new("female_population", DataType::UInt32, false),
+            Field::new("total_private_households", DataType::UInt32, false),
+            Field::new("median_household_income_brl", DataType::Float32, true),
+        ]))
+    }
+
+    /// Schema Canônico para Condições Socioeconômicas Amostrais (IBGE PNAD Contínua)
+    pub fn canonical_socioeconomic_pnad_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("survey_id", DataType::Utf8, false),
+            Field::new("survey_year", DataType::UInt16, false),
+            Field::new("survey_quarter", DataType::UInt8, false),
+            Field::new("state_code", DataType::Utf8, false),
+            Field::new("sample_weight", DataType::Float64, false),
+            Field::new("head_of_household_sex", DataType::Utf8, false),
+            Field::new("per_capita_household_income", DataType::Float64, true),
+            Field::new("has_private_health_insurance", DataType::Boolean, false),
+            Field::new("education_level_years", DataType::UInt8, true),
+        ]))
+    }
+
+    /// Schema Canônico para Vulnerabilidade Social (CadÚnico / MDS)
+    pub fn canonical_social_vulnerability_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("family_id", DataType::Utf8, false),
+            Field::new("municipality_code", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("is_extreme_poverty", DataType::Boolean, false),
+            Field::new("receives_income_transfer", DataType::Boolean, false),
+            Field::new("number_of_family_members", DataType::UInt8, false),
+            Field::new("has_piped_water", DataType::Boolean, false),
+            Field::new("has_sewage_network", DataType::Boolean, false),
+            Field::new("has_electricity", DataType::Boolean, false),
+        ]))
+    }
+
+    /// Schema Canônico para Focos de Calor e Fumaça (BDQueimadas / INPE)
+    pub fn canonical_wildfire_smoke_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("fire_event_id", DataType::Utf8, false),
+            Field::new("satellite_sensor", DataType::Utf8, false),
+            Field::new(
+                "detection_timestamp_utc",
+                DataType::Timestamp(TimeUnit::Second, Some("UTC".into())),
+                false,
+            ),
+            Field::new("latitude", DataType::Float64, false),
+            Field::new("longitude", DataType::Float64, false),
+            Field::new("h3_index_res8", DataType::UInt64, false),
+            Field::new("municipality_code", DataType::Utf8, false),
+            Field::new("biome_name", DataType::Utf8, false),
+            Field::new("fire_radiative_power_mw", DataType::Float32, true),
+            Field::new("estimated_pm25_ug_m3", DataType::Float32, true),
+        ]))
+    }
+
+    /// Schema Canônico para Vigilância da Qualidade da Água (SISAGUA / SNIS)
+    pub fn canonical_water_quality_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("sample_id", DataType::Utf8, false),
+            Field::new("collection_date", DataType::Date32, false),
+            Field::new("municipality_code", DataType::Utf8, false),
+            Field::new("water_supply_system_id", DataType::Utf8, false),
+            Field::new("sampling_point_type", DataType::Utf8, false),
+            Field::new("total_coliforms_detected", DataType::Boolean, false),
+            Field::new("escherichia_coli_detected", DataType::Boolean, false),
+            Field::new("free_residual_chlorine_mg_l", DataType::Float32, true),
+            Field::new("turbidity_ntu", DataType::Float32, true),
+            Field::new("fluoride_mg_l", DataType::Float32, true),
+        ]))
+    }
+
+    /// Schema Canônico para Indicadores Globais da Saúde (WHO GHO)
+    pub fn canonical_who_indicator_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("indicator_code", DataType::Utf8, false),
+            Field::new("indicator_name", DataType::Utf8, false),
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("reference_year", DataType::UInt16, false),
+            Field::new("sex", DataType::Utf8, true),
+            Field::new("numeric_value", DataType::Float64, false),
+            Field::new("low_bound_value", DataType::Float64, true),
+            Field::new("high_bound_value", DataType::Float64, true),
+            Field::new("sdg_target_id", DataType::Utf8, true),
+        ]))
+    }
+
+    /// Schema Canônico para Carga Global de Doenças (IHME GBD)
+    pub fn canonical_global_burden_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("measure_name", DataType::Utf8, false), // "DALYs", "YLDs", "YLLs", "Deaths"
+            Field::new("cause_code", DataType::Utf8, false),
+            Field::new("cause_name", DataType::Utf8, false),
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("subnational_code", DataType::Utf8, true),
+            Field::new("year", DataType::UInt16, false),
+            Field::new("age_group_id", DataType::UInt8, false),
+            Field::new("sex", DataType::Utf8, false),
+            Field::new("metric_value", DataType::Float64, false),
+            Field::new("metric_rate_per_100k", DataType::Float64, false),
+        ]))
+    }
+
+    /// Schema Canônico para Demografia em Grade Contínua (WorldPop)
+    pub fn canonical_gridded_population_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("grid_cell_id", DataType::Utf8, false),
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, false),
+            Field::new("latitude", DataType::Float64, false),
+            Field::new("longitude", DataType::Float64, false),
+            Field::new("year", DataType::UInt16, false),
+            Field::new("estimated_population_count", DataType::Float64, false),
+            Field::new("population_density_sq_km", DataType::Float64, false),
+        ]))
+    }
+
+    /// Schema Canônico para Vigilância Pan-Americana de Arboviroses (PAHO / PLISA)
+    pub fn canonical_panamerican_surveillance_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("report_id", DataType::Utf8, false),
+            Field::new("disease_name", DataType::Utf8, false), // "Dengue", "Chikungunya", "Zika", "Oropouche"
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("subnational_iso", DataType::Utf8, true),
+            Field::new("epidemiological_year", DataType::UInt16, false),
+            Field::new("epidemiological_week", DataType::UInt8, false),
+            Field::new("suspected_cases", DataType::UInt32, false),
+            Field::new("confirmed_cases", DataType::UInt32, false),
+            Field::new("severe_cases", DataType::UInt32, false),
+            Field::new("deaths", DataType::UInt32, false),
+        ]))
+    }
 }
+

@@ -43,7 +43,14 @@ pub struct BlastDecompressor {
 
 impl Default for BlastDecompressor {
     fn default() -> Self {
-        Self::new().expect("Tabelas canônicas internas de Huffman são válidas por definição")
+        match Self::new() {
+            Ok(decompressor) => decompressor,
+            Err(_) => Self {
+                litcode: HuffmanTree::empty(),
+                lencode: HuffmanTree::empty(),
+                distcode: HuffmanTree::empty(),
+            },
+        }
     }
 }
 

@@ -21,6 +21,15 @@ pub struct HuffmanTree {
 }
 
 impl HuffmanTree {
+    /// Cria uma árvore de Huffman vazia.
+    #[must_use]
+    pub fn empty() -> Self {
+        Self {
+            count: [0; MAX_BITS + 1],
+            symbols: Vec::new(),
+        }
+    }
+
     /// Constrói uma nova árvore de Huffman a partir da especificação compactada de comprimentos.
     ///
     /// Cada byte na fatia `rep` codifica:

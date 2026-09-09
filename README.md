@@ -91,11 +91,33 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Funções vetorizadas sobre colunas de coordenadas (`append_h3_column`).
 - Análise de vizinhança em anel concêntrico (`grid_disk`).
 
-### 4. Country Pack Brasil (Fontes Nacionais do SUS)
-- Adaptadores SPI para microdados do DATASUS:
-  - **SIM** (Sistema de Informações sobre Mortalidade).
-  - **SINASC** (Sistema de Informações sobre Nascidos Vivos).
-  - **SIH** (Sistema de Informações Hospitalares do SUS - AIH Reduzida).
+### 4. Country Packs: Brasil (16 Fontes Nacionais) e Global (5 Fontes Supranacionais)
+- **Country Pack Brasil (`pack_brasil`)**:
+  - **DATASUS / MS**:
+    - **SIM** (Sistema de Informações sobre Mortalidade)
+    - **SINASC** (Sistema de Informações sobre Nascidos Vivos)
+    - **SIH** (Sistema de Informações Hospitalares - AIH Reduzida)
+    - **SINAN** (Sistema de Informação de Agravos de Notificação)
+    - **SIASUS** (Sistema de Informações Ambulatoriais - BPA/APAC)
+    - **CNES** (Cadastro Nacional de Estabelecimentos de Saúde e Leitos)
+    - **SI-PNI / RNDS** (Vigilância Imunológica e Vacinas)
+    - **SISVAN** (Vigilância Alimentar e Nutricional)
+    - **SISCAN / SISCOLO / SISMAMA** (Rastreamento de Câncer de Mama e Colo)
+    - **BPS / CMED / Anvisa** (Banco de Preços em Saúde e Fármacos)
+  - **IBGE & MDS**:
+    - **IBGE Censo** (Censo Demográfico e Setores Censitários)
+    - **IBGE PNAD** (PNAD Contínua - Rendimento e Condições de Vida)
+    - **CadÚnico / MDS** (Vulnerabilidade Social e Transferência de Renda)
+  - **Clima, Ambiente e Saneamento**:
+    - **INMET** (Estações Meteorológicas de Superfície)
+    - **BDQueimadas / INPE** (Focos de Calor por Satélite e Dispersão de Fumaça)
+    - **SISAGUA / SNIS** (Qualidade da Água Potável e Saneamento)
+- **Country Pack Global (`pack_global`)**:
+  - **WHO GHO** (Global Health Observatory - Indicadores Globais da OMS / ODS 3)
+  - **IHME GBD** (Global Burden of Disease - DALYs, YLLs, YLDs)
+  - **Copernicus ERA5** (Reanálise Climática e Meteorológica Global em Grade)
+  - **WorldPop** (Demografia e População Georreferenciada em Grade Contínua de 100m)
+  - **PAHO / OPAS PLISA** (Vigilância Pan-Americana Transfronteiriça de Arboviroses)
 
 ### 5. Analítica de CSAP e Economia da Saúde
 - Classificação completa dos **19 Grupos de Causas** da **Portaria MS/SAS nº 221/2008**.

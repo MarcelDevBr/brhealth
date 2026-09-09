@@ -47,3 +47,58 @@ pub fn get_float64_value(batch: &RecordBatch, col_name: &str, row: usize) -> Opt
         None
     }
 }
+
+/// Extrai com segurança um valor `f32` de uma coluna do `RecordBatch`.
+#[inline]
+pub fn get_float32_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option<f32> {
+    get_float64_value(batch, col_name, row).map(|v| v as f32)
+}
+
+/// Extrai com segurança um valor `u32` de uma coluna do `RecordBatch`.
+#[inline]
+pub fn get_u32_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option<u32> {
+    let idx = batch.schema().index_of(col_name).ok()?;
+    let col = batch.column(idx);
+    if let Some(str_col) = col.as_any().downcast_ref::<StringArray>() {
+        str_col
+            .is_valid(row)
+            .then(|| str_col.value(row).trim().parse::<u32>().ok())
+            .flatten()
+    } else {
+        None
+    }
+}
+
+/// Extrai com segurança um valor `u16` de uma coluna do `RecordBatch`.
+#[inline]
+pub fn get_u16_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option<u16> {
+    get_u32_value(batch, col_name, row).and_then(|v| u16::try_from(v).ok())
+}
+
+/// Extrai com segurança um valor `u8` de uma coluna do `RecordBatch`.
+#[inline]
+pub fn get_u8_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option<u8> {
+    get_u32_value(batch, col_name, row).and_then(|v| u8::try_from(v).ok())
+}
+
+/// Extrai com segurança um valor booleano de uma coluna do `RecordBatch`.
+#[inline]
+pub fn get_bool_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option<bool> {
+    let idx = batch.schema().index_of(col_name).ok()?;
+    let col = batch.column(idx);
+    if let Some(str_col) = col.as_any().downcast_ref::<StringArray>() {
+        if str_col.is_valid(row) {
+            let s = str_col.value(row).trim().to_uppercase();
+            match s.as_str() {
+                "1" | "S" | "SIM" | "T" | "TRUE" => Some(true),
+                "0" | "N" | "NAO" | "NÃO" | "F" | "FALSE" => Some(false),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+

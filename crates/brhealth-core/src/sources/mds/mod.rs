@@ -1,0 +1,9 @@
+// Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+// Licensed under the GNU Affero General Public License v3 (AGPLv3)
+// or a commercial license agreement directly with the author.
+
+//! Adaptadores para dados sociais e de vulnerabilidade do Ministério do Desenvolvimento Social.
+
+pub mod cadunico;
+
+pub use cadunico::CadUnicoDataSource;
