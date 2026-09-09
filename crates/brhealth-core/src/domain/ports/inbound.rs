@@ -83,7 +83,10 @@ pub trait SnapshotTimeTravelPort: Send + Sync {
 /// Caso de Uso: Economia da Saúde e Vigilância de Custos Evitáveis (CSAP).
 pub trait CSAPCostAnalysisPort: Send + Sync {
     /// Analisa e classifica lotes de morbidade hospitalar (SIHSUS) segundo os 19 grupos da Portaria MS/SAS 221/2008.
-    fn evaluate_hospital_csap(&self, batches: &[RecordBatch]) -> Result<CSAPAnalysisSummary, PortError>;
+    fn evaluate_hospital_csap(
+        &self,
+        batches: &[RecordBatch],
+    ) -> Result<CSAPAnalysisSummary, PortError>;
 }
 
 /// Caso de Uso: Harmonização Federativa e Mapeamento Universal de Ontologias.

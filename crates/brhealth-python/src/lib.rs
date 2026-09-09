@@ -120,7 +120,8 @@ impl Engine {
         age_years: u16,
     ) -> PyResult<bool> {
         let harmonizer = MedicalOntologyHarmonizer::new();
-        let bio_sex = brhealth_core::domain::transforms::ontology::BiologicalSex::from_str_lenient(sex);
+        let bio_sex =
+            brhealth_core::domain::transforms::ontology::BiologicalSex::from_str_lenient(sex);
         match harmonizer.validate_biological_consistency(icd10, bio_sex, age_years) {
             Ok(()) => Ok(true),
             Err(e) => Err(PyValueError::new_err(e.to_string())),

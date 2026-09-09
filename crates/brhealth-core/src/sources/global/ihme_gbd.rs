@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Float64Builder, StringBuilder, UInt16Builder, UInt8Builder};
+use arrow::array::{ArrayRef, Float64Builder, StringBuilder, UInt8Builder, UInt16Builder};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
@@ -19,7 +19,7 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 use crate::sources::datasus::helpers::{
-    get_float64_value, get_str_value, get_u16_value, get_u8_value,
+    get_float64_value, get_str_value, get_u8_value, get_u16_value,
 };
 
 /// Adaptador SPI para métricas de carga global de doenças (GBD / IHME).

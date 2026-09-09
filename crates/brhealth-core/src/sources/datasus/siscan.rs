@@ -162,7 +162,12 @@ impl HealthDataSourceSPI for SiscanDataSource {
             .map(|s| s.as_str())
             .unwrap_or("MAM"); // MAM = Mamografia, CIT = Citopatológico
         let year_short = params.year % 100;
-        let filename = format!("{}{}{:02}.dbc", exam.to_uppercase(), uf.to_uppercase(), year_short);
+        let filename = format!(
+            "{}{}{:02}.dbc",
+            exam.to_uppercase(),
+            uf.to_uppercase(),
+            year_short
+        );
 
         Ok(format!(
             "ftp://ftp.datasus.gov.br/dissemin/publicos/SISCAN/DADOS/{filename}"

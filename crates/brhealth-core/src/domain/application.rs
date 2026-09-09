@@ -14,7 +14,7 @@ use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 use chrono::Utc;
 
-use crate::domain::analytics::csap::{compute_csap_metrics, CsapMetrics};
+use crate::domain::analytics::csap::{CsapMetrics, compute_csap_metrics};
 use crate::domain::ports::inbound::{
     CSAPAnalysisSummary, CSAPCostAnalysisPort, GlobalHarmonizationPort, MultidimensionalQueryPort,
     ProvenanceExtractionPort, SnapshotTimeTravelPort, SpatialJoinEnginePort,

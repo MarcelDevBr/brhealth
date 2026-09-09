@@ -101,4 +101,3 @@ pub fn get_bool_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option
         None
     }
 }
-

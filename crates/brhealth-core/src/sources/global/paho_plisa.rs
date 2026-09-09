@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, StringBuilder, UInt16Builder, UInt32Builder, UInt8Builder};
+use arrow::array::{ArrayRef, StringBuilder, UInt8Builder, UInt16Builder, UInt32Builder};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
@@ -18,7 +18,7 @@ use crate::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-use crate::sources::datasus::helpers::{get_str_value, get_u16_value, get_u32_value, get_u8_value};
+use crate::sources::datasus::helpers::{get_str_value, get_u8_value, get_u16_value, get_u32_value};
 
 /// Adaptador SPI para a plataforma PLISA da OPAS (vigilância transfronteiriça de arboviroses).
 #[derive(Debug, Default, Clone)]

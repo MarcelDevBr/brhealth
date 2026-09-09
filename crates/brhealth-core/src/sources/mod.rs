@@ -13,8 +13,8 @@ pub mod mds;
 use std::sync::Arc;
 
 pub use datasus::{
-    BpsDataSource, CnesDataSource, SiasusDataSource, SihDataSource, SimDataSource,
-    SinanDataSource, SinascDataSource, SipniDataSource, SiscanDataSource, SisvanDataSource,
+    BpsDataSource, CnesDataSource, SiasusDataSource, SihDataSource, SimDataSource, SinanDataSource,
+    SinascDataSource, SipniDataSource, SiscanDataSource, SisvanDataSource,
 };
 pub use environmental::{BdQueimadasDataSource, InmetDataSource, SisaguaDataSource};
 pub use global::{

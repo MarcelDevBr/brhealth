@@ -76,8 +76,8 @@ impl WhoGhoDataSource {
         // 5. sex (Dim1 / Sex)
         let mut sex_builder = StringBuilder::with_capacity(num_rows, num_rows * 4);
         for i in 0..num_rows {
-            if let Some(s) = get_str_value(raw_batch, "Dim1", i)
-                .or_else(|| get_str_value(raw_batch, "Sex", i))
+            if let Some(s) =
+                get_str_value(raw_batch, "Dim1", i).or_else(|| get_str_value(raw_batch, "Sex", i))
             {
                 sex_builder.append_value(s);
             } else {

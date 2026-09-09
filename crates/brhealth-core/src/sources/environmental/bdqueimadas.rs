@@ -140,15 +140,7 @@ impl BdQueimadasDataSource {
         RecordBatch::try_new(
             target_schema,
             vec![
-                id_col,
-                sat_col,
-                ts_col,
-                lat_col,
-                lon_col,
-                h3_col,
-                mun_col,
-                biome_col,
-                frp_col,
+                id_col, sat_col, ts_col, lat_col, lon_col, h3_col, mun_col, biome_col, frp_col,
                 pm_col,
             ],
         )

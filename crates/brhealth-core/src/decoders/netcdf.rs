@@ -92,8 +92,9 @@ impl NetCDFGridDecoder {
         }
 
         let schema = Arc::new(Schema::new(fields));
-        RecordBatch::try_new(schema, columns)
-            .map_err(|e| PortError::TransformationError(format!("Falha ao montar batch NetCDF: {e}")))
+        RecordBatch::try_new(schema, columns).map_err(|e| {
+            PortError::TransformationError(format!("Falha ao montar batch NetCDF: {e}"))
+        })
     }
 }
 

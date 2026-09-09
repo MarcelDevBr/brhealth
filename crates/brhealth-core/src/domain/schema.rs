@@ -341,4 +341,3 @@ impl CanonicalSchemas {
         ]))
     }
 }
-

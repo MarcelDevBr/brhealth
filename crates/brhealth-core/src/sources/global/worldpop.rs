@@ -19,9 +19,7 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 use crate::domain::spatial::coord_to_h3_index;
-use crate::sources::datasus::helpers::{
-    get_float64_value, get_str_value, get_u16_value,
-};
+use crate::sources::datasus::helpers::{get_float64_value, get_str_value, get_u16_value};
 
 /// Adaptador SPI para população contínua em grade (WorldPop).
 #[derive(Debug, Default, Clone)]

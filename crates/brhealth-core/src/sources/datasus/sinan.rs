@@ -206,7 +206,12 @@ impl HealthDataSourceSPI for SinanDataSource {
             .map(|s| s.as_str())
             .unwrap_or("DENG");
         let year_short = params.year % 100;
-        let filename = format!("{}{}{:02}.dbc", disease.to_uppercase(), uf.to_uppercase(), year_short);
+        let filename = format!(
+            "{}{}{:02}.dbc",
+            disease.to_uppercase(),
+            uf.to_uppercase(),
+            year_short
+        );
 
         Ok(format!(
             "ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/PRELIM/{filename}"

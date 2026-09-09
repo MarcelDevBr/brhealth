@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use arrow::array::{
-    ArrayRef, BooleanBuilder, Float64Builder, StringBuilder, UInt16Builder, UInt8Builder,
+    ArrayRef, BooleanBuilder, Float64Builder, StringBuilder, UInt8Builder, UInt16Builder,
 };
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
@@ -21,7 +21,7 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 use crate::sources::datasus::helpers::{
-    get_bool_value, get_float64_value, get_str_value, get_u16_value, get_u8_value,
+    get_bool_value, get_float64_value, get_str_value, get_u8_value, get_u16_value,
 };
 
 /// Adaptador SPI para a PNAD Contínua do IBGE.
@@ -172,7 +172,10 @@ impl HealthDataSourceSPI for IbgePnadDataSource {
 
     fn resolve_locator(&self, params: &DataQueryParams) -> Result<String, PortError> {
         let year = params.year;
-        let quarter = params.month.map(|m| (m.saturating_sub(1) / 3) + 1).unwrap_or(1);
+        let quarter = params
+            .month
+            .map(|m| (m.saturating_sub(1) / 3) + 1)
+            .unwrap_or(1);
         let filename = format!("PNADC_{:04}_trimestre_{:02}.parquet", year, quarter);
 
         Ok(format!(

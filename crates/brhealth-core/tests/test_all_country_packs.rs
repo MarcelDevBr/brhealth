@@ -7,6 +7,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use brhealth_core::decoders::dbc::DbcDecompressor;
 use brhealth_core::domain::registry::SourceRegistry;
 use brhealth_core::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceExecutionContext,
@@ -15,12 +16,15 @@ use brhealth_core::infrastructure::cache::MemoryCache;
 use brhealth_core::infrastructure::state::MemorySyncState;
 use brhealth_core::infrastructure::transport::MockTransport;
 use brhealth_core::{create_pack_brasil, create_pack_global};
-use brhealth_core::decoders::dbc::DbcDecompressor;
 
 #[test]
 fn test_country_pack_brasil_metadata_and_registry() {
     let pack = create_pack_brasil();
-    assert_eq!(pack.len(), 16, "Pack Brasil deve conter exatamente 16 fontes oficiais");
+    assert_eq!(
+        pack.len(),
+        16,
+        "Pack Brasil deve conter exatamente 16 fontes oficiais"
+    );
 
     let mut registry = SourceRegistry::new();
     registry.register_pack(pack);
@@ -53,7 +57,11 @@ fn test_country_pack_brasil_metadata_and_registry() {
 
     for id in &expected_ids {
         let source = registry.get(id);
-        assert!(source.is_ok(), "Fonte '{}' deve estar registrada no SourceRegistry", id);
+        assert!(
+            source.is_ok(),
+            "Fonte '{}' deve estar registrada no SourceRegistry",
+            id
+        );
         let s = source.unwrap();
         let meta = s.metadata();
         assert_eq!(meta.id, *id);
@@ -100,7 +108,11 @@ fn test_country_pack_brasil_locators() {
 #[test]
 fn test_country_pack_global_metadata_and_registry() {
     let pack = create_pack_global();
-    assert_eq!(pack.len(), 5, "Pack Global deve conter exatamente 5 fontes supranacionais");
+    assert_eq!(
+        pack.len(),
+        5,
+        "Pack Global deve conter exatamente 5 fontes supranacionais"
+    );
 
     let mut registry = SourceRegistry::new();
     registry.register_pack(pack);
@@ -115,7 +127,11 @@ fn test_country_pack_global_metadata_and_registry() {
 
     for id in &expected_global_ids {
         let source = registry.get(id);
-        assert!(source.is_ok(), "Fonte global '{}' deve estar registrada", id);
+        assert!(
+            source.is_ok(),
+            "Fonte global '{}' deve estar registrada",
+            id
+        );
         let s = source.unwrap();
         let meta = s.metadata();
         assert_eq!(meta.id, *id);
@@ -162,7 +178,11 @@ async fn test_end_to_end_fetch_mocked_for_all_sources() {
     all_sources.extend(create_pack_brasil());
     all_sources.extend(create_pack_global());
 
-    assert_eq!(all_sources.len(), 21, "Total de fontes suportadas deve ser 21");
+    assert_eq!(
+        all_sources.len(),
+        21,
+        "Total de fontes suportadas deve ser 21"
+    );
 
     let transport = Arc::new(MockTransport::new());
     let decompressor = Arc::new(DbcDecompressor::new().unwrap());
@@ -198,4 +218,3 @@ async fn test_end_to_end_fetch_mocked_for_all_sources() {
         assert!(res.is_ok() || res.is_err());
     }
 }
-

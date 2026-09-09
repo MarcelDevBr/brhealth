@@ -21,7 +21,9 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 use crate::domain::transforms::ibge::harmonize_ibge_code;
-use crate::sources::datasus::helpers::{get_float32_value, get_str_value, get_u16_value, get_u32_value};
+use crate::sources::datasus::helpers::{
+    get_float32_value, get_str_value, get_u16_value, get_u32_value,
+};
 
 /// Adaptador SPI para o Censo Demográfico do IBGE.
 #[derive(Debug, Default, Clone)]
@@ -135,8 +137,7 @@ impl IbgeCensoDataSource {
         RecordBatch::try_new(
             target_schema,
             vec![
-                sector_col, mun_col, yr_col, h3_col, pop_col, male_col, fem_col, dom_col,
-                inc_col,
+                sector_col, mun_col, yr_col, h3_col, pop_col, male_col, fem_col, dom_col, inc_col,
             ],
         )
         .map_err(|e| PortError::TransformationError(e.to_string()))

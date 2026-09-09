@@ -43,9 +43,7 @@ impl GeoArrowDecoder {
             r#"{"crs":"OGC:CRS84"}"#.to_string(),
         );
 
-        Arc::new(
-            Field::new(name, DataType::Struct(fields), true).with_metadata(metadata),
-        )
+        Arc::new(Field::new(name, DataType::Struct(fields), true).with_metadata(metadata))
     }
 
     /// Constrói um `StructArray` de pontos GeoArrow a partir de vetores contíguos de coordenadas.
@@ -70,8 +68,9 @@ impl GeoArrowDecoder {
         let fields = Fields::from(vec![x_field, y_field]);
 
         let arrays: Vec<Arc<dyn Array>> = vec![x_array, y_array];
-        let struct_array = StructArray::try_new(fields, arrays, None)
-            .map_err(|e| PortError::TransformationError(format!("Falha ao montar GeoArrow: {e}")))?;
+        let struct_array = StructArray::try_new(fields, arrays, None).map_err(|e| {
+            PortError::TransformationError(format!("Falha ao montar GeoArrow: {e}"))
+        })?;
 
         Ok(Arc::new(struct_array))
     }
@@ -86,17 +85,25 @@ impl GeoArrowDecoder {
     ) -> Result<RecordBatch, PortError> {
         let lon_array = batch
             .column_by_name(lon_col)
-            .ok_or_else(|| PortError::ValidationError(format!("Coluna '{lon_col}' não encontrada")))?
+            .ok_or_else(|| {
+                PortError::ValidationError(format!("Coluna '{lon_col}' não encontrada"))
+            })?
             .as_any()
             .downcast_ref::<Float64Array>()
-            .ok_or_else(|| PortError::ValidationError(format!("Coluna '{lon_col}' não é Float64")))?;
+            .ok_or_else(|| {
+                PortError::ValidationError(format!("Coluna '{lon_col}' não é Float64"))
+            })?;
 
         let lat_array = batch
             .column_by_name(lat_col)
-            .ok_or_else(|| PortError::ValidationError(format!("Coluna '{lat_col}' não encontrada")))?
+            .ok_or_else(|| {
+                PortError::ValidationError(format!("Coluna '{lat_col}' não encontrada"))
+            })?
             .as_any()
             .downcast_ref::<Float64Array>()
-            .ok_or_else(|| PortError::ValidationError(format!("Coluna '{lat_col}' não é Float64")))?;
+            .ok_or_else(|| {
+                PortError::ValidationError(format!("Coluna '{lat_col}' não é Float64"))
+            })?;
 
         let num_rows = batch.num_rows();
         let mut lons = Vec::with_capacity(num_rows);
