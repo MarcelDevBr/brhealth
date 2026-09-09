@@ -61,11 +61,13 @@ flowchart TD
 ```
 
 ### 3.1 Custo Hospitalar Direto Evitável (Camada A)
+
 Calcula-se a soma direta dos valores pagos nas Autorizações de Internação Hospitalar (AIH) para as causas classificadas como CSAP:
 
 $$\text{Custo Hospitalar Evitável} = \sum_{i \in \text{CSAP}} \text{VAL\_TOT}_i$$
 
 ### 3.2 Custo por Paciente na Atenção Primária vs. Custo da Complicação
+
 - **Custo Anual do Acompanhamento Resolutivo na UBS**: Aprox. **R$ 600 a R$ 900 / ano por paciente** (metformina, insulina básica, fitas reagentes de glicemia, glicosímetro, consultas trimestrais, avaliação odontológica e rastreio de fundo de olho).
 - **Custo Hospitalar de uma Amputação e Internação**: Varia de **R$ 4.000 a R$ 15.000** por internação na tabela do SUS (sem contar os custos posteriores de órteses, próteses e cadeira de rodas).
 - **Custo Anual de Manutenção em Hemodiálise**: Entre **R$ 35.000 e R$ 50.000 / ano por paciente**.
@@ -160,7 +162,7 @@ Com os dados processados pelo BRHealth, o painel interativo (construído em Stre
 └────────────────────────────────┴─────────────────────────────────────────────┘
 ```
 
-### Projeção Contrafactual ("E se a Atenção Primária fosse fortalecida?"):
+### Projeção Contrafactual ("E se a Atenção Primária fosse fortalecida?")
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -190,6 +192,7 @@ Com os dados processados pelo BRHealth, o painel interativo (construído em Stre
 ## 6. Conclusão e Valor Estratégico
 
 Este caso de uso demonstra que o **BRHealth** não é apenas uma ferramenta acadêmica, mas um **instrumento decisório para prefeitos e secretários de saúde**:
+
 1. **Auditoria de Recursos**: Mostra com precisão onde o dinheiro público está sendo drenado por falhas no rastreamento primário.
 2. **Humanização e Qualidade de Vida**: Cada internação evitada representa uma família que não precisou vivenciar a dor de uma amputação ou um leito de hospital.
 3. **Decisão Baseada em Evidências**: Permite justificar perante a Câmara Municipal e o Tribunal de Contas (TCE) o aumento de investimentos na Atenção Básica, demonstrando retorno financeiro e assistencial mensurável.
