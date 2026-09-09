@@ -10,6 +10,7 @@
 
 pub mod decoders;
 pub mod domain;
+pub mod ffi;
 pub mod infrastructure;
 pub mod sources;
 
