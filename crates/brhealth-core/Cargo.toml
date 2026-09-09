@@ -29,3 +29,11 @@ criterion = { version = "0.5", default-features = false }
 [[bench]]
 name = "core_benchmarks"
 harness = false
+
+[[example]]
+name = "sim_datasus_full_pipeline"
+path = "../../examples/sim_datasus_full_pipeline.rs"
+
+[[example]]
+name = "csap_health_economics_roi"
+path = "../../examples/csap_health_economics_roi.rs"

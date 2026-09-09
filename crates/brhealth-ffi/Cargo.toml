@@ -1,0 +1,19 @@
+[package]
+name = "brhealth-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "C-ABI e Arrow C Data Interface FFI para o motor BRHealth"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+brhealth-core = { path = "../brhealth-core" }
+arrow = { workspace = true }
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3.12"

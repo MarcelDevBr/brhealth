@@ -81,12 +81,11 @@ pub const BRHEALTH_ERR_NULL_POINTER: i32 = -1;
 /// Código de status para falha interna de conversão.
 pub const BRHEALTH_ERR_EXPORT_FAILED: i32 = -2;
 
-/// Função C-ABI para exportar um lote `RecordBatch` para a Arrow C Data Interface.
+/// Função interna C-ABI para exportar um lote `RecordBatch` para a Arrow C Data Interface.
 ///
 /// # Safety
 ///
 /// Requer ponteiros válidos e não-nulos para `batch_ptr`, `out_array` e `out_schema`.
-#[unsafe(no_mangle)]
 pub unsafe extern "C" fn brhealth_export_arrow_batch(
     batch_ptr: *const RecordBatch,
     out_array: *mut FFI_ArrowArray,

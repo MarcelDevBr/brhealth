@@ -381,6 +381,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "brhealth-ffi"
+version = "1.0.0"
+dependencies = [
+ "arrow",
+ "brhealth-core",
+ "libc",
+ "tempfile",
+]
+
+[[package]]
 name = "brotli"
 version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
