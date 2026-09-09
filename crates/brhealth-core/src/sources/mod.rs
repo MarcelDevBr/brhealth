@@ -3,3 +3,7 @@
 // or a commercial license agreement directly with the author.
 
 //! Pacotes de fontes regionais e globais (Country Packs)
+
+pub mod datasus;
+
+pub use datasus::{SihDataSource, SimDataSource, SinascDataSource};
