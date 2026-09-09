@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/brhealth-core",
+    "crates/brhealth-ffi",
 ]
 resolver = "2"
 
