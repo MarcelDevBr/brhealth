@@ -86,12 +86,12 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Validação e cálculo canônico do Dígito Verificador (DV) via **Luhn Módulo 10**.
 - Tabela imutável de transições históricas municipais (desmembramentos e fusões).
 
-### 3. Indexação Espacial Discreta Uber H3
-- Resoluções configuráveis (ex: Resolução 8 para células de $\sim 0.7\text{ km}^2$).
-- Funções vetorizadas sobre colunas de coordenadas (`append_h3_column`).
-- Análise de vizinhança em anel concêntrico (`grid_disk`).
+### 3. Indexação Espacial Discreta Uber H3 e Google S2 Geometry
+- Resoluções configuráveis (ex: Resolução H3 8 para células de $\sim 0.7\text{ km}^2$; Nível S2 10 para células municipais).
+- Funções vetorizadas sobre colunas de coordenadas (`append_h3_column`, `append_s2_column`).
+- Análise de vizinhança em anel concêntrico (`grid_disk`) e *spatial joins* colunares contíguos em Arrow (`spatial_join_on_index`).
 
-### 4. Country Packs: Brasil (16 Fontes Nacionais) e Global (5 Fontes Supranacionais)
+### 4. Country Packs: Brasil (20 Fontes Nacionais) e Global (6 Fontes Supranacionais)
 - **Country Pack Brasil (`pack_brasil`)**:
   - **DATASUS / MS**:
     - **SIM** (Sistema de Informações sobre Mortalidade)
@@ -107,10 +107,14 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
   - **IBGE & MDS**:
     - **IBGE Censo** (Censo Demográfico e Setores Censitários)
     - **IBGE PNAD** (PNAD Contínua - Rendimento e Condições de Vida)
+    - **IBGE POF** (Pesquisa de Orçamentos Familiares e Gastos em Saúde)
+    - **IBGE PeNSE** (Pesquisa Nacional de Saúde do Escolar)
+    - **IBGE MUNIC** (Perfil e Capacidade da Gestão Municipal em Saúde)
     - **CadÚnico / MDS** (Vulnerabilidade Social e Transferência de Renda)
   - **Clima, Ambiente e Saneamento**:
     - **INMET** (Estações Meteorológicas de Superfície)
     - **BDQueimadas / INPE** (Focos de Calor por Satélite e Dispersão de Fumaça)
+    - **PRODES / INPE** (Taxas de Desmatamento Anual e Risco de Zoonoses)
     - **SISAGUA / SNIS** (Qualidade da Água Potável e Saneamento)
 - **Country Pack Global (`pack_global`)**:
   - **WHO GHO** (Global Health Observatory - Indicadores Globais da OMS / ODS 3)
@@ -118,8 +122,14 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
   - **Copernicus ERA5** (Reanálise Climática e Meteorológica Global em Grade)
   - **WorldPop** (Demografia e População Georreferenciada em Grade Contínua de 100m)
   - **PAHO / OPAS PLISA** (Vigilância Pan-Americana Transfronteiriça de Arboviroses)
+  - **OpenAQ** (Monitoramento Global de Poluentes Atmosféricos e Qualidade do Ar)
 
-### 5. Analítica de CSAP e Economia da Saúde
+### 5. Bioestatística, Epidemiologia e Mortalidade Prematura (APVP / YLL)
+- Cálculo formal dos **Anos Potenciais de Vida Perdidos** (APVP / *Years of Life Lost* - YLL):
+  $$\text{APVP} = \sum_{i=1}^{n} d_i \cdot (L - a_i)$$
+- Taxa padronizada de APVP por 100.000 habitantes e Padronização Direta de Mortalidade com a População Padrão da OMS.
+
+### 6. Analítica de CSAP e Economia da Saúde
 - Classificação completa dos **19 Grupos de Causas** da **Portaria MS/SAS nº 221/2008**.
 - Taxa Bruta de CSAP por 10.000 habitantes:
   $$\text{Taxa Bruta CSAP} = \left( \frac{\sum_{i \in \text{CSAP}} N_i}{\text{População}} \right) \times 10.000$$
@@ -127,23 +137,28 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Retorno sobre Investimento (ROI) em Saúde Coletiva na Atenção Primária à Saúde:
   $$\text{ROI}_{\text{APS}} = \frac{(\alpha \cdot \text{Custo Evitável}) - \text{Investimento}_{\text{APS}}}{\text{Investimento}_{\text{APS}}}$$
 
-### 6. Governança FAIR e Time-Travel
+### 7. Governança FAIR, Time-Travel e Persistência Híbrida
 - Linhagem científica rastreável com manifestos **W3C PROV-O** em JSON-LD e hashes SHA-256 calculados no voo.
 - Armazenamento particionado em **Apache Hive-Parquet** com suporte a consultas históricas reproduzíveis bit a bit (`as_of_snapshot`).
+- Backend relacional embutido **SQLite Sync State** (`SqliteSyncState`) e persistência atômica em disco (`DiskSyncState`) para auditoria determinística.
 
-### 7. Ecossistema Cross-Language e Interoperabilidade Zero-Copy
-- **`crates/brhealth-core`**: Núcleo analítico puro, 21 fontes de dados, schemas Arrow, CSAP, H3, FAIR e decodificadores nativos.
+### 8. Ecossistema Cross-Language e Interoperabilidade Zero-Copy
+- **`crates/brhealth-core`**: Núcleo analítico puro, 26 fontes oficiais, schemas Arrow, CSAP, APVP, H3/S2, FAIR e decodificadores nativos.
+- **`crates/brhealth-cli`**: Interface de linha de comando com subcomandos para cálculo de DV, CSAP, ROI, APVP, S2 e ingestão colunar completa.
 - **`crates/brhealth-ffi`**: Exportação plana C-ABI e Arrow C Data Interface para integração binária universal.
-- **`crates/brhealth-python`**: Bindings idiomáticos via PyO3 para Python 3.10+ com interoperabilidade direta para Polars e PyArrow.
+- **`crates/brhealth-python`**: Bindings idiomáticos via PyO3 com acessores semânticos, suporte Arrow PyCapsule e **DLPack** para tensores PyTorch.
 - **`crates/brhealth-jni`**: Bindings de alta performance para Java 21+ Project Panama (Foreign Function & Memory API).
 - **`bindings/cpp/include/brhealth.hpp`**: Wrapper moderno C++20 com RAII sobre a C-ABI.
 
-### 8. Mapeamento Universal de Ontologias Médicas
-- Equivalência transversal bidirecional **CID-10 $\leftrightarrow$ CID-11** (OMS).
+### 9. Harmonização Ontológica e Normalização Semântica
+- Mapeamento transversal histórico **CID-9 $\leftrightarrow$ CID-10** e transição **CID-10 $\leftrightarrow$ CID-11** (OMS).
 - Mapeador de conceitos **SNOMED-CT** para interoperabilidade FHIR R4.
+- Tabela de Procedimentos do SUS (**SIGTAP**) de 10 dígitos e identificação de eventos sentinela evitáveis (amputações, diálise).
+- Vocabulários Farmacêuticos Internacionais: Classificação **ATC** da OMS e mapeamento **RxNorm**.
 - Validação estrita de consistência biológica (incompatibilidades anatômicas de sexo e faixas etárias extremas).
 
-### 9. Decodificadores e Conectores de Rede
+### 10. Extensibilidade SPI e Fontes Declarativas
+- Loader dinâmico de manifestos declarativos **YAML/JSON** (`DeclarativeDataSource`), permitindo adicionar novas fontes sem recompilar o motor.
 - Decodificador vetorial nativo **Apache GeoArrow** (EPSG:4326).
 - Decodificador colunar para matrizes e grades climáticas **NetCDF / ERA5**.
 - Clientes assíncronos **Tokio FTP** (DATASUS) e **HTTP Streaming** com *stream hashing* SHA-256 no voo.
@@ -160,9 +175,10 @@ brhealth/
 │   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
 │   └── jvm/BRHealthEngine.java        # Interface Java 21 Panama FFM
 └── crates/
-    ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 21 Fontes
+    ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 26 Fontes
+    ├── brhealth-cli/                  # CLI nativo de alta performance
     ├── brhealth-ffi/                  # C-ABI plana e Arrow C Data Interface
-    ├── brhealth-python/               # Bindings PyO3 / Maturin para Python 3.10+
+    ├── brhealth-python/               # Bindings PyO3 com DLPack e Acessores Semânticos
     └── brhealth-jni/                  # Bindings Panama FFM para JVM
 ```
 
@@ -181,7 +197,7 @@ brhealth/
 # Compilar todo o workspace em modo release
 cargo build --release --workspace
 
-# Executar suíte completa de testes (67 testes automatizados)
+# Executar suíte completa de testes (100 testes automatizados)
 cargo test --workspace
 
 # Validar com Clippy estrito (Zero Warnings)
@@ -195,7 +211,7 @@ cargo bench --workspace
 
 ## Exemplos de Uso
 
-### Python (Polars / PyArrow Zero-Copy)
+### Python (Polars / PyArrow / PyTorch Zero-Copy)
 
 ```python
 import brhealth
@@ -210,13 +226,21 @@ if brhealth.is_csap("J45.0"):
     group_id = brhealth.classify_cid10("J45.0")
     print(f"Internação evitável identificada: Grupo {group_id} (Asma)")
 
-# 3. Mapeamento Transversal CID-10 -> CID-11
-icd11 = brhealth.map_icd10_to_icd11("I10")
-print(f"Hipertensão CID-10 (I10) mapeada para CID-11: {icd11}") # BA00
+# 3. Bioestatística: Anos Potenciais de Vida Perdidos (APVP / YLL)
+apvp = brhealth.compute_apvp([35, 42, 18, 55], cutoff_age=70)
+print(f"Total de APVP: {apvp} anos") # 130 anos
 
-# 4. Motor Analítico com 21 Fontes de Dados Registradas
+# 4. Mapeamento Transversal Histórico CID-9 -> CID-10 e CID-10 -> CID-11
+cid10 = brhealth.map_icd9_to_icd10("493") # J45 (Asma)
+cid11 = brhealth.map_icd10_to_icd11("I10") # BA00 (Hipertensão essencial)
+
+# 5. Motor Analítico com 26 Fontes Oficiais e Acessores Semânticos
 engine = brhealth.Engine()
-print(f"Fontes ativas no catálogo: {engine.source_count()}") # 21
+print(f"Fontes ativas no catálogo: {engine.source_count()}") # 26
+
+# Ingestão com autocomplete idiomático:
+# sih_batch = engine.hospital_morbidity.fetch(jurisdiction="3509502", years=[2022, 2023, 2024])
+# polars_df = sih_batch.to_polars()
 ```
 
 ### Rust (Domínio Puro)

@@ -286,29 +286,42 @@ brhealth/
 │   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
 │   └── jvm/BRHealthEngine.java        # Interface Java 21 Panama FFM
 ├── crates/
-│   ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 21 Fontes
+│   ├── brhealth-core/                 # Domínio Puro, Inbound/Outbound Ports, SPI e 26 Fontes Oficiais
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── domain/
 │   │       │   ├── application.rs     # BRHealthApplicationService
-│   │       │   ├── ports/
-│   │       │   │   ├── inbound.rs     # Driving Ports (Query, Spatial, Prov, CSAP, etc.)
-│   │       │   │   └── outbound.rs    # SPI Traits
+│   │       │   ├── declarative.rs     # Dynamic Declarative YAML/JSON Data Source Loader
+│   │       │   ├── provenance.rs      # FAIR W3C PROV-O & SHA-256 Hashing
+│   │       │   ├── registry.rs        # Source Registry & Pack Manager
+│   │       │   ├── analytics/
+│   │       │   │   ├── csap.rs        # CSAP Portaria 221/2008 & Primary Care ROI
+│   │       │   │   └── mortality.rs   # APVP / YLL & Age-Standardized Rates
+│   │       │   ├── spatial/
+│   │       │   │   ├── h3.rs          # Uber H3 Hexagonal Discrete Indexing
+│   │       │   │   ├── s2.rs          # Google S2 Geometry Discrete Indexing
+│   │       │   │   └── join.rs        # Columnar Vectorized Spatial Joins
 │   │       │   ├── transforms/
 │   │       │   │   ├── ibge.rs        # Luhn Modulo 10 DV & Transições 1970-2026
-│   │       │   │   └── ontology.rs    # CID-10 <-> CID-11, SNOMED & Consistência Biológica
-│   │       │   └── ...
+│   │       │   │   ├── ontology.rs    # CID-9 <-> CID-10 <-> CID-11, SNOMED & Consistência
+│   │       │   │   ├── sigtap.rs      # SUS SIGTAP 10 Dígitos & Eventos Sentinela
+│   │       │   │   └── pharmacy.rs    # OMS ATC & RxNorm Active Ingredient Mapping
+│   │       │   └── ports/
+│   │       │       ├── inbound.rs     # Driving Ports (Query, Spatial, Prov, CSAP, etc.)
+│   │       │       └── outbound.rs    # Outbound SPI Traits
 │   │       ├── decoders/
-│   │       │   ├── blast.rs           # Descompressor Nativo PKWARE DCL (.dbc)
-│   │       │   ├── dbf.rs             # Fast DBF para Arrow RecordBatch
+│   │       │   ├── blast/             # Descompressor Nativo PKWARE DCL (.dbc)
+│   │       │   ├── dbf/               # Fast DBF para Arrow RecordBatch
 │   │       │   ├── geoarrow.rs        # Apache GeoArrow Points
 │   │       │   └── netcdf.rs          # Matrizes Climáticas em Grade
-│   │       └── infrastructure/
-│   │           ├── transport/         # Tokio FTP DATASUS, HTTP Streaming, Local File
-│   │           ├── state/             # DiskSyncState (Auditoria de Snapshots)
-│   │           └── storage/           # Hive-Parquet Cache com Time-Travel
+│   │       ├── infrastructure/
+│   │       │   ├── transport/         # Tokio FTP DATASUS, HTTP Streaming, Local File
+│   │       │   ├── state/             # SQLite Sync State & Disk Sync State (Auditoria)
+│   │       │   └── storage/           # Hive-Parquet Cache com Time-Travel
+│   │       └── sources/               # 26 Fontes Oficiais (20 Brasil + 6 Global)
+│   ├── brhealth-cli/                  # CLI Nativo de Alta Performance (Subcomandos analíticos)
 │   ├── brhealth-ffi/                  # C-ABI plana e Arrow C Data Interface
-│   ├── brhealth-python/               # Bindings PyO3 / Maturin para Python 3.10+
+│   ├── brhealth-python/               # Bindings PyO3 com DLPack e Acessores Semânticos
 │   └── brhealth-jni/                  # Bindings Java 21+ Project Panama FFM
 └── .agents/
     ├── rules/
