@@ -26,6 +26,12 @@ pub enum PortError {
 
     #[error("Erro de validação ou esquema: {0}")]
     ValidationError(String),
+
+    #[error("Incompatibilidade de esquema de dados: {0}")]
+    SchemaMismatch(String),
+
+    #[error("Erro durante transformação analítica de dados: {0}")]
+    TransformationError(String),
 }
 
 pub trait DecompressorPort: Send + Sync {
