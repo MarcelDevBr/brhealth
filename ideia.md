@@ -8,6 +8,7 @@
 
 1. [Visão Geral e Posicionamento do Projeto](#1-visão-geral-e-posicionamento-do-projeto)
    - [1.1 Premissas Centrais de Engenharia e Rigor Científico](#11-premissas-centrais-de-engenharia-e-rigor-científico)
+   - [1.2 Filosofia de Bem Público Digital, Licenciamento AGPLv3 e Modelo de Duplo Licenciamento](#12-filosofia-de-bem-público-digital-licenciamento-agplv3-e-modelo-de-duplo-licenciamento)
 2. [Alcance, Utilidade Prática e Proposta de Valor Estratégica](#2-alcance-utilidade-prática-e-proposta-de-valor-estratégica)
    - [2.1 Matriz Comparativa: Status Quo vs. BRHealth](#21-matriz-comparativa-status-quo-vs-brhealth)
    - [2.2 Dimensões de Alcance](#22-dimensões-de-alcance)
@@ -38,7 +39,10 @@
     - [12.1 Python: Cruzamento de Dados Locais com Reanálise Climática e ML (Zero-Copy com Polars e PyTorch via DLPack)](#121-python-cruzamento-de-dados-locais-com-reanálise-climática-global-era5-e-ml)
     - [12.2 C++20: Processamento de Alto Desempenho e Borda](#122-c20-processamento-de-alto-desempenho-e-borda)
     - [12.3 Kotlin e Java 21+: Interoperabilidade com Project Panama (FFM API)](#123-kotlin-e-java-21-interoperabilidade-com-project-panama-ffm-api)
-13. [Identificadores Oficiais e Registro de Pacotes](#13-identificadores-oficiais-e-registro-de-pacotes)
+13. [Governança, Autoria, Licenciamento e Citação Científica](#13-governança-autoria-licenciamento-e-citação-científica)
+    - [13.1 Autoria e Identificador de Citação (`CITATION.cff`)](#131-autoria-e-identificador-de-citação-citationcff)
+    - [13.2 Registro de Pacotes nos Ecossistemas Oficiais e Duplo Licenciamento](#132-registro-de-pacotes-nos-ecossistemas-oficiais-e-duplo-licenciamento)
+    - [13.3 Validade Jurídica da AGPLv3, Proteção contra Uso Irregular e Remédios Legais](#133-validade-jurídica-da-agplv3-proteção-contra-uso-irregular-e-remédios-legais)
 
 ---
 
@@ -85,6 +89,28 @@ O motor atua como fundação técnica para estudos de **Saúde Global** (*Global
 6. **Desacoplamento Extremo de Fontes (Pluggable SPI, Regional Packs & Declarative Manifests)**:
    - Nenhuma fonte de dados ou regra nacional é codificada de forma rígida (*hardcoded*) no fluxo analítico central.
    - Cada fonte é um componente autônomo registrado dinamicamente através do padrão de Plugin / Provedor de Serviço (**SPI**) e orquestrado por manifestos declarativos versionados ou pacotes regionais (*Country Packs*).
+
+---
+
+### 1.2 Filosofia de Bem Público Digital, Licenciamento AGPLv3 e Modelo de Duplo Licenciamento
+
+O BRHealth foi fundado sob a premissa de ser um **Bem Público Digital (*Digital Public Good*)**, aberto, transparente e irrestrito para o avanço da ciência e da saúde coletiva, ao mesmo tempo em que protege o trabalho do seu criador contra apropriação predatória corporativa:
+
+- **Acesso Democrático e Universal (100% Gratuito para a Sociedade)**:
+  - Estudantes, pesquisadores, universidades, prefeituras, hospitais do SUS e instituições filantrópicas têm acesso irrestrito e gratuito ao código-fonte e binários.
+- **Licenciamento Principal: GNU Affero General Public License v3 (AGPLv3)**:
+  - Adota a licença **AGPLv3**, o padrão ouro de proteção para softwares executados em rede e em nuvem (*Network Copyleft*).
+  - **Reciprocidade Estrita contra o "Fechamento" de Código**: Qualquer entidade ou empresa que utilize, modifique ou disponibilize o BRHealth via rede/serviço (SaaS) **é obrigada por lei a disponibilizar 100% do código-fonte das melhorias e sistemas derivados sob a mesma licença AGPLv3**. Isso impede que grandes corporações privatizem o esforço comunitário sem devolver nada à sociedade.
+- **Opção de Licenciamento Comercial Alternativo (*Dual-Licensing*)**:
+  - Empresas privadas que desejem embutir o BRHealth em softwares proprietários comerciais fechados (sem a obrigação de abrir o código-fonte da sua aplicação) podem adquirir uma **Licença Comercial Proprietária** diretamente do autor e detentor dos direitos autorais (**Marcel / MarcelDevBr**).
+  - Esse modelo híbrido equilibra o impacto social máximo com a sustentabilidade financeira justa do criador.
+- **Cláusula de Proteção Autoral Inalienável**:
+  - Tanto sob a AGPLv3 quanto em licenças comerciais, o aviso de direitos autorais original é juridicamente perpétuo:
+    ```text
+    Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+    ```
+- **Citação Científica e Identificação Internacional (DOI)**:
+  - Pesquisadores que utilizarem o BRHealth devem citar a autoria original conforme especificado no arquivo [`CITATION.cff`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/CITATION.cff) e no registro permanente **DOI** (Zenodo/CERN).
 
 ---
 
@@ -152,10 +178,11 @@ mindmap
    - Criação de coortes ecológicas e séries temporais de 20+ anos de mortalidade (SIM) cruzadas com anomalias de temperatura (ERA5) e poluição por queimadas ($PM_{2.5}$) em minutos, gerando o manifesto FAIR exigido por periódicos como *The Lancet* e *Nature*.
 2. **Vigilância Epidemiológica e Sala de Situação em Tempo Real (SUS / Municípios / OPAS)**:
    - Detecção antecipada de surtos de arboviroses (Dengue, Chikungunya, Zika, Oropouche) ao correlacionar notificações parciais com anomalias de precipitação e calor em células H3 de resolução fina.
-3. **Planejamento de Saúde e Inteligência Assistencial (Gestão Pública e Privada)**:
-   - Análise de desertos assistenciais e dimensionamento de leitos de UTI via CNES e SIHSUS, identificando fluxos de encaminhamento intermunicipais e tempo de trânsito de pacientes.
+3. **Economia da Saúde e Auditoria de Gastos Evitáveis (CSAP)**:
+   - Identificação de custos hospitalares gerados por falhas na atenção básica (como internações e amputações por Diabetes Mellitus descompensado), demonstrando o **Retorno sobre o Investimento (ROI)** da Atenção Primária.
+   - *Consulte o caso de uso detalhado e script completo em: [exemplo_analise_custos_csap.md](file:///home/marcel/Desenvolvimento/Projetos/brhealth/exemplo_analise_custos_csap.md).*
 4. **Alimentação de Modelos Fundacionais de Inteligência Artificial em Saúde**:
-   - Ingestão contínua de milhões de registros hospitalares e ambulatoriais diretamente para tensores PyTorch via Arrow C Data Interface sem sobrecarga de serialização.
+   - Ingestão contínua de milhões de registros hospitalares e ambulatoriais diretamente para tensores PyTorch via Arrow C Data Interface / DLPack sem sobrecarga de serialização.
 
 ---
 
@@ -1020,12 +1047,89 @@ class HealthEngine : AutoCloseable {
 
 ---
 
-## 13. Identificadores Oficiais e Registro de Pacotes
+## 13. Governança, Autoria, Licenciamento e Citação Científica
 
-| Ecossistema | Pacote / Artefato | Gerenciador / Registro |
-| :--- | :--- | :--- |
-| **Rust** | `brhealth` / `brhealth-core` | [Crates.io](https://crates.io) |
-| **Python** | `brhealth` | [PyPI](https://pypi.org) |
-| **Java / Kotlin** | `io.github.brhealth:brhealth-jvm` | [Maven Central](https://central.sonatype.com) |
-| **C++** | `find_package(brhealth CONFIG REQUIRED)` | [CMake](https://cmake.org) / [vcpkg](https://vcpkg.io) / [Conan](https://conan.io) |
-| **R (Roadmap)** | `brhealth` | [CRAN](https://cran.r-project.org) |
+### 13.1 Autoria e Identificador de Citação (`CITATION.cff`)
+
+O projeto é de autoria e criação original de **Marcel (`MarcelDevBr`)**. Para garantir o reconhecimento perpétuo da autoria em artigos acadêmicos, teses e documentos de políticas públicas, o repositório adota o padrão formal de citação **Citation File Format (`CITATION.cff`)**:
+
+```yaml
+cff-version: 1.2.0
+message: "Se você utilizar o BRHealth em pesquisas acadêmicas, relatórios governamentais ou softwares derivados, cite conforme abaixo:"
+title: "BRHealth: Motor de Alta Performance para Dados de Saúde Coletiva e Determinantes Sociais do Brasil"
+authors:
+  - family-names: "DevBr"
+    given-names: "Marcel"
+    alias: "MarcelDevBr"
+    affiliation: "BRHealth Open Source Initiative"
+url: "https://github.com/MarcelDevBr/brhealth"
+repository-code: "https://github.com/MarcelDevBr/brhealth"
+license: "AGPL-3.0-or-later"
+keywords:
+  - "epidemiology"
+  - "public-health"
+  - "datasus"
+  - "rust"
+  - "apache-arrow"
+  - "global-health"
+  - "planetary-health"
+  - "fair-data"
+```
+
+#### Exemplo de Citação em BibTeX para Publicações:
+```bibtex
+@software{brhealth2026,
+  author = {Marcel},
+  title = {BRHealth: High-Performance Columnar Engine for Public Health and Social Determinants of Health},
+  url = {https://github.com/MarcelDevBr/brhealth},
+  version = {0.1.0},
+  year = {2026}
+}
+```
+
+---
+
+### 13.2 Registro de Pacotes nos Ecossistemas Oficiais e Duplo Licenciamento
+
+O código-fonte público e os pacotes oficiais são distribuídos sob a **GNU Affero General Public License v3 (AGPLv3)**. Para entidades comerciais que necessitam de distribuição em soluções proprietárias fechadas sem a obrigação do *Network Copyleft*, licenças comerciais podem ser solicitadas diretamente ao autor.
+
+| Ecossistema | Pacote / Artefato | Gerenciador / Registro | Licença Primária | Opção Comercial |
+| :--- | :--- | :--- | :--- | :--- |
+| **Rust** | `brhealth` / `brhealth-core` | [Crates.io](https://crates.io) | AGPL-3.0-or-later | Sob consulta com o autor |
+| **Python** | `brhealth` | [PyPI](https://pypi.org) | AGPL-3.0-or-later | Sob consulta com o autor |
+| **Java / Kotlin** | `io.github.brhealth:brhealth-jvm` | [Maven Central](https://central.sonatype.com) | AGPL-3.0-or-later | Sob consulta com o autor |
+| **C++** | `find_package(brhealth CONFIG REQUIRED)` | [CMake](https://cmake.org) / [vcpkg](https://vcpkg.io) | AGPL-3.0-or-later | Sob consulta com o autor |
+| **R (Roadmap)** | `brhealth` | [CRAN](https://cran.r-project.org) | AGPL-3.0-or-later | Sob consulta com o autor |
+
+---
+
+### 13.3 Validade Jurídica da AGPLv3, Proteção contra Uso Irregular e Remédios Legais
+
+A escolha da licença **GNU AGPLv3** combinada ao modelo de duplo licenciamento confere proteção jurídica robusta e executável internacionalmente contra apropriações indevidas ou uso em desacordo com as regras de reciprocidade:
+
+#### 1. Fundamentação Legal no Brasil
+- **Lei de Software (Lei nº 9.609/1998)** e **Lei de Direitos Autorais (Lei nº 9.610/1998)**: O código-fonte é protegido como obra intelectual equiparada a obra literária. O art. 24 da Lei 9.610/98 estabelece que os direitos morais do autor (reivindicar a autoria e ter seu nome indicado) são inalienáveis e irrenunciáveis. A proteção independe de registro formal.
+- **Natureza Contratual**: Nos termos do Código Civil Brasileiro (art. 421 e seguintes), a AGPLv3 opera como um contrato de licença de uso por adesão. Qualquer entidade que utilize o software vincula-se formalmente às suas condições.
+
+#### 2. Jurisprudência e Precedentes Internacionais
+A validade jurídica executável da GPL/AGPL foi reiteradamente confirmada em cortes internacionais:
+- ***Artifex Software v. Hancom* (Corte Federal dos EUA, 2017)**: O tribunal confirmou expressamente que a licença AGPLv3 é um contrato legal válido e executável, e que o uso do software em produto proprietário sem a abertura do código correspondente ou sem a compra de licença comercial constitui infração direta de direitos autorais (*Copyright Infringement*).
+- ***Jacobsen v. Katzer* (Corte Federal de Apelações dos EUA, 2008)**: Firmou jurisprudência definitiva de que descumprir as condições de uma licença de software livre não é mera quebra contratual, mas violação de direito autoral, ensejando concessão de tutela de urgência (liminares) e indenização pecuniária.
+- ***Welte v. Sitecom / D-Link* (Tribunais da Alemanha / gpl-violations.org)**: Dezenas de decisões judiciais forçaram grandes fabricantes de hardware e software a interromper a distribuição de produtos e indenizar os autores por violar licenças da família GNU.
+
+#### 3. Consequências do Uso Irregular e Remédios Jurídicos
+Caso uma empresa ou entidade utilize o BRHealth em desacordo com os termos da AGPLv3 (por exemplo, comercializando um serviço fechado em nuvem sem disponibilizar o código-fonte correspondente ou omitindo a autoria de Marcel):
+1. **Rescisão Automática da Licença (Seção 8 da AGPLv3)**: O direito de uso do infrator é extinto de forma imediata e automática. A partir desse momento, qualquer uso continuado do software passa a caracterizar **pirataria e uso não autorizado**.
+2. **Notificação Extrajudicial (*Cease and Desist*)**: Notificação formal concedendo prazo legal para que o infrator opte por: (a) abrir publicamente 100% do código sob AGPLv3, (b) firmar contrato de Licença Comercial retroativa com o autor, ou (c) cessar imediatamente todo o uso com remoção do sistema do ar.
+3. **Ações Judiciais Cabíveis**:
+   - **Tutela Provisória de Urgência (Liminar)**: Suspensão imediata das atividades do software, plataforma ou serviço infrator sob pena de multa diária (*astreintes*).
+   - **Indenização por Perdas e Danos Materiais**: Cobrança judicial dos valores de mercado equivalentes ao que deveria ter sido pago por licenças comerciais durante todo o período de exploração indevida.
+   - **Indenização por Danos Morais**: Compensação pela apropriação indevida e violação de direitos morais de autor (art. 24 da Lei 9.610/98).
+
+#### 4. Blindagem Probatória de Anterioridade
+Para assegurar prova cabal e irrefutável em eventuais litígios, o projeto adota tripla rastreabilidade:
+- Histórico público contínuo de commits criptografados via Git e GitHub.
+- Certificação imutável com carimbo de tempo (*timestamp*) e atribuição de **DOI permanente via Zenodo/CERN**.
+- Depósito facultativo de programa de computador no **INPI (Instituto Nacional da Propriedade Industrial)**.
+
+
