@@ -44,6 +44,26 @@ impl CanonicalSchemas {
         ]))
     }
 
+    /// Schema Canônico para Estatísticas Vitais de Nascidos Vivos (SINASC)
+    pub fn canonical_birth_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("record_id", DataType::Utf8, false),
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("birth_date", DataType::Date32, false),
+            Field::new("birth_weight_grams", DataType::UInt16, true),
+            Field::new("gestational_weeks", DataType::UInt8, true),
+            Field::new("apgar_1min", DataType::UInt8, true),
+            Field::new("apgar_5min", DataType::UInt8, true),
+            Field::new("sex", DataType::Utf8, true),
+            Field::new("race_ethnicity", DataType::Utf8, true),
+            Field::new("mother_age_years", DataType::UInt8, true),
+            Field::new("delivery_type", DataType::Utf8, true),
+            Field::new("congenital_anomaly", DataType::Boolean, true),
+        ]))
+    }
+
     /// Schema Canônico para Reanálise Climática e Meteorologia (INMET / ERA5)
     pub fn canonical_climate_schema() -> Arc<Schema> {
         Arc::new(Schema::new(vec![

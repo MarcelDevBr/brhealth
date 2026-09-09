@@ -3,3 +3,11 @@
 // or a commercial license agreement directly with the author.
 
 //! Adaptadores de infraestrutura e I/O (Transporte FTP/HTTP, Cache Hive-Parquet)
+
+pub mod cache;
+pub mod state;
+pub mod transport;
+
+pub use cache::MemoryCache;
+pub use state::MemorySyncState;
+pub use transport::{FileTransport, MockTransport};
