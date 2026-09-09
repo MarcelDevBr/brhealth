@@ -2,11 +2,6 @@
 // Licensed under the GNU Affero General Public License v3 (AGPLv3)
 // or a commercial license agreement directly with the author.
 
-pub mod analytics;
-pub mod ports;
-pub mod provenance;
-pub mod registry;
-pub mod schema;
-pub mod source_spi;
-pub mod spatial;
-pub mod transforms;
+//! Submódulo de analítica avançada em saúde coletiva e bioestatística.
+
+pub mod csap;
