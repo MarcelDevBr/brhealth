@@ -32,7 +32,6 @@ h3o = "0.11"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 bytes = "1.10"
 serde_yaml = "0.9"
-rusqlite = { version = "0.32", features = ["bundled"] }
 
 [profile.release]
 opt-level = 3

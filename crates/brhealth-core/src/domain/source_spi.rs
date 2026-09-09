@@ -74,4 +74,13 @@ pub trait HealthDataSourceSPI: Send + Sync + 'static {
         params: &DataQueryParams,
         context: &SourceExecutionContext,
     ) -> Result<Vec<RecordBatch>, PortError>;
+
+    /// Retorna URIs alternativas (mirrors) para a mesma consulta.
+    ///
+    /// Implementação padrão retorna lista vazia. Fontes individuais
+    /// podem sobrescrever para declarar mirrors HTTP, FTP alternativos
+    /// ou endpoints regionais de redundância.
+    fn mirror_uris(&self, _params: &DataQueryParams) -> Vec<String> {
+        Vec::new()
+    }
 }

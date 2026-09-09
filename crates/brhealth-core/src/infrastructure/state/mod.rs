@@ -5,10 +5,8 @@
 //! Adaptadores de estado de sincronização e auditoria de snapshots.
 
 pub mod disk;
-pub mod sqlite;
 
 pub use disk::{DiskSyncState, PersistentSnapshotEntry};
-pub use sqlite::SqliteSyncState;
 
 use std::collections::HashMap;
 use std::sync::RwLock;

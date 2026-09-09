@@ -213,6 +213,19 @@ impl HealthDataSourceSPI for SimDataSource {
         ))
     }
 
+    fn mirror_uris(&self, params: &DataQueryParams) -> Vec<String> {
+        let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
+        let year = params.year;
+        vec![
+            format!(
+                "https://datasus.saude.gov.br/transferencia-download-de-arquivos/dissemin/publicos/SIM/CID10/DORES/DO{uf}{year}.dbc"
+            ),
+            format!(
+                "ftp://ftp2.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/DO{uf}{year}.dbc"
+            ),
+        ]
+    }
+
     async fn fetch_and_decode(
         &self,
         params: &DataQueryParams,

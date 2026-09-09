@@ -140,7 +140,7 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 ### 7. Governança FAIR, Time-Travel e Persistência Híbrida
 - Linhagem científica rastreável com manifestos **W3C PROV-O** em JSON-LD e hashes SHA-256 calculados no voo.
 - Armazenamento particionado em **Apache Hive-Parquet** com suporte a consultas históricas reproduzíveis bit a bit (`as_of_snapshot`).
-- Backend relacional embutido **SQLite Sync State** (`SqliteSyncState`) e persistência atômica em disco (`DiskSyncState`) para auditoria determinística.
+- Persistência atômica em disco **Disk Sync State** (`DiskSyncState`) com locking concorrente para auditoria determinística de snapshots.
 
 ### 8. Ecossistema Cross-Language e Interoperabilidade Zero-Copy
 - **`crates/brhealth-core`**: Núcleo analítico puro, 26 fontes oficiais, schemas Arrow, CSAP, APVP, H3/S2, FAIR e decodificadores nativos.

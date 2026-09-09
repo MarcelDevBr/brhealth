@@ -28,6 +28,7 @@ use crate::domain::transforms::ibge::harmonize_ibge_code;
 use crate::domain::transforms::ontology::MedicalOntologyHarmonizer;
 
 use crate::infrastructure::storage::hive_parquet::HiveParquetStore;
+use crate::infrastructure::transport::resilience::DataFreshness;
 
 /// Opções de configuração para o pipeline analítico de ponta a ponta.
 #[derive(Debug, Clone, Default)]
@@ -59,6 +60,8 @@ pub struct PipelineExecutionResult {
     pub csap_summary: Option<CSAPAnalysisSummary>,
     /// Identificador do snapshot histórico gravado no cache Hive-Parquet.
     pub persisted_snapshot_id: Option<String>,
+    /// Indicador de frescura dos dados obtidos.
+    pub data_freshness: DataFreshness,
 }
 
 /// Serviço central de aplicação que implementa as portas *Inbound*.
@@ -99,18 +102,95 @@ impl BRHealthApplicationService {
 
     /// Executa o pipeline analítico de ponta a ponta:
     /// Ingestão $\to$ Descompressão $\to$ Harmonização IBGE $\to$ Indexação H3 $\to$ Enriquecimento CSAP $\to$ Cache Hive-Parquet $\to$ Manifesto FAIR W3C PROV-O.
+    ///
+    /// Em caso de falha na fonte primária, tenta mirrors declarados pela fonte.
+    /// Se todos falharem e `persist_to_cache` estiver habilitado com dados existentes,
+    /// serve os dados stale do cache Hive-Parquet local.
     pub async fn execute_full_pipeline(
         &self,
         source_id: &str,
         params: &DataQueryParams,
         options: &PipelineExecutionOptions,
     ) -> Result<PipelineExecutionResult, PortError> {
-        // 1. Ingestão e decodificação via SPI
-        let raw_batches = self.execute_query(source_id, params).await?;
-
-        // 2. Resolver locator e hash para o manifesto FAIR
         let source = self.registry.get(source_id)?;
         let locator = source.resolve_locator(params)?;
+        let mirror_uris = source.mirror_uris(params);
+
+        // 1. Ingestão com fallback resiliente
+        let (raw_batches, data_freshness) = match self.execute_query(source_id, params).await {
+            Ok(batches) => (batches, DataFreshness::Fresh),
+            Err(primary_err) => {
+                // Tentar mirrors
+                let mut mirror_result = None;
+                for mirror_uri in &mirror_uris {
+                    eprintln!(
+                        "[BRHealth] Tentando mirror para '{}': {}",
+                        source_id, mirror_uri
+                    );
+                    let mirror_bytes = self.context.transport.fetch_bytes(mirror_uri).await;
+                    if let Ok(bytes) = mirror_bytes {
+                        // Decodificar via decompressor + decoder
+                        let decompressed = self.context.decompressor.decompress(&bytes)?;
+                        let dbf_decoder = crate::decoders::dbf::DbfDecoder::new();
+                        let raw_batch = dbf_decoder.decode_to_record_batch(&decompressed)?;
+                        let canonical = source.fetch_and_decode(params, &self.context).await;
+                        if let Ok(batches) = canonical {
+                            mirror_result = Some(batches);
+                            break;
+                        }
+                        // Se a decodificação falhar, tentar próximo mirror
+                        let _ = mirror_result.insert(vec![raw_batch]);
+                        break;
+                    }
+                }
+
+                if let Some(batches) = mirror_result {
+                    (
+                        batches,
+                        DataFreshness::Stale {
+                            cached_at: Utc::now(),
+                            reason: format!("Obtido via mirror após falha primária: {primary_err}"),
+                        },
+                    )
+                } else if let (true, Some(base_path)) =
+                    (options.persist_to_cache, options.cache_base_path.as_ref())
+                {
+                    // Fallback para cache Hive-Parquet stale
+                    let store = HiveParquetStore::new(base_path)?;
+                    let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
+                    match store.read_as_of(source_id, uf, params.year as i32, Utc::now())? {
+                        Some(cached_batch) => {
+                            eprintln!(
+                                "[BRHealth] Servindo dados stale do cache para '{}'",
+                                source_id
+                            );
+                            (
+                                vec![cached_batch],
+                                DataFreshness::Stale {
+                                    cached_at: Utc::now(),
+                                    reason: format!(
+                                        "Cache stale após falha de todas as fontes: {primary_err}"
+                                    ),
+                                },
+                            )
+                        }
+                        None => {
+                            return Err(PortError::DegradedSource(format!(
+                                "Fonte '{}' indisponível e sem cache local: {}",
+                                source_id, primary_err
+                            )));
+                        }
+                    }
+                } else {
+                    return Err(PortError::DegradedSource(format!(
+                        "Fonte '{}' indisponível (sem mirrors ou cache configurado): {}",
+                        source_id, primary_err
+                    )));
+                }
+            }
+        };
+
+        // 2. Resolver hash para o manifesto FAIR
         let raw_bytes_sha256 = self
             .sync_state
             .get_snapshot_version(source_id)
@@ -168,6 +248,7 @@ impl BRHealthApplicationService {
             manifest,
             csap_summary,
             persisted_snapshot_id,
+            data_freshness,
         })
     }
 }

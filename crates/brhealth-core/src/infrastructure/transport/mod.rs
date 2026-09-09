@@ -5,10 +5,14 @@
 //! Adaptadores de transporte para download e leitura de dados brutos.
 
 pub mod ftp;
+pub mod health_check;
 pub mod http;
+pub mod resilience;
 
 pub use ftp::{AsyncFtpTransport, FtpClientConfig};
+pub use health_check::{HealthReport, SourceHealthChecker, SourceHealthEntry, SourceStatus};
 pub use http::{AsyncHttpTransport, HttpClientConfig};
+pub use resilience::{DataFreshness, FetchOutcome, ResilientTransport, ResiliencePolicy};
 
 use std::collections::HashMap;
 use std::path::Path;

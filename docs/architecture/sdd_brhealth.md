@@ -87,14 +87,14 @@ C4Container
     Container(jvm_lib, "brhealth-jni", "Java 21+ Panama FFM", "Bindings nativos para Kotlin e ecossistema JVM sem JNI lento")
 
     ContainerDb(cache_hive, "Local Storage Cache", "Apache Parquet / Hive", "Armazenamento particionado em disco com leitura via Mmap")
-    ContainerDb(sqlite_sync, "Sync & Provenance Store", "SQLite", "Controle de versões de snapshots, hashes SHA-256 e grafo PROV-O")
+    ContainerDb(disk_sync, "Sync & Provenance Store", "JSON Atômico (DiskSyncState)", "Controle de versões de snapshots, hashes SHA-256 e grafo PROV-O")
 
     Rel(py_lib, core, "Invoca funções internas e recebe ponteiros Arrow via", "In-Process FFI Zero-Copy")
     Rel(ffi_lib, core, "Expõe C-ABI a partir de", "Static / Shared Lib")
     Rel(jvm_lib, core, "Mapeia memória com Project Panama via", "Foreign Function & Memory API")
 
     Rel(core, cache_hive, "Lê e grava snapshots particionados via", "Arrow Parquet Writer / Reader")
-    Rel(core, sqlite_sync, "Persiste metadados de auditoria e time-travel via", "SQL assíncrono")
+    Rel(core, disk_sync, "Persiste metadados de auditoria e time-travel via", "JSON atômico com locking")
 ```
 
 ### 2.3 Nível 3: Diagrama de Componentes (Hexagonal DOD)
@@ -316,7 +316,7 @@ brhealth/
 │   │       │   └── netcdf.rs          # Matrizes Climáticas em Grade
 │   │       ├── infrastructure/
 │   │       │   ├── transport/         # Tokio FTP DATASUS, HTTP Streaming, Local File
-│   │       │   ├── state/             # SQLite Sync State & Disk Sync State (Auditoria)
+│   │       │   ├── state/             # Disk Sync State (Auditoria JSON Atômica com Locking)
 │   │       │   └── storage/           # Hive-Parquet Cache com Time-Travel
 │   │       └── sources/               # 26 Fontes Oficiais (20 Brasil + 6 Global)
 │   ├── brhealth-cli/                  # CLI Nativo de Alta Performance (Subcomandos analíticos)

@@ -32,6 +32,9 @@ pub enum PortError {
 
     #[error("Erro durante transformação analítica de dados: {0}")]
     TransformationError(String),
+
+    #[error("Fonte degradada (dados stale do cache local): {0}")]
+    DegradedSource(String),
 }
 
 pub trait DecompressorPort: Send + Sync {

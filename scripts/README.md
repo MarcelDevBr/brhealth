@@ -36,7 +36,7 @@ python3 scripts/run_all_tests.py
 
 ## 2. Limpeza de Caches e Temporários
 
-Remove com segurança e de forma idempotente os caches analíticos temporários, particionamentos transitórios Hive-Parquet, artefatos Python e bancos de dados SQLite transitórios. Detecta automaticamente os caminhos de temp específicos do OS (`%LOCALAPPDATA%\Temp` no Windows, `/var/folders` no macOS e `/tmp` no Linux).
+Remove com segurança e de forma idempotente os caches analíticos temporários, particionamentos transitórios Hive-Parquet e artefatos temporários de Python. Detecta automaticamente os caminhos de temp específicos do OS (`%LOCALAPPDATA%\Temp` no Windows, `/var/folders` no macOS e `/tmp` no Linux).
 
 ```bash
 # 1. Modo Universal via Python (Linux, macOS, Windows)

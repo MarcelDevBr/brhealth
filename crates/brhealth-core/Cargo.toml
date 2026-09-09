@@ -23,7 +23,6 @@ h3o = { workspace = true }
 reqwest = { workspace = true }
 bytes = { workspace = true }
 serde_yaml = { workspace = true }
-rusqlite = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.12"

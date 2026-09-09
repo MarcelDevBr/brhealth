@@ -233,7 +233,7 @@ flowchart TD
         decompPort["DecompressorPort (Blast DBC / Zstd / Gzip / 7z)"]
         decPort["TabularDecoderPort (DBF / CSV / GeoArrow / NetCDF)"]
         cachePort["LocalCachePort (Hive-Parquet / Mmap)"]
-        syncPort["SyncStatePort (Snapshots, Hashes e SQLite State)"]
+        syncPort["SyncStatePort (Snapshots, Hashes e DiskSyncState)"]
     end
 
     subgraph DrivenAdapters["Plugged Driven Adapters (Modular SPI Plugins)"]
@@ -721,7 +721,7 @@ brhealth/
 │   │       │   ├── ftp_client.rs  # Cliente assíncrono FTP do DATASUS (Tokio)
 │   │       │   ├── http_client.rs # Cliente Tokio HTTP para APIs internacionais
 │   │       │   ├── local_cache.rs # Repositório Parquet com particionamento Hive
-│   │       │   └── sync_store.rs  # Banco de metadados SQLite para snapshots
+│   │       │   └── sync_store.rs  # Persistência atômica JSON para snapshots (DiskSyncState)
 │   │       └── arrow_util.rs      # Pontes da Arrow C Data Interface
 │   ├── brhealth-python/           # ADAPTADOR: CPython via PyO3
 │   ├── brhealth-ffi/              # ADAPTADOR: C-ABI plana para C++20

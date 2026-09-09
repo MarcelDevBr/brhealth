@@ -31,4 +31,9 @@ pub use domain::spatial::{
 pub use domain::transforms::ibge::{
     calculate_ibge_dv, harmonize_ibge_code, reconcile_historical_ibge_code,
 };
+pub use infrastructure::transport::{
+    DataFreshness, FetchOutcome, HealthReport, ResilientTransport, ResiliencePolicy,
+    SourceHealthChecker, SourceHealthEntry, SourceStatus,
+};
 pub use sources::{create_pack_brasil, create_pack_global};
+

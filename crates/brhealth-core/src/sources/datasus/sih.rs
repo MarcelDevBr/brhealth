@@ -213,6 +213,20 @@ impl HealthDataSourceSPI for SihDataSource {
         ))
     }
 
+    fn mirror_uris(&self, params: &DataQueryParams) -> Vec<String> {
+        let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
+        let year_2digits = params.year % 100;
+        let month = params.month.unwrap_or(1);
+        vec![
+            format!(
+                "https://datasus.saude.gov.br/transferencia-download-de-arquivos/dissemin/publicos/SIHSUS/200801_/Dados/RD{uf}{year_2digits:02}{month:02}.dbc"
+            ),
+            format!(
+                "ftp://ftp2.datasus.gov.br/dissemin/publicos/SIHSUS/200801_/Dados/RD{uf}{year_2digits:02}{month:02}.dbc"
+            ),
+        ]
+    }
+
     async fn fetch_and_decode(
         &self,
         params: &DataQueryParams,

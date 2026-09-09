@@ -80,7 +80,7 @@ done
 find /tmp -maxdepth 1 -name "brhealth*" -exec rm -rf {} + 2>/dev/null || true
 echo -e "${GREEN}✓ Caches em /tmp limpos com sucesso.${RESET}"
 
-# 2. Caches locais do repositório (Hive-Parquet, SQLite e downloads locais)
+# 2. Caches locais do repositório (Hive-Parquet e downloads locais)
 echo -e "\n${BOLD}${YELLOW}[2/4] Removendo caches analíticos locais...${RESET}"
 LOCAL_TARGETS=(
     "${ROOT_DIR}/.brhealth_cache"
@@ -97,9 +97,7 @@ for target in "${LOCAL_TARGETS[@]}"; do
     fi
 done
 
-# Remover arquivos SQLite temporários de sync de teste
-find "${ROOT_DIR}" -maxdepth 3 -type f \( -name "*_sync_state.db*" -o -name "test_sync.sqlite*" \) -exec rm -f {} + 2>/dev/null || true
-echo -e "${GREEN}✓ Caches analíticos e arquivos de estado transitório limpos.${RESET}"
+echo -e "${GREEN}✓ Caches analíticos locais em Parquet limpos.${RESET}"
 
 # 3. Caches de ambiente Python
 echo -e "\n${BOLD}${YELLOW}[3/4] Removendo caches de Python e testes...${RESET}"

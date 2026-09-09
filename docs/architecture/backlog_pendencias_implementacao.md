@@ -2,7 +2,7 @@
 
 > **Documento de Auditoria e Rastreabilidade de Funcionalidades Implementadas**  
 > **Referência:** Confronto entre [`AGENTS.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/AGENTS.md), [`README.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/README.md), [`sdd_brhealth.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/docs/architecture/sdd_brhealth.md), [`ideia.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/docs/architecture/ideia.md) e [`exemplo_analise_custos_csap.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/docs/architecture/exemplo_analise_custos_csap.md).  
-> **Status de Conclusão:** 100% IMPLEMENTADO E VALIDADO. Todos os 7 eixos técnicos foram integralmente desenvolvidos sob Hexagonal DOD, Apache Arrow contíguo, 26 Fontes Oficiais (20 BR + 6 Global), S2 Geometry, APVP, SIGTAP, ATC, SQLite Sync State, Declarative SPI YAML, Python DLPack & Submodule Accessors, e subcomandos CLI. 100% dos testes e Clippy estrito passaram com zero erros e zero avisos.  
+> **Status de Conclusão:** 100% IMPLEMENTADO E VALIDADO. Todos os 7 eixos técnicos foram integralmente desenvolvidos sob Hexagonal DOD, Apache Arrow contíguo, 26 Fontes Oficiais (20 BR + 6 Global), S2 Geometry, APVP, SIGTAP, ATC, Disk Sync State, Declarative SPI YAML, Python DLPack & Submodule Accessors, e subcomandos CLI. 100% dos testes e Clippy estrito passaram com zero erros e zero avisos.  
 >
 > *Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.*  
 > *Licenciado sob a GNU Affero General Public License v3 (AGPLv3) ou Contrato Comercial Exclusivo.*
@@ -26,7 +26,7 @@
    - [5.1 Loader Dinâmico de Manifestos Declarativos YAML/JSON](#51-loader-dinâmico-de-manifestos-declarativos-yamljson)
    - [5.2 Conector Genérico para APIs OData e CKAN](#52-conector-genérico-para-apis-odata-e-ckan)
 6. [Eixo 5: Infraestrutura, Persistência e Auditoria](#6-eixo-5-infraestrutura-persistência-e-auditoria)
-   - [5.1 Backend Relacional SQLite para Snapshot State (`sqlite_sync`)](#61-backend-relacional-sqlite-para-snapshot-state-sqlite_sync)
+   - [5.1 Backend Persistente DiskSyncState para Snapshot State](#61-backend-persistente-disksyncstate-para-snapshot-state)
 7. [Eixo 6: Interfaces Cross-Language e Ergonomia](#7-eixo-6-interfaces-cross-language-e-ergonomia)
    - [7.1 Acessores Semânticos Especializados no Python `Engine`](#71-acessores-semânticos-especializados-no-python-engine)
    - [7.2 Protocolo DLPack para Tensores PyTorch Zero-Copy](#72-protocolo-dlpack-para-tensores-pytorch-zero-copy)
@@ -123,21 +123,19 @@ O presente documento inventaria os itens especificados nos documentos conceituai
 
 ## 6. Eixo 5: Infraestrutura, Persistência e Auditoria
 
-### 6.1 Backend Relacional SQLite para Snapshot State (`sqlite_sync`)
+### 6.1 Backend Persistente DiskSyncState para Snapshot State
 - **Documentação de Origem:** [`sdd_brhealth.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/docs/architecture/sdd_brhealth.md) (Diagrama de Containers C4 Nível 2) e [`ideia.md`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/docs/architecture/ideia.md) (Seções 10 e 3).
-- **Descrição da Lacuna:** A implementação atual de persistência de auditoria de snapshots e time-travel reside em [`DiskSyncState`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/infrastructure/state/disk.rs) (arquivo JSON atômico com locking). O SDD C4 especifica um container de banco embutido **SQLite** (`sqlite_sync`) para consultas relacionais avançadas sobre históricos extensos de versões de dados com indexação por hash SHA-256 e timestamps UTC.
-- **Entregável Técnico:**
-  - Adaptador `SqliteSyncState` implementando a trait `SyncStatePort` com schema de auditoria:
-    ```sql
-    CREATE TABLE IF NOT EXISTS dataset_snapshots (
-        source_id TEXT NOT NULL,
-        version TEXT NOT NULL,
-        sha256 TEXT NOT NULL,
-        registered_at_utc TEXT NOT NULL,
-        payload_size_bytes INTEGER,
-        metadata_json TEXT,
-        PRIMARY KEY (source_id, version)
-    );
+- **Descrição:** A persistência de auditoria de snapshots e time-travel utiliza [`DiskSyncState`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/infrastructure/state/disk.rs) (arquivo JSON atômico com locking concorrente via `RwLock`). Registra histórico imutável de snapshots com hashes SHA-256 e carimbos temporais UTC.
+- **Status:** Implementado e validado.
+- **Entregáveis:**
+  - Adaptador `DiskSyncState` implementando a trait `SyncStatePort` com persistência JSON:
+    ```rust
+    pub struct PersistentSnapshotEntry {
+        pub source_id: String,
+        pub version: String,
+        pub sha256: String,
+        pub registered_at_utc: String,
+    }
     ```
 
 ---
@@ -193,7 +191,7 @@ Todos os itens identificados foram 100% implementados e validados nas suítes de
 | **P2** | **Indexação S2 Geometry (`s2.rs` e Joins)** | [`s2.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/domain/spatial/s2.rs), [`join.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/domain/spatial/join.rs) | **Concluído** ✅ |
 | **P2** | **Protocolo DLPack Zero-Copy para PyTorch** | [`brhealth-python/src/lib.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-python/src/lib.rs) | **Concluído** ✅ |
 | **P3** | **Manifestos Declarativos YAML (`who_gho.yaml`)** | [`declarative.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/domain/declarative.rs) | **Concluído** ✅ |
-| **P3** | **Backend SQLite para Snapshots (`sqlite_sync`)** | [`sqlite.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/infrastructure/state/sqlite.rs) | **Concluído** ✅ |
+| **P3** | **Backend Persistente DiskSyncState para Snapshots** | [`disk.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/infrastructure/state/disk.rs) | **Concluído** ✅ |
 | **P3** | **Fontes Complementares (POF, PeNSE, MUNIC, PRODES, OpenAQ)** | [`sources/`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-core/src/sources/) | **Concluído (26 Fontes)** ✅ |
 | **CLI** | **Subcomandos `apvp`, `s2`, `cid9`** | [`brhealth-cli/src/main.rs`](file:///home/marcel/Desenvolvimento/Projetos/brhealth/crates/brhealth-cli/src/main.rs) | **Concluído** ✅ |
 | **Roadmap** | **Crate `brhealth-r` (extendr)** | `crates/brhealth-r` | Planejado pós-v1 |

@@ -126,11 +126,6 @@ def main() -> int:
     for cand in local_candidates:
         total_freed += remove_path(cand)
 
-    # Remover bancos de dados transitórios de teste SQLite
-    for pattern in ["*_sync_state.db*", "test_sync.sqlite*"]:
-        for f in ROOT_DIR.glob(pattern):
-            total_freed += remove_path(f)
-
     # 3. Caches de ambiente Python
     print(f"\n{BOLD}{YELLOW}[3/4] Removendo caches Python (__pycache__, .pytest_cache)...{RESET}")
     py_dirs = ["__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"]
