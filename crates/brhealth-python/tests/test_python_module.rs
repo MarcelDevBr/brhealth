@@ -2,5 +2,8 @@
 // Licensed under the GNU Affero General Public License v3 (AGPLv3)
 // or a commercial license agreement directly with the author.
 
-pub mod ibge;
-pub mod ontology;
+#[test]
+fn test_python_module_metadata() {
+    let version = env!("CARGO_PKG_VERSION");
+    assert_eq!(version, "1.0.0");
+}

@@ -1,0 +1,18 @@
+[package]
+name = "brhealth-python"
+version.workspace = true
+edition = "2021"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Python bindings for the BRHealth columnar analytics engine via PyO3"
+
+[lib]
+name = "brhealth"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+brhealth-core = { path = "../brhealth-core" }
+arrow = { workspace = true }
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
+tokio = { workspace = true }

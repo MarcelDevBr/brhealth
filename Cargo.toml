@@ -2,6 +2,8 @@
 members = [
     "crates/brhealth-core",
     "crates/brhealth-ffi",
+    "crates/brhealth-python",
+    "crates/brhealth-jni",
 ]
 resolver = "2"
 

@@ -1,0 +1,15 @@
+[package]
+name = "brhealth-jni"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "High-performance Java 21+ Project Panama FFM bindings for BRHealth"
+
+[lib]
+name = "brhealth_jni"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+brhealth-core = { path = "../brhealth-core" }

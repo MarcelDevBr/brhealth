@@ -4,6 +4,12 @@
 
 //! Adaptadores de transporte para download e leitura de dados brutos.
 
+pub mod ftp;
+pub mod http;
+
+pub use ftp::{AsyncFtpTransport, FtpClientConfig};
+pub use http::{AsyncHttpTransport, HttpClientConfig};
+
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::RwLock;

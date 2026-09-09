@@ -2,11 +2,16 @@
 // Licensed under the GNU Affero General Public License v3 (AGPLv3)
 // or a commercial license agreement directly with the author.
 
-//! Adaptadores decodificadores de dados brutos (Blast PKWARE DCL, DBF, etc.)
+//! Adaptadores decodificadores de dados brutos (Blast PKWARE DCL, DBF, GeoArrow, NetCDF, etc.)
 
 pub mod blast;
 pub mod dbc;
 pub mod dbf;
+pub mod geoarrow;
+pub mod netcdf;
 
 pub use blast::BlastDecompressor;
 pub use dbc::DbcDecompressor;
+pub use dbf::DbfDecoder;
+pub use geoarrow::GeoArrowDecoder;
+pub use netcdf::{ClimateGridVariable, NetCDFGridDecoder};

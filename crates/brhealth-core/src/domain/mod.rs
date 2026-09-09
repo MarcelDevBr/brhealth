@@ -3,6 +3,7 @@
 // or a commercial license agreement directly with the author.
 
 pub mod analytics;
+pub mod application;
 pub mod ports;
 pub mod provenance;
 pub mod registry;

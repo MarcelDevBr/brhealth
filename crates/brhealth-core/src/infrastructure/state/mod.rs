@@ -4,6 +4,10 @@
 
 //! Adaptadores de estado de sincronização e auditoria de snapshots.
 
+pub mod disk;
+
+pub use disk::{DiskSyncState, PersistentSnapshotEntry};
+
 use std::collections::HashMap;
 use std::sync::RwLock;
 
