@@ -45,5 +45,10 @@ pub trait LocalCachePort: Send + Sync {
 
 pub trait SyncStatePort: Send + Sync {
     fn get_snapshot_version(&self, source_id: &str) -> Option<String>;
-    fn record_snapshot(&self, source_id: &str, version: &str, sha256: &str) -> Result<(), PortError>;
+    fn record_snapshot(
+        &self,
+        source_id: &str,
+        version: &str,
+        sha256: &str,
+    ) -> Result<(), PortError>;
 }
