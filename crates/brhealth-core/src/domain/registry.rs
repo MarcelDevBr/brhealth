@@ -33,10 +33,9 @@ impl SourceRegistry {
     }
 
     pub fn get(&self, source_id: &str) -> Result<Arc<dyn HealthDataSourceSPI>, PortError> {
-        self.sources
-            .get(source_id)
-            .cloned()
-            .ok_or_else(|| PortError::ResourceNotFound(format!("Fonte '{}' não registrada", source_id)))
+        self.sources.get(source_id).cloned().ok_or_else(|| {
+            PortError::ResourceNotFound(format!("Fonte '{}' não registrada", source_id))
+        })
     }
 
     pub fn list_by_scope(&self, scope: &GeographicScope) -> Vec<SourceMetadata> {
