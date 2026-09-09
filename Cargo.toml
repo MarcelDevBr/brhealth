@@ -1,0 +1,38 @@
+[workspace]
+members = [
+    "crates/brhealth-core",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Marcel <MarcelDevBr>"]
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/MarcelDevBr/brhealth"
+homepage = "https://github.com/MarcelDevBr/brhealth"
+
+[workspace.dependencies]
+arrow = { version = "53.0", features = ["ffi", "ipc", "chrono-tz"] }
+parquet = { version = "53.0", features = ["arrow"] }
+tokio = { version = "1.40", features = ["full"] }
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+rayon = "1.10"
+sha2 = "0.10"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[profile.bench]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

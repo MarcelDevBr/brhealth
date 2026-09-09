@@ -1,0 +1,11 @@
+/home/marcel/Desenvolvimento/Projetos/brhealth/target/debug/deps/arrow_string-88ff521585b38db7.d: /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/lib.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/concat_elements.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/length.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/like.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/predicate.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/regexp.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/substring.rs
+
+/home/marcel/Desenvolvimento/Projetos/brhealth/target/debug/deps/libarrow_string-88ff521585b38db7.rmeta: /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/lib.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/concat_elements.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/length.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/like.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/predicate.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/regexp.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/substring.rs
+
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/lib.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/concat_elements.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/length.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/like.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/predicate.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/regexp.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-string-53.4.1/src/substring.rs:

@@ -1,0 +1,10 @@
+/home/marcel/Desenvolvimento/Projetos/brhealth/target/debug/deps/chrono_tz-0f95ef5c188b4cf1.d: /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/lib.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/binary_search.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/mod.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/directory.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/timezone_impl.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/timezones.rs
+
+/home/marcel/Desenvolvimento/Projetos/brhealth/target/debug/deps/libchrono_tz-0f95ef5c188b4cf1.rmeta: /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/lib.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/binary_search.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/mod.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/directory.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/timezone_impl.rs /home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/timezones.rs
+
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/lib.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/binary_search.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/mod.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/directory.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/timezone_impl.rs:
+/home/marcel/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/chrono-tz-0.10.4/src/prebuilt/timezones.rs:

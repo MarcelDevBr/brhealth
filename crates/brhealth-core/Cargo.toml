@@ -1,0 +1,25 @@
+[package]
+name = "brhealth-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Motor colunar de alto desempenho para dados de saúde coletiva e determinantes sociais"
+
+[dependencies]
+arrow = { workspace = true }
+parquet = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+rayon = { workspace = true }
+sha2 = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.12"
+proptest = "1.5"
