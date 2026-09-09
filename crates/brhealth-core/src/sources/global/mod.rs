@@ -6,12 +6,14 @@
 
 pub mod era5;
 pub mod ihme_gbd;
+pub mod openaq;
 pub mod paho_plisa;
 pub mod who_gho;
 pub mod worldpop;
 
 pub use era5::Era5DataSource;
 pub use ihme_gbd::IhmeGbdDataSource;
+pub use openaq::OpenAqDataSource;
 pub use paho_plisa::PahoPlisaDataSource;
 pub use who_gho::WhoGhoDataSource;
 pub use worldpop::WorldPopDataSource;

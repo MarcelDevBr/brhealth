@@ -1,0 +1,25 @@
+source_id: "who_gho_mortality"
+version: "1.0.0"
+display_name: "WHO Global Health Observatory - Mortality and Life Expectancy"
+maintaining_agency: "World Health Organization"
+scope: "Supranational"
+scope_entity: "WHO_GLOBAL"
+category: "GlobalBurdenIndicators"
+temporal_resolution: "Anual"
+spatial_resolution: "País"
+start_year: 1950
+end_year: 2026
+locator_template: "https://ghoapi.azureedge.net/api/WHOSIS_{indicator}?$filter=SpatialDimType eq 'COUNTRY' and TimeDim eq {year}"
+schema_columns:
+  - name: "country_iso3"
+    data_type: "string"
+    nullable: false
+  - name: "year"
+    data_type: "uint16"
+    nullable: false
+  - name: "indicator_code"
+    data_type: "string"
+    nullable: false
+  - name: "numeric_value"
+    data_type: "float64"
+    nullable: true

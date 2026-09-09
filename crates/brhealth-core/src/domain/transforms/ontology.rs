@@ -69,6 +69,8 @@ pub struct MedicalOntologyHarmonizer;
 
 static ICD10_TO_ICD11_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
 static ICD10_TO_SNOMED_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+static ICD9_TO_ICD10_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+static ICD10_TO_ICD9_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
 
 impl MedicalOntologyHarmonizer {
     /// Cria uma nova instância do harmonizador.
@@ -141,6 +143,92 @@ impl MedicalOntologyHarmonizer {
         })
     }
 
+    fn get_icd9_to_icd10_map() -> &'static HashMap<&'static str, &'static str> {
+        ICD9_TO_ICD10_MAP.get_or_init(|| {
+            let mut m = HashMap::new();
+            // Infecciosas
+            m.insert("009", "A09"); // Diarreia infecciosa
+            m.insert("010", "A15"); // Tuberculose pulmonar
+            m.insert("036", "A39"); // Infecção meningocócica
+            m.insert("042", "B20"); // Doença pelo HIV
+            m.insert("061", "A90"); // Dengue
+            // Neoplasias
+            m.insert("150", "C15"); // Esôfago
+            m.insert("151", "C16"); // Estômago
+            m.insert("153", "C18"); // Cólon
+            m.insert("162", "C34"); // Brônquios e pulmão
+            m.insert("174", "C50"); // Mama feminina
+            m.insert("180", "C53"); // Colo do útero
+            m.insert("185", "C61"); // Próstata
+            m.insert("204", "C91"); // Leucemia linfoide
+            // Endócrinas
+            m.insert("250", "E14"); // Diabetes mellitus
+            m.insert("260", "E40"); // Kwashiorkor / Desnutrição
+            // Cardiovasculares
+            m.insert("401", "I10"); // Hipertensão essencial
+            m.insert("410", "I21"); // Infarto agudo do miocárdio
+            m.insert("413", "I20"); // Angina pectoris
+            m.insert("428", "I50"); // Insuficiência cardíaca
+            m.insert("436", "I64"); // AVC / Doença cerebrovascular aguda
+            m.insert("440", "I70"); // Aterosclerose
+            // Respiratórias
+            m.insert("486", "J18"); // Pneumonia
+            m.insert("491", "J44"); // Bronquite crônica / DPOC
+            m.insert("493", "J45"); // Asma
+            // Digestivas
+            m.insert("531", "K25"); // Úlcera gástrica
+            m.insert("540", "K35"); // Apendicite aguda
+            m.insert("571", "K70"); // Doença hepática crônica / Cirrose
+            // Causas Externas
+            m.insert("E810", "V89"); // Acidente de trânsito
+            m.insert("E819", "V89");
+            m.insert("E950", "X60"); // Suicídio e autolesão
+            m.insert("E960", "X85"); // Homicídio e agressão
+            m.insert("E965", "X95"); // Agressão por arma de fogo
+            m
+        })
+    }
+
+    fn get_icd10_to_icd9_map() -> &'static HashMap<&'static str, &'static str> {
+        ICD10_TO_ICD9_MAP.get_or_init(|| {
+            let mut m = HashMap::new();
+            m.insert("A09", "009");
+            m.insert("A15", "010");
+            m.insert("A39", "036");
+            m.insert("B20", "042");
+            m.insert("A90", "061");
+            m.insert("C15", "150");
+            m.insert("C16", "151");
+            m.insert("C18", "153");
+            m.insert("C34", "162");
+            m.insert("C50", "174");
+            m.insert("C53", "180");
+            m.insert("C61", "185");
+            m.insert("C91", "204");
+            m.insert("E10", "250");
+            m.insert("E11", "250");
+            m.insert("E14", "250");
+            m.insert("E40", "260");
+            m.insert("I10", "401");
+            m.insert("I20", "413");
+            m.insert("I21", "410");
+            m.insert("I50", "428");
+            m.insert("I64", "436");
+            m.insert("I70", "440");
+            m.insert("J18", "486");
+            m.insert("J44", "491");
+            m.insert("J45", "493");
+            m.insert("K25", "531");
+            m.insert("K35", "540");
+            m.insert("K70", "571");
+            m.insert("V89", "E819");
+            m.insert("X60", "E950");
+            m.insert("X85", "E960");
+            m.insert("X95", "E965");
+            m
+        })
+    }
+
     /// Mapeia um código da CID-10 para a CID-11.
     ///
     /// Aceita códigos com ou sem ponto (ex.: `"I10"`, `"I10.0"`).
@@ -167,6 +255,36 @@ impl MedicalOntologyHarmonizer {
         };
 
         Self::get_snomed_map().get(prefix).map(|&v| v.to_string())
+    }
+
+    /// Mapeia um código histórico da CID-9 para a CID-10 correspondente.
+    ///
+    /// Aceita códigos numéricos puros ou com prefixo 'E' (Causas Externas).
+    #[must_use]
+    pub fn map_icd9_to_icd10(&self, icd9: &str) -> Option<String> {
+        let cleaned = icd9.trim().to_uppercase();
+        let prefix = if cleaned.starts_with('E') && cleaned.len() >= 4 {
+            &cleaned[0..4]
+        } else if cleaned.len() >= 3 {
+            &cleaned[0..3]
+        } else {
+            &cleaned
+        };
+
+        Self::get_icd9_to_icd10_map().get(prefix).map(|&v| v.to_string())
+    }
+
+    /// Mapeia um código da CID-10 para a representação histórica equivalente na CID-9.
+    #[must_use]
+    pub fn map_icd10_to_icd9(&self, icd10: &str) -> Option<String> {
+        let cleaned = icd10.trim().to_uppercase();
+        let prefix = if cleaned.len() >= 3 {
+            &cleaned[0..3]
+        } else {
+            &cleaned
+        };
+
+        Self::get_icd10_to_icd9_map().get(prefix).map(|&v| v.to_string())
     }
 
     /// Valida a consistência biológica de um evento médico segundo idade e sexo.

@@ -18,13 +18,18 @@ use brhealth_core::decoders::dbc::DbcDecompressor;
 use brhealth_core::domain::analytics::csap::{
     classify_cid10, compute_csap_metrics, compute_primary_care_roi,
 };
+use brhealth_core::domain::analytics::mortality::{compute_apvp, compute_apvp_rate};
 use brhealth_core::domain::application::{
     BRHealthApplicationService, PipelineExecutionOptions,
 };
 use brhealth_core::domain::source_spi::{
     DataQueryParams, GeographicScope, SourceExecutionContext,
 };
+use brhealth_core::domain::spatial::s2::{
+    coord_to_s2_cell, s2_cell_to_coord, DEFAULT_S2_MUNICIPAL_LEVEL,
+};
 use brhealth_core::domain::transforms::ibge::{calculate_ibge_dv, harmonize_ibge_code};
+use brhealth_core::domain::transforms::ontology::MedicalOntologyHarmonizer;
 use brhealth_core::infrastructure::cache::MemoryCache;
 use brhealth_core::infrastructure::state::MemorySyncState;
 use brhealth_core::infrastructure::transport::AsyncFtpTransport;
@@ -112,6 +117,42 @@ enum Commands {
         /// Caminho para exportação do resultado colunar em formato Apache Parquet.
         #[arg(short, long)]
         out_parquet: Option<PathBuf>,
+    },
+
+    /// Calcula os Anos Potenciais de Vida Perdidos (APVP / YLL) para idades de óbito prematuro.
+    Apvp {
+        /// Idades de óbito separadas por espaço (ex: 35 42 18 55).
+        #[arg(required = true, num_args = 1..)]
+        ages: Vec<u16>,
+
+        /// Idade limite de corte de morte prematura (padrão: 70 anos).
+        #[arg(short, long, default_value_t = 70)]
+        cutoff: u16,
+
+        /// População de referência para cálculo da taxa por 100.000 hab.
+        #[arg(short, long)]
+        population: Option<u64>,
+    },
+
+    /// Converte latitude e longitude em um identificador S2 CellId de 64 bits.
+    S2 {
+        /// Latitude geográfica em graus decimais (-90 a 90).
+        #[arg(long, allow_hyphen_values = true)]
+        lat: f64,
+
+        /// Longitude geográfica em graus decimais (-180 a 180).
+        #[arg(long, allow_hyphen_values = true)]
+        lon: f64,
+
+        /// Nível de resolução da célula S2 (0 a 30, padrão: 10 - nível municipal).
+        #[arg(short, long, default_value_t = DEFAULT_S2_MUNICIPAL_LEVEL)]
+        level: u8,
+    },
+
+    /// Mapeia código histórico da CID-9 para o equivalente canônico na CID-10.
+    Cid9 {
+        /// Código CID-9 (ex: 250, 401, 410, 493, E819).
+        code: String,
     },
 }
 
@@ -307,6 +348,63 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("\nDados salvos com sucesso em Parquet: {:?}", target_path);
                 } else {
                     println!("\nNenhum dado retornado para salvar em Parquet.");
+                }
+            }
+        }
+
+        Commands::Apvp {
+            ages,
+            cutoff,
+            population,
+        } => {
+            let total_apvp = compute_apvp(&ages, cutoff);
+            println!("=== Indicadores de Mortalidade Prematura (APVP / YLL) ===");
+            println!("Total de óbitos analisados: {}", ages.len());
+            println!("Idade limite de corte:      {} anos", cutoff);
+            println!("Total de APVP acumulado:    {} anos de vida perdidos", total_apvp);
+
+            if let Some(pop) = population {
+                match compute_apvp_rate(total_apvp, pop) {
+                    Ok(rate) => {
+                        println!("População sob o corte:      {}", pop);
+                        println!("Taxa de APVP padronizada:   {:.2} por 100.000 hab.", rate);
+                    }
+                    Err(err) => {
+                        eprintln!("Erro ao calcular taxa de APVP: {}", err);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        }
+
+        Commands::S2 { lat, lon, level } => {
+            match coord_to_s2_cell(lat, lon, level) {
+                Ok(cell_id) => {
+                    let (center_lat, center_lon) = s2_cell_to_coord(cell_id)?;
+                    println!("=== Indexação Espacial Esférica S2 Geometry ===");
+                    println!("Coordenadas de entrada: lat={:.6}, lon={:.6}", lat, lon);
+                    println!("Nível de resolução:     {}", level);
+                    println!("S2 CellID (decimal):    {}", cell_id);
+                    println!("S2 CellID (hexadecimal):0x{:016x}", cell_id);
+                    println!("Centro da célula S2:    lat={:.6}, lon={:.6}", center_lat, center_lon);
+                }
+                Err(err) => {
+                    eprintln!("Erro ao calcular célula S2: {}", err);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        Commands::Cid9 { code } => {
+            let harmonizer = MedicalOntologyHarmonizer::new();
+            match harmonizer.map_icd9_to_icd10(&code) {
+                Some(icd10) => {
+                    println!("Código CID-9 original:  {}", code.to_uppercase());
+                    println!("Código CID-10 mapeado:  {}", icd10);
+                }
+                None => {
+                    eprintln!("Código CID-9 '{}' não possui mapeamento direto cadastrado.", code);
+                    std::process::exit(1);
                 }
             }
         }

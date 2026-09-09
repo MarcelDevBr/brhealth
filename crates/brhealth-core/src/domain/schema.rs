@@ -340,4 +340,76 @@ impl CanonicalSchemas {
             Field::new("deaths", DataType::UInt32, false),
         ]))
     }
+
+    /// Schema Canônico para Pesquisa de Orçamentos Familiares (IBGE POF)
+    pub fn canonical_pof_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("household_id", DataType::Utf8, false),
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("reference_year", DataType::UInt16, false),
+            Field::new("total_monthly_income", DataType::Float64, false),
+            Field::new("health_expenditure_total", DataType::Float64, false),
+            Field::new("medication_expenditure", DataType::Float64, false),
+            Field::new("health_insurance_expenditure", DataType::Float64, false),
+            Field::new("catastrophic_expenditure_flag", DataType::Boolean, false),
+        ]))
+    }
+
+    /// Schema Canônico para Pesquisa Nacional de Saúde do Escolar (IBGE PeNSE)
+    pub fn canonical_pense_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("student_id", DataType::Utf8, false),
+            Field::new("school_id", DataType::Utf8, false),
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("survey_year", DataType::UInt16, false),
+            Field::new("age_years", DataType::UInt8, false),
+            Field::new("sex", DataType::Utf8, false),
+            Field::new("tobacco_use_past_30d", DataType::Boolean, false),
+            Field::new("alcohol_use_past_30d", DataType::Boolean, false),
+            Field::new("physical_activity_minutes_weekly", DataType::UInt16, false),
+            Field::new("soda_consumption_daily", DataType::Boolean, false),
+        ]))
+    }
+
+    /// Schema Canônico para Perfil dos Municípios Brasileiros (IBGE MUNIC)
+    pub fn canonical_munic_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("survey_year", DataType::UInt16, false),
+            Field::new("has_municipal_health_plan", DataType::Boolean, false),
+            Field::new("has_municipal_health_fund", DataType::Boolean, false),
+            Field::new("has_health_council", DataType::Boolean, false),
+            Field::new("emergency_contingency_plan", DataType::Boolean, false),
+            Field::new("primary_care_teams_count", DataType::UInt32, false),
+        ]))
+    }
+
+    /// Schema Canônico para Monitoramento de Cobertura Vegetal e Desmatamento (INPE PRODES)
+    pub fn canonical_prodes_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("polygon_id", DataType::Utf8, false),
+            Field::new("jurisdiction_code", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("biome_name", DataType::Utf8, false),
+            Field::new("year", DataType::UInt16, false),
+            Field::new("deforested_area_sq_km", DataType::Float64, false),
+            Field::new("latitude", DataType::Float64, false),
+            Field::new("longitude", DataType::Float64, false),
+        ]))
+    }
+
+    /// Schema Canônico para Monitoramento Global da Qualidade do Ar (OpenAQ)
+    pub fn canonical_openaq_schema() -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("measurement_id", DataType::Utf8, false),
+            Field::new("location_name", DataType::Utf8, false),
+            Field::new("country_iso3", DataType::Utf8, false),
+            Field::new("h3_index_res8", DataType::UInt64, true),
+            Field::new("timestamp_utc", DataType::Timestamp(TimeUnit::Second, Some("UTC".into())), false),
+            Field::new("pollutant", DataType::Utf8, false), // "pm25", "pm10", "no2", "o3", "so2", "co"
+            Field::new("value_micrograms_m3", DataType::Float32, false),
+            Field::new("latitude", DataType::Float64, false),
+            Field::new("longitude", DataType::Float64, false),
+        ]))
+    }
 }

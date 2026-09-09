@@ -4,6 +4,7 @@
 
 pub mod analytics;
 pub mod application;
+pub mod declarative;
 pub mod ports;
 pub mod provenance;
 pub mod registry;

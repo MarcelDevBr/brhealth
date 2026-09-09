@@ -5,7 +5,13 @@
 //! Adaptadores para pesquisas estatísticas e censitárias do IBGE.
 
 pub mod censo;
+pub mod munic;
+pub mod pense;
 pub mod pnad;
+pub mod pof;
 
 pub use censo::IbgeCensoDataSource;
+pub use munic::IbgeMunicDataSource;
+pub use pense::IbgePenseDataSource;
 pub use pnad::IbgePnadDataSource;
+pub use pof::IbgePofDataSource;

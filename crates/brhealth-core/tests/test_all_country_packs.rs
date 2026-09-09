@@ -22,8 +22,8 @@ fn test_country_pack_brasil_metadata_and_registry() {
     let pack = create_pack_brasil();
     assert_eq!(
         pack.len(),
-        16,
-        "Pack Brasil deve conter exatamente 16 fontes oficiais"
+        20,
+        "Pack Brasil deve conter exatamente 20 fontes oficiais"
     );
 
     let mut registry = SourceRegistry::new();
@@ -33,9 +33,9 @@ fn test_country_pack_brasil_metadata_and_registry() {
         iso_3166_alpha3: "BRA".into(),
     };
     let sources_bra = registry.list_by_scope(&national_scope);
-    assert_eq!(sources_bra.len(), 16);
+    assert_eq!(sources_bra.len(), 20);
 
-    // Verificar IDs das 16 fontes nacionais
+    // Verificar IDs das 20 fontes nacionais
     let expected_ids = [
         "datasus.sim",
         "datasus.sinasc",
@@ -49,10 +49,14 @@ fn test_country_pack_brasil_metadata_and_registry() {
         "datasus.bps",
         "ibge.censo",
         "ibge.pnad",
+        "ibge.pof",
+        "ibge.pense",
+        "ibge.munic",
         "mds.cadunico",
         "environmental.inmet",
         "environmental.bdqueimadas",
         "environmental.sisagua",
+        "environmental.prodes",
     ];
 
     for id in &expected_ids {
@@ -110,8 +114,8 @@ fn test_country_pack_global_metadata_and_registry() {
     let pack = create_pack_global();
     assert_eq!(
         pack.len(),
-        5,
-        "Pack Global deve conter exatamente 5 fontes supranacionais"
+        6,
+        "Pack Global deve conter exatamente 6 fontes supranacionais"
     );
 
     let mut registry = SourceRegistry::new();
@@ -123,6 +127,7 @@ fn test_country_pack_global_metadata_and_registry() {
         "global.copernicus_era5",
         "global.worldpop",
         "global.paho_plisa",
+        "global.openaq",
     ];
 
     for id in &expected_global_ids {
@@ -180,8 +185,8 @@ async fn test_end_to_end_fetch_mocked_for_all_sources() {
 
     assert_eq!(
         all_sources.len(),
-        21,
-        "Total de fontes suportadas deve ser 21"
+        26,
+        "Total de fontes suportadas deve ser 26"
     );
 
     let transport = Arc::new(MockTransport::new());

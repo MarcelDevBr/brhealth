@@ -6,8 +6,10 @@
 
 pub mod bdqueimadas;
 pub mod inmet;
+pub mod prodes;
 pub mod sisagua;
 
 pub use bdqueimadas::BdQueimadasDataSource;
 pub use inmet::InmetDataSource;
+pub use prodes::ProdesDataSource;
 pub use sisagua::SisaguaDataSource;
