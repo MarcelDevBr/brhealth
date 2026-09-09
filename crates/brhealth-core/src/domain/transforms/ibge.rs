@@ -135,6 +135,115 @@ pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
     }
 }
 
+/// Registro de transição territorial histórica de municípios brasileiros (1970–2026).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HistoricalTransition {
+    /// Código legado de 6 dígitos
+    pub legacy_code_6: &'static str,
+    /// Código legado com DV de 7 dígitos
+    pub legacy_code_7: &'static str,
+    /// Código canônico atual do IBGE de 7 dígitos
+    pub canonical_code_7: &'static str,
+    /// Ano da transição territorial (CF/88, emancipação, etc.)
+    pub transition_year: u16,
+    /// Descrição formal da alteração territorial
+    pub description: &'static str,
+}
+
+/// Tabela estática de mapeamento de transições territoriais históricas.
+pub const HISTORICAL_TRANSITIONS: &[HistoricalTransition] = &[
+    HistoricalTransition {
+        legacy_code_6: "200001",
+        legacy_code_7: "2000013",
+        canonical_code_7: "2605459", // Fernando de Noronha (PE)
+        transition_year: 1988,
+        description: "Território Federal de Fernando de Noronha incorporado ao estado de Pernambuco",
+    },
+    HistoricalTransition {
+        legacy_code_6: "260545",
+        legacy_code_7: "2605459",
+        canonical_code_7: "2605459",
+        transition_year: 1988,
+        description: "Fernando de Noronha canônico (PE)",
+    },
+    // Transições decorrentes da criação do estado do Tocantins (desmembrado de Goiás em 1988)
+    HistoricalTransition {
+        legacy_code_6: "520210",
+        legacy_code_7: "5202101",
+        canonical_code_7: "1702107", // Araguaína
+        transition_year: 1988,
+        description: "Araguaína transferido de Goiás para Tocantins",
+    },
+    HistoricalTransition {
+        legacy_code_6: "520930",
+        legacy_code_7: "5209308",
+        canonical_code_7: "1709300", // Gurupi
+        transition_year: 1988,
+        description: "Gurupi transferido de Goiás para Tocantins",
+    },
+    HistoricalTransition {
+        legacy_code_6: "521360",
+        legacy_code_7: "5213603",
+        canonical_code_7: "1713205", // Miracema do Tocantins
+        transition_year: 1988,
+        description: "Miracema do Norte (GO) renomeado e transferido para Miracema do Tocantins",
+    },
+    HistoricalTransition {
+        legacy_code_6: "521780",
+        legacy_code_7: "5217800",
+        canonical_code_7: "1718204", // Porto Nacional
+        transition_year: 1988,
+        description: "Porto Nacional transferido de Goiás para Tocantins",
+    },
+    HistoricalTransition {
+        legacy_code_6: "521660",
+        legacy_code_7: "5216604",
+        canonical_code_7: "1716109", // Paraíso do Tocantins
+        transition_year: 1988,
+        description: "Paraíso do Norte de Goiás transferido para Paraíso do Tocantins",
+    },
+];
+
+/// Reconcilia códigos municipais históricos com a malha canônica do IBGE de 2026.
+///
+/// Caso o código pertença a uma transição territorial histórica (ex: municípios do antigo norte
+/// de Goiás transferidos para o Tocantins em 1988 ou o antigo Território de Fernando de Noronha),
+/// o código canônico contemporâneo é retornado. Caso contrário, é aplicada a harmonização padrão.
+///
+/// # Exemplos
+///
+/// ```rust
+/// use brhealth_core::domain::transforms::ibge::reconcile_historical_ibge_code;
+///
+/// // Antigo código de Fernando de Noronha
+/// assert_eq!(reconcile_historical_ibge_code("200001", Some(1980)).unwrap(), "2605459");
+///
+/// // Araguaína com código histórico de Goiás antes de 1988
+/// assert_eq!(reconcile_historical_ibge_code("520210", Some(1985)).unwrap(), "1702107");
+///
+/// // Município sem alteração territorial segue o cálculo padrão
+/// assert_eq!(reconcile_historical_ibge_code("355030", None).unwrap(), "3550308");
+/// ```
+pub fn reconcile_historical_ibge_code(
+    raw_code: &str,
+    reference_year: Option<u16>,
+) -> Result<String, PortError> {
+    let trimmed = raw_code.trim();
+    for transition in HISTORICAL_TRANSITIONS {
+        if trimmed == transition.legacy_code_6 || trimmed == transition.legacy_code_7 {
+            if let Some(year) = reference_year {
+                if year <= transition.transition_year {
+                    return Ok(transition.canonical_code_7.to_string());
+                }
+            } else {
+                return Ok(transition.canonical_code_7.to_string());
+            }
+        }
+    }
+
+    harmonize_ibge_code(raw_code)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,6 +307,35 @@ mod tests {
     #[test]
     fn test_invalid_existing_dv() {
         assert!(harmonize_ibge_code("3550309").is_err());
+    }
+
+    #[test]
+    fn test_historical_transitions() {
+        // Fernando de Noronha histórico -> canônico
+        assert_eq!(
+            reconcile_historical_ibge_code("200001", Some(1980)).unwrap(),
+            "2605459"
+        );
+        assert_eq!(
+            reconcile_historical_ibge_code("2000013", Some(1985)).unwrap(),
+            "2605459"
+        );
+
+        // Tocantins (Araguaína antigo de GO -> TO)
+        assert_eq!(
+            reconcile_historical_ibge_code("520210", Some(1987)).unwrap(),
+            "1702107"
+        );
+        assert_eq!(
+            reconcile_historical_ibge_code("520930", Some(1982)).unwrap(),
+            "1709300"
+        );
+
+        // Município regular sem transição segue padrão
+        assert_eq!(
+            reconcile_historical_ibge_code("355030", None).unwrap(),
+            "3550308"
+        );
     }
 
     // Property-Based Testing com proptest
