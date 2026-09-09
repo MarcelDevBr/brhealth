@@ -21,4 +21,9 @@ pub use domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-pub use domain::transforms::ibge::{calculate_ibge_dv, harmonize_ibge_code};
+pub use domain::spatial::{
+    append_h3_column, coord_to_h3_index, h3_grid_disk, h3_grid_distance, h3_index_to_coord,
+};
+pub use domain::transforms::ibge::{
+    calculate_ibge_dv, harmonize_ibge_code, reconcile_historical_ibge_code,
+};

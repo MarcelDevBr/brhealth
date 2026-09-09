@@ -7,4 +7,5 @@ pub mod provenance;
 pub mod registry;
 pub mod schema;
 pub mod source_spi;
+pub mod spatial;
 pub mod transforms;
