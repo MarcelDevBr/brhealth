@@ -6,6 +6,7 @@
 
 pub mod cache;
 pub mod state;
+pub mod storage;
 pub mod transport;
 
 pub use cache::MemoryCache;
