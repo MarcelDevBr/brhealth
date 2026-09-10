@@ -422,6 +422,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 reference_population: None,
                 persist_to_cache: persist_cache,
                 cache_base_path: Some(resolved_cache_path),
+                custom_steps: Vec::new(),
             };
 
             let result = match app_service

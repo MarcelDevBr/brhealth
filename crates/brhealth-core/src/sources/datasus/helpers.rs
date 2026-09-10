@@ -383,3 +383,44 @@ pub fn build_f64_col(
     }
     Arc::new(builder.finish())
 }
+
+/// Constrói coluna de idade em anos calculada a partir do padrão de codificação DATASUS/SIM.
+pub fn build_sim_age_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut age_builder = UInt16Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let age_val = get_str_value(batch, col_name, i).and_then(|raw_idade| {
+            if raw_idade.len() == 3 {
+                let unit = &raw_idade[0..1];
+                let value: u16 = raw_idade[1..3].parse().unwrap_or(0);
+                match unit {
+                    "4" => Some(value),
+                    "5" => Some(100 + value),
+                    _ => Some(0),
+                }
+            } else {
+                None
+            }
+        });
+        if let Some(a) = age_val {
+            age_builder.append_value(a);
+        } else {
+            age_builder.append_null();
+        }
+    }
+    Arc::new(age_builder.finish())
+}
+
+/// Constrói coluna booleana baseada em correspondência de string (ex: "1" = true).
+pub fn build_computed_bool_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    true_value: &str,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = arrow::array::BooleanBuilder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let is_true = get_str_value(batch, col_name, i) == Some(true_value);
+        builder.append_value(is_true);
+    }
+    Arc::new(builder.finish())
+}

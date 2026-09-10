@@ -26,6 +26,9 @@ use crate::domain::source_spi::{DataQueryParams, SourceExecutionContext};
 use crate::domain::spatial::h3::append_h3_column;
 use crate::domain::transforms::ibge::harmonize_ibge_code;
 use crate::domain::transforms::ontology::MedicalOntologyHarmonizer;
+use crate::domain::transforms::pipeline::{
+    BatchTransformationStep, CsapEnrichmentStep, H3SpatialIndexingStep, TransformationPipeline,
+};
 
 use crate::infrastructure::storage::hive_parquet::HiveParquetStore;
 use crate::infrastructure::transport::resilience::DataFreshness;
@@ -47,6 +50,17 @@ pub struct PipelineExecutionOptions {
     pub persist_to_cache: bool,
     /// Caminho do diretório raiz para persistência do cache Hive-Parquet.
     pub cache_base_path: Option<std::path::PathBuf>,
+    /// Passos customizados adicionais de transformação colunar (Chain of Responsibility).
+    pub custom_steps: Vec<Arc<dyn BatchTransformationStep>>,
+}
+
+impl PipelineExecutionOptions {
+    /// Adiciona um passo customizado de transformação à cadeia.
+    #[must_use]
+    pub fn with_step<S: BatchTransformationStep + 'static>(mut self, step: S) -> Self {
+        self.custom_steps.push(Arc::new(step));
+        self
+    }
 }
 
 /// Resultado consolidado da execução do pipeline analítico.
@@ -228,27 +242,30 @@ impl BRHealthApplicationService {
                 format!("{:x}", hasher.finalize())
             });
 
-        // 3. Processamento de transformações colunares em cada lote
-        let mut processed_batches = Vec::with_capacity(raw_batches.len());
+        // 3. Processamento de transformações colunares via Chain of Responsibility
+        let mut pipeline = TransformationPipeline::new();
 
-        for mut batch in raw_batches {
-            // 3.1 Atribuição espacial H3 (se solicitado)
-            if let (Some(res), Some((lat_col, lon_col))) = (
-                options.assign_h3_resolution,
-                options.h3_coord_columns.as_ref(),
-            ) && batch.column_by_name(lat_col).is_some()
-                && batch.column_by_name(lon_col).is_some()
-            {
-                batch = self.assign_h3_indices(&batch, lat_col, lon_col, res)?;
-            }
-
-            // 3.2 Enriquecimento CSAP (se for dados de AIH/SIH)
-            if options.enrich_csap && batch.column_by_name("main_diagnosis_icd10").is_some() {
-                batch = crate::domain::analytics::csap::enrich_sih_batch_with_csap(&batch)?;
-            }
-
-            processed_batches.push(batch);
+        if let (Some(res), Some((lat_col, lon_col))) = (
+            options.assign_h3_resolution,
+            options.h3_coord_columns.as_ref(),
+        ) {
+            pipeline = pipeline.add_step(H3SpatialIndexingStep::new(
+                lat_col,
+                lon_col,
+                format!("h3_res{res}"),
+                res,
+            ));
         }
+
+        if options.enrich_csap {
+            pipeline = pipeline.add_step(CsapEnrichmentStep::new());
+        }
+
+        for custom_step in &options.custom_steps {
+            pipeline = pipeline.add_shared_step(custom_step.clone());
+        }
+
+        let processed_batches = pipeline.execute_batches(raw_batches)?;
 
         // 4. Sumário de CSAP (se aplicável)
         let csap_summary = if options.enrich_csap || source_id.contains("sih") {

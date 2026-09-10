@@ -7,6 +7,7 @@
 pub mod bps;
 pub mod cnes;
 pub mod helpers;
+pub mod mapper;
 pub mod siasus;
 pub mod sih;
 pub mod sim;
@@ -15,6 +16,8 @@ pub mod sinasc;
 pub mod sipni;
 pub mod siscan;
 pub mod sisvan;
+
+pub use mapper::{ColumnExtractorSpec, DatasusBatchHarmonizer};
 
 pub use bps::BpsDataSource;
 pub use cnes::CnesDataSource;

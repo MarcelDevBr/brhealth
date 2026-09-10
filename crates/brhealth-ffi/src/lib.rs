@@ -295,6 +295,7 @@ pub unsafe extern "C" fn brhealth_fetch_source(
         reference_population: None,
         persist_to_cache: false,
         cache_base_path: None,
+        custom_steps: Vec::new(),
     };
 
     let client = unsafe { &*handle };

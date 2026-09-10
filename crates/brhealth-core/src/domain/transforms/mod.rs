@@ -5,8 +5,13 @@
 pub mod ibge;
 pub mod ontology;
 pub mod pharmacy;
+pub mod pipeline;
 pub mod sigtap;
 
 pub use ontology::{BiologicalSex, Icd10Chapter, Icd10Code, MedicalOntologyHarmonizer};
 pub use pharmacy::{PharmacyHarmonizer, StandardDrugConcept};
+pub use pipeline::{
+    BatchTransformationStep, CsapEnrichmentStep, CustomTransformationStep, H3SpatialIndexingStep,
+    IbgeHarmonizationStep, TransformationPipeline,
+};
 pub use sigtap::{SigtapCode, is_amputation_procedure, is_dialysis_procedure, parse_sigtap_code};

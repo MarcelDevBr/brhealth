@@ -6,15 +6,11 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, BooleanArray, BooleanBuilder};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{
-    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col, build_str_col,
-    build_str_opt_col, build_u16_col, get_str_value,
-};
+use super::mapper::DatasusBatchHarmonizer;
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -38,75 +34,23 @@ impl SihDataSource {
 
     /// Harmoniza o `RecordBatch` extraído do DBF bruto para o schema canônico de morbidade hospitalar.
     pub fn harmonize_batch(&self, raw_batch: &RecordBatch) -> Result<RecordBatch, PortError> {
-        let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_hospital_morbidity_schema();
+        let harmonizer = DatasusBatchHarmonizer::new(target_schema)
+            .with_record_id("N_AIH", PREFIX_AIH)
+            .with_harmonized_ibge("MUNIC_RES")
+            .with_harmonized_ibge("MUNIC_MOV")
+            .with_date32("DT_INTER", 0)
+            .with_date32("DT_SAIDA", 0)
+            .with_u16("DIAS_PERM", 0)
+            .with_str("DIAG_PRINC", "Z00")
+            .with_str_opt("DIAG_SECUN", 5)
+            .with_str("PROC_REA", "0000000000")
+            .with_f64("VAL_TOT", 0.0)
+            .with_u16("UTI_MES_TO", 0)
+            .with_computed_bool("MORTE", "1")
+            .with_constant_bool(false);
 
-        // 1. record_id (N_AIH)
-        let record_id_col = build_record_id_col(raw_batch, "N_AIH", PREFIX_AIH, num_rows);
-
-        // 2. municipality_residence (MUNIC_RES)
-        let municipality_residence_col =
-            build_harmonized_ibge_col(raw_batch, "MUNIC_RES", num_rows);
-
-        // 3. municipality_hospital (MUNIC_MOV)
-        let municipality_hospital_col = build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", num_rows);
-
-        // 4. admission_date (DT_INTER)
-        let admission_date_col = build_date32_col(raw_batch, "DT_INTER", 0, num_rows);
-
-        // 5. discharge_date (DT_SAIDA)
-        let discharge_date_col = build_date32_col(raw_batch, "DT_SAIDA", 0, num_rows);
-
-        // 6. length_of_stay_days (DIAS_PERM)
-        let stay_col = build_u16_col(raw_batch, "DIAS_PERM", 0, num_rows);
-
-        // 7. main_diagnosis_icd10 (DIAG_PRINC)
-        let diag_p_col = build_str_col(raw_batch, "DIAG_PRINC", "Z00", num_rows);
-
-        // 8. secondary_diagnosis_icd10 (DIAG_SECUN)
-        let diag_s_col = build_str_opt_col(raw_batch, "DIAG_SECUN", 5, num_rows);
-
-        // 9. procedure_sigtap (PROC_REA)
-        let proc_col = build_str_col(raw_batch, "PROC_REA", "0000000000", num_rows);
-
-        // 10. total_paid_amount (VAL_TOT)
-        let val_col = build_f64_col(raw_batch, "VAL_TOT", 0.0, num_rows);
-
-        // 11. icu_days (UTI_MES_TO)
-        let uti_col = build_u16_col(raw_batch, "UTI_MES_TO", 0, num_rows);
-
-        // 12. death_outcome (MORTE: 1=Sim, 0=Não)
-        let mut morte_builder = BooleanBuilder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let died = get_str_value(raw_batch, "MORTE", i) == Some("1");
-            morte_builder.append_value(died);
-        }
-        let morte_col: ArrayRef = Arc::new(morte_builder.finish());
-
-        // 13. is_csap (Inicialmente falso até enriquecimento com módulo CSAP)
-        let csap_col: ArrayRef = Arc::new(BooleanArray::from(vec![false; num_rows]));
-
-        let columns = vec![
-            record_id_col,
-            municipality_residence_col,
-            municipality_hospital_col,
-            admission_date_col,
-            discharge_date_col,
-            stay_col,
-            diag_p_col,
-            diag_s_col,
-            proc_col,
-            val_col,
-            uti_col,
-            morte_col,
-            csap_col,
-        ];
-
-        RecordBatch::try_new(target_schema, columns).map_err(|e| {
-            PortError::TabularDecodeError(format!(
-                "Falha ao gerar RecordBatch canônico de morbidade hospitalar: {e}"
-            ))
-        })
+        harmonizer.harmonize(raw_batch)
     }
 }
 
