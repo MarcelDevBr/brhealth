@@ -164,17 +164,18 @@ import brhealth
 from brhealth import Engine
 import torch
 
-# 1. Validação IBGE e CSAP
+# 1. Leitura Direta de Arquivos Comprimidos DATASUS (.dbc e .dbf)
+batch_dbc = brhealth.read_dbc("RDSP2401.dbc")
+df_pandas = batch_dbc.to_pandas()  # Conversão Zero-Copy para Pandas
+df_polars = batch_dbc.to_polars()  # Conversão Zero-Copy para Polars
+
+# 2. Validação IBGE e CSAP
 dv = brhealth.calculate_ibge_dv("355030") # 8
 assert brhealth.is_csap("J45.0") == True   # Asma é evitável na APS
 
-# 2. Ingestão Colunar de AIH/SIH
+# 3. Ingestão Colunar de AIH/SIH
 engine = Engine()
 sih_batch = engine.hospital_morbidity.fetch(jurisdiction="SP", year=2023, month=1)
-
-# 3. Conversão Zero-Copy para Polars DataFrame
-df = sih_batch.to_polars()
-print(df.head())
 
 # 4. Exportação Zero-Copy para Tensores PyTorch via DLPack
 tensor = torch.from_dlpack(sih_batch)
@@ -186,6 +187,8 @@ print(f"Custo Hospitalar Evitável: R$ {metricas['avoidable_cost']:.2f}")
 # 6. Exportar Manifesto FAIR W3C PROV-O
 sih_batch.export_fair_manifest("manifesto_extracao.jsonld")
 ```
+
+> Para a documentação exaustiva com todos os exemplos executáveis em Google Colab e Jupyter, consulte o [Guia Completo de Python](docs/python_guide.md).
 
 ---
 

@@ -1,4 +1,7 @@
+use arrow::array::{Int32Array, RecordBatch};
+use arrow::datatypes::{DataType, Field, Schema};
 use pyo3::prelude::*;
+use std::sync::Arc;
 
 #[test]
 fn test_python_module_metadata() {
@@ -41,6 +44,12 @@ fn test_python_csap_and_roi_functions() {
         let is_csap = brhealth::is_csap("J450");
         assert!(is_csap);
 
+        let name = brhealth::csap_group_name(7).unwrap();
+        assert_eq!(name, "Asma");
+
+        let invalid_group = brhealth::csap_group_name(20);
+        assert!(invalid_group.is_err());
+
         let roi = brhealth::compute_roi(500_000.0, 100_000.0, 0.50).unwrap();
         assert!((roi - 1.5).abs() < 1e-6);
     });
@@ -60,6 +69,10 @@ fn test_python_extended_features() {
         // S2
         let s2_cell = brhealth::coord_to_s2_cell(-23.550520, -46.633308, Some(10)).unwrap();
         assert_ne!(s2_cell, 0);
+
+        let (lat, lon) = brhealth::s2_cell_to_coord(s2_cell).unwrap();
+        assert!((lat - (-23.55)).abs() < 0.5);
+        assert!((lon - (-46.63)).abs() < 0.5);
 
         // CID-9 to CID-10
         let icd10 = brhealth::map_icd9_to_icd10("250");
@@ -107,10 +120,130 @@ fn test_python_ibge_validation() {
         assert_eq!(brhealth::harmonize_ibge_code(&sp_6_int).unwrap(), "3550308");
         assert_eq!(brhealth::harmonize_ibge_code(&sp_6_str).unwrap(), "3550308");
 
+        // Reconciliação de municípios históricos (Fernando de Noronha e Tocantins)
+        let fn_code = py.eval_bound("'200001'", None, None).unwrap();
+        let reconciled_fn = brhealth::reconcile_historical_ibge_code(&fn_code, Some(1980)).unwrap();
+        assert_eq!(reconciled_fn, "2605459");
+
         // Via Engine
         let engine = brhealth::Engine::new().unwrap();
         assert!(engine.validate_ibge_code(&sp_int));
         assert!(engine.validate_ibge_code(&rj_int));
         assert!(!engine.validate_ibge_code(&invalid_dv));
+    });
+}
+
+#[test]
+fn test_python_h3_and_spatial_features() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|_py| {
+        let lat = -23.550520;
+        let lng = -46.633308;
+        let h3_idx = brhealth::latlng_to_h3(lat, lng, 7).unwrap();
+        assert_ne!(h3_idx, 0);
+
+        let (c_lat, c_lng) = brhealth::h3_to_latlng(h3_idx).unwrap();
+        assert!((c_lat - lat).abs() < 0.1);
+        assert!((c_lng - lng).abs() < 0.1);
+
+        let disk = brhealth::h3_grid_disk(h3_idx, 1).unwrap();
+        assert_eq!(disk.len(), 7); // Anel de raio 1 no H3 possui 7 hexágonos
+
+        let dist = brhealth::h3_grid_distance(h3_idx, h3_idx).unwrap();
+        assert_eq!(dist, 0);
+    });
+}
+
+#[test]
+fn test_python_ontology_and_mortality() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        // Validação Biológica top-level
+        assert!(brhealth::validate_biological_consistency("O00", "F", 28).unwrap());
+        assert!(brhealth::validate_biological_consistency("O00", "M", 28).is_err());
+
+        // Metadados do Capítulo CID-10
+        let chap = brhealth::icd10_chapter(py, "I10").unwrap();
+        let num: u8 = chap.get_item("number").unwrap().unwrap().extract().unwrap();
+        let roman: String = chap.get_item("roman").unwrap().unwrap().extract().unwrap();
+        assert_eq!(num, 9);
+        assert_eq!(roman, "IX");
+
+        // Padronização Direta da OMS (18 faixas)
+        let deaths = vec![10; 18];
+        let pop = vec![1000; 18];
+        let std_rate = brhealth::compute_age_standardized_mortality_rate(deaths, pop).unwrap();
+        assert!(std_rate > 0.0);
+    });
+}
+
+#[test]
+fn test_python_record_batch_wrapper_utilities() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int32, false),
+            Field::new("age", DataType::Int32, false),
+        ]));
+        let id_array = Arc::new(Int32Array::from(vec![1, 2, 3]));
+        let age_array = Arc::new(Int32Array::from(vec![25, 40, 65]));
+        let batch = RecordBatch::try_new(schema, vec![id_array, age_array]).unwrap();
+
+        let wrapper = brhealth::RecordBatchWrapper::new(batch, None);
+        assert_eq!(wrapper.num_rows(), 3);
+        assert_eq!(wrapper.num_columns(), 2);
+        assert_eq!(wrapper.__len__(), 3);
+        assert_eq!(wrapper.columns(), vec!["id", "age"]);
+
+        let repr = wrapper.__repr__();
+        assert!(repr.contains("3 rows x 2 columns"));
+
+        let html = wrapper._repr_html_();
+        assert!(html.contains("BRHealth Colunar RecordBatch"));
+        assert!(html.contains("3 linhas &times; 2 colunas"));
+
+        // Cálculo de APVP em lote sobre wrapper
+        let apvp_dict = brhealth::compute_batch_apvp(py, &wrapper, "age", Some(70), Some(10_000)).unwrap();
+        let total_apvp: u64 = apvp_dict.get_item("total_apvp").unwrap().unwrap().extract().unwrap();
+        // (70 - 25) + (70 - 40) + (70 - 65) = 45 + 30 + 5 = 80
+        assert_eq!(total_apvp, 80);
+    });
+}
+
+#[test]
+fn test_python_engine_new_accessors_and_top_level_fetch() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        let engine_obj = Py::new(py, brhealth::Engine::new().unwrap()).unwrap();
+
+        // Testar instâncias dos novos accessors via getattr do Python
+        assert!(engine_obj.getattr(py, "demographics").is_ok());
+        assert!(engine_obj.getattr(py, "ambulatory").is_ok());
+        assert!(engine_obj.getattr(py, "environmental").is_ok());
+        assert!(engine_obj.getattr(py, "social").is_ok());
+
+        // Top-level fetch: fonte desconhecida deve retornar PyValueError sem pânico
+        let res_err = brhealth::fetch(
+            "fonte.desconhecida",
+            Some("35".to_string()),
+            2024,
+            None,
+            true,
+            None,
+            false,
+            None,
+        );
+        assert!(res_err.is_err());
+    });
+}
+
+#[test]
+fn test_python_decoders_file_errors() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        // Arquivo inexistente deve retornar erro tipado sem pânico
+        assert!(brhealth::read_dbc("/caminho/inexistente.dbc").is_err());
+        assert!(brhealth::read_dbf("/caminho/inexistente.dbf").is_err());
+        assert!(brhealth::decompress_dbc(py, "/caminho/inexistente.dbc", None).is_err());
     });
 }

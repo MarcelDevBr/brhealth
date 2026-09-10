@@ -4,15 +4,16 @@
 
 //! Bindings idiomáticos de alta performance para Python via PyO3.
 //!
-//! Permite consumo de pipelines analíticos, harmonização territorial do IBGE,
+//! Permite consumo de pipelines analíticos, descompressão nativa PKWARE Blast (.dbc)
+//! e decodificação DBF para Apache Arrow, harmonização territorial do IBGE,
 //! classificação de CSAP, indexação espacial discreta H3/S2, análise de mortalidade APVP,
-//! e exportação Zero-Copy de `RecordBatch` para Polars, PyArrow e PyTorch via DLPack.
+//! e exportação Zero-Copy de `RecordBatch` para Polars, PyArrow, Pandas e PyTorch via DLPack.
 
 #![allow(clippy::useless_conversion)]
 
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use arrow::array::{Array, ArrayData, StructArray};
 use arrow::compute::concat_batches;
@@ -20,27 +21,36 @@ use arrow::ffi::to_ffi;
 use arrow::record_batch::RecordBatch;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyDict};
+use pyo3::types::{PyBytes, PyCapsule, PyDict};
 
+use brhealth_core::decoders::{DbcDecompressor, DbfDecoder};
 use brhealth_core::domain::analytics::csap::{
     classify_cid10 as core_classify_cid10, compute_csap_metrics, compute_primary_care_roi,
-    is_csap as core_is_csap,
+    is_csap as core_is_csap, CsapGroup,
 };
 use brhealth_core::domain::analytics::mortality::{
+    compute_age_standardized_mortality_rate as core_compute_age_standardized_mortality_rate,
     compute_apvp as core_compute_apvp, compute_apvp_rate as core_compute_apvp_rate,
+    compute_batch_apvp as core_compute_batch_apvp,
 };
 use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
 use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
-use brhealth_core::domain::spatial::h3::coord_to_h3_index;
+use brhealth_core::domain::spatial::h3::{
+    coord_to_h3_index, h3_grid_disk as core_h3_grid_disk,
+    h3_grid_distance as core_h3_grid_distance, h3_index_to_coord as core_h3_index_to_coord,
+};
 use brhealth_core::domain::spatial::s2::{
     coord_to_s2_cell as core_coord_to_s2_cell, s2_cell_to_coord as core_s2_cell_to_coord,
     DEFAULT_S2_MUNICIPAL_LEVEL,
 };
 use brhealth_core::domain::transforms::ibge::{
     calculate_ibge_dv as core_calculate_ibge_dv, harmonize_ibge_code as core_harmonize_ibge_code,
+    reconcile_historical_ibge_code as core_reconcile_historical_ibge_code,
     validate_ibge_code as core_validate_ibge_code,
 };
-use brhealth_core::domain::transforms::ontology::MedicalOntologyHarmonizer;
+use brhealth_core::domain::transforms::ontology::{
+    BiologicalSex, Icd10Chapter, MedicalOntologyHarmonizer,
+};
 use brhealth_core::domain::transforms::pharmacy::PharmacyHarmonizer;
 use brhealth_core::domain::transforms::sigtap::{
     is_amputation_procedure as core_is_amputation_procedure,
@@ -85,6 +95,73 @@ impl RecordBatchWrapper {
             .iter()
             .map(|f| f.name().clone())
             .collect()
+    }
+
+    /// Lista de colunas do lote (propriedade compatível com Pandas/Polars).
+    #[getter]
+    pub fn columns(&self) -> Vec<String> {
+        self.column_names()
+    }
+
+    /// Dicionário contendo o esquema de tipos Arrow {nome_coluna: tipo_string}.
+    #[getter]
+    pub fn schema<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        for field in self.batch.schema().fields() {
+            dict.set_item(field.name(), format!("{:?}", field.data_type()))?;
+        }
+        Ok(dict)
+    }
+
+    /// Retorna o manifesto FAIR W3C PROV-O formatado em JSON, se disponível.
+    #[getter]
+    pub fn manifest_json(&self) -> Option<String> {
+        self.manifest.as_ref().and_then(|m| m.to_json().ok())
+    }
+
+    /// Suporte ao protocolo len() do Python: retorna o número de linhas contidas no lote.
+    pub fn __len__(&self) -> usize {
+        self.batch.num_rows()
+    }
+
+    /// Representação textual concisa do lote colunar.
+    pub fn __repr__(&self) -> String {
+        format!(
+            "BRHealth.RecordBatch({} rows x {} columns, fields={:?})",
+            self.batch.num_rows(),
+            self.batch.num_columns(),
+            self.column_names()
+        )
+    }
+
+    /// Renderização rica em HTML para exibição interativa e elegante no Jupyter Notebook e Google Colab.
+    pub fn _repr_html_(&self) -> String {
+        let schema = self.batch.schema();
+        let mut fields_html = String::new();
+        for field in schema.fields() {
+            fields_html.push_str(&format!(
+                "<tr><td style='text-align:left;font-weight:600;padding:4px 12px;border-bottom:1px solid #e0e0e0;'>{}</td><td style='text-align:left;color:#555;padding:4px 12px;border-bottom:1px solid #e0e0e0;'>{:?}</td><td style='text-align:center;color:#888;padding:4px 12px;border-bottom:1px solid #e0e0e0;'>{}</td></tr>",
+                field.name(),
+                field.data_type(),
+                if field.is_nullable() { "sim" } else { "não" }
+            ));
+        }
+
+        format!(
+            "<div style='border:1px solid #0284c7;border-radius:8px;padding:12px;background:#f8fafc;font-family:system-ui,sans-serif;max-width:650px;'>\
+            <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>\
+            <span style='font-size:14px;font-weight:bold;color:#0369a1;'>BRHealth Colunar RecordBatch (Apache Arrow Zero-Copy)</span>\
+            <span style='background:#0284c7;color:white;font-size:11px;padding:2px 8px;border-radius:12px;'>{} linhas &times; {} colunas</span>\
+            </div>\
+            <table style='width:100%;border-collapse:collapse;font-size:12px;'>\
+            <thead><tr style='background:#e2e8f0;'><th style='text-align:left;padding:6px 12px;'>Coluna</th><th style='text-align:left;padding:6px 12px;'>Tipo Arrow</th><th style='text-align:center;padding:6px 12px;'>Anulável</th></tr></thead>\
+            <tbody>{}</tbody>\
+            </table>\
+            </div>",
+            self.batch.num_rows(),
+            self.batch.num_columns(),
+            fields_html
+        )
     }
 
     /// Retorna os endereços de memória brutos (array_ptr, schema_ptr) para a C Data Interface.
@@ -183,6 +260,26 @@ impl RecordBatchWrapper {
         polars.call_method1("from_arrow", (slf.into_py(py),))
     }
 
+    /// Converte o RecordBatch para um DataFrame do Pandas.
+    pub fn to_pandas<'py>(slf: PyRef<'py, Self>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let slf_py: Py<Self> = slf.into();
+        if let Ok(pa) = py.import_bound("pyarrow") {
+            let batch = pa.call_method1("record_batch", (slf_py.clone_ref(py),))?;
+            if let Ok(df) = batch.call_method0("to_pandas") {
+                return Ok(df);
+            }
+        }
+        if let Ok(pl) = py.import_bound("polars") {
+            let df = pl.call_method1("from_arrow", (slf_py.clone_ref(py),))?;
+            if let Ok(pandas_df) = df.call_method0("to_pandas") {
+                return Ok(pandas_df);
+            }
+        }
+        Err(PyValueError::new_err(
+            "to_pandas() requer 'pyarrow' ou 'polars' e 'pandas' instalados no ambiente Python",
+        ))
+    }
+
     /// Exporta o manifesto FAIR W3C PROV-O em formato JSON-LD para o caminho de arquivo fornecido.
     pub fn export_fair_manifest(&self, path: &str) -> PyResult<()> {
         if let Some(ref manifest) = self.manifest {
@@ -199,6 +296,69 @@ impl RecordBatchWrapper {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Decodificadores Nativos (.dbc e .dbf)
+// ---------------------------------------------------------------------------
+
+/// Descomprime um arquivo .dbc do DATASUS e decodifica diretamente para um RecordBatch Arrow Zero-Copy.
+#[pyfunction]
+pub fn read_dbc(path: &str) -> PyResult<RecordBatchWrapper> {
+    let input = std::fs::read(path)
+        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{path}': {e}")))?;
+    let decompressor = DbcDecompressor::new()
+        .map_err(|e| PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}")))?;
+    let dbf_bytes = decompressor
+        .decompress_dbc(&input)
+        .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
+    let decoder = DbfDecoder::new();
+    let batch = decoder
+        .decode_to_record_batch(&dbf_bytes)
+        .map_err(|e| PyValueError::new_err(format!("Falha na decodificação DBF: {e}")))?;
+    Ok(RecordBatchWrapper::new(batch, None))
+}
+
+/// Decodifica um arquivo .dbf diretamente para um RecordBatch Arrow Zero-Copy.
+#[pyfunction]
+pub fn read_dbf(path: &str) -> PyResult<RecordBatchWrapper> {
+    let input = std::fs::read(path)
+        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{path}': {e}")))?;
+    let decoder = DbfDecoder::new();
+    let batch = decoder
+        .decode_to_record_batch(&input)
+        .map_err(|e| PyValueError::new_err(format!("Falha na decodificação DBF: {e}")))?;
+    Ok(RecordBatchWrapper::new(batch, None))
+}
+
+/// Descomprime um arquivo .dbc do DATASUS retornando os bytes brutos do arquivo .dbf correspondente.
+///
+/// Caso `output_path` seja fornecido, grava os bytes descomprimidos no caminho de arquivo especificado.
+#[pyfunction]
+#[pyo3(signature = (input_path, output_path=None))]
+pub fn decompress_dbc<'py>(
+    py: Python<'py>,
+    input_path: &str,
+    output_path: Option<String>,
+) -> PyResult<Bound<'py, PyBytes>> {
+    let input = std::fs::read(input_path)
+        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{input_path}': {e}")))?;
+    let decompressor = DbcDecompressor::new()
+        .map_err(|e| PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}")))?;
+    let dbf_bytes = decompressor
+        .decompress_dbc(&input)
+        .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
+
+    if let Some(ref out_path) = output_path {
+        std::fs::write(out_path, &dbf_bytes)
+            .map_err(|e| PyValueError::new_err(format!("Erro ao gravar DBF em '{out_path}': {e}")))?;
+    }
+
+    Ok(PyBytes::new_bound(py, &dbf_bytes))
+}
+
+// ---------------------------------------------------------------------------
+// Harmonização Territorial IBGE
+// ---------------------------------------------------------------------------
 
 /// Calcula o Dígito Verificador oficial do IBGE (Módulo 10 Luhn) para um código de 6 dígitos.
 ///
@@ -253,10 +413,64 @@ pub fn validate_ibge_code(code: &Bound<'_, PyAny>) -> bool {
     }
 }
 
+/// Reconcilia códigos municipais históricos com a malha canônica do IBGE de 2026.
+///
+/// Caso o código pertença a uma transição territorial histórica (ex: desmembramento do Tocantins
+/// de Goiás em 1988 ou incorporação do Território Federal de Fernando de Noronha),
+/// o código contemporâneo canônico é retornado.
+///
+/// Aceita string ou inteiro (ex: `"200001"`, `"520210"`, `200001`).
+#[pyfunction]
+#[pyo3(signature = (raw_code, reference_year=None))]
+pub fn reconcile_historical_ibge_code(
+    raw_code: &Bound<'_, PyAny>,
+    reference_year: Option<u16>,
+) -> PyResult<String> {
+    let s = if let Ok(s) = raw_code.extract::<String>() {
+        s
+    } else if let Ok(n) = raw_code.extract::<i64>() {
+        n.to_string()
+    } else {
+        return Err(PyValueError::new_err(
+            "Código IBGE deve ser string ou inteiro",
+        ));
+    };
+    core_reconcile_historical_ibge_code(&s, reference_year)
+        .map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+// ---------------------------------------------------------------------------
+// Geoespacial Analítico (Uber H3 & Google S2)
+// ---------------------------------------------------------------------------
+
 /// Converte coordenadas de latitude e longitude em um índice hexagonal Uber H3.
 #[pyfunction]
 pub fn latlng_to_h3(lat: f64, lng: f64, resolution: u8) -> PyResult<u64> {
     coord_to_h3_index(lat, lng, resolution).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Converte um índice de célula H3 de 64 bits para o centróide em coordenadas (latitude, longitude).
+#[pyfunction]
+pub fn h3_to_latlng(h3_index: u64) -> PyResult<(f64, f64)> {
+    core_h3_index_to_coord(h3_index).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Converte um índice de célula H3 de 64 bits para o centróide em coordenadas (latitude, longitude).
+#[pyfunction]
+pub fn h3_index_to_coord(h3_index: u64) -> PyResult<(f64, f64)> {
+    h3_to_latlng(h3_index)
+}
+
+/// Retorna as células vizinhas em um disco espacial de raio k (anel/vizinhança de ordem k).
+#[pyfunction]
+pub fn h3_grid_disk(h3_index: u64, k: u32) -> PyResult<Vec<u64>> {
+    core_h3_grid_disk(h3_index, k).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Calcula a distância de grade em número de células hexagonais entre duas posições H3 de mesma resolução.
+#[pyfunction]
+pub fn h3_grid_distance(origin: u64, destination: u64) -> PyResult<i32> {
+    core_h3_grid_distance(origin, destination).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Converte coordenadas de latitude e longitude em um identificador S2 CellId de 64 bits.
@@ -280,6 +494,10 @@ pub fn s2_cell_to_coord(cell_id: u64) -> PyResult<(f64, f64)> {
     core_s2_cell_to_coord(cell_id).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
+// ---------------------------------------------------------------------------
+// Bioestatística e Análise de Mortalidade Prematura
+// ---------------------------------------------------------------------------
+
 /// Calcula Anos Potenciais de Vida Perdidos (APVP / YLL) para um conjunto de idades de óbito.
 #[pyfunction]
 #[pyo3(signature = (ages, cutoff_age=None))]
@@ -287,11 +505,55 @@ pub fn compute_apvp(ages: Vec<u16>, cutoff_age: Option<u16>) -> u64 {
     core_compute_apvp(&ages, cutoff_age.unwrap_or(70))
 }
 
-/// Calcula a taxa padronizada de APVP por habitante.
+/// Calcula a taxa padronizada de APVP por 100.000 habitantes.
 #[pyfunction]
 pub fn compute_apvp_rate(total_apvp: u64, population: u64) -> PyResult<f64> {
     core_compute_apvp_rate(total_apvp, population).map_err(|e| PyValueError::new_err(e.to_string()))
 }
+
+/// Avalia vetorizadamente um RecordBatch Arrow e calcula métricas completas de APVP.
+#[pyfunction]
+#[pyo3(signature = (wrapper, age_column, cutoff_age=None, reference_population=None))]
+pub fn compute_batch_apvp<'py>(
+    py: Python<'py>,
+    wrapper: &RecordBatchWrapper,
+    age_column: &str,
+    cutoff_age: Option<u16>,
+    reference_population: Option<u64>,
+) -> PyResult<Bound<'py, PyDict>> {
+    let metrics = core_compute_batch_apvp(
+        &wrapper.batch,
+        age_column,
+        cutoff_age.unwrap_or(70),
+        reference_population,
+    )
+    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    let dict = PyDict::new_bound(py);
+    dict.set_item("total_apvp", metrics.total_apvp)?;
+    dict.set_item("premature_deaths", metrics.premature_deaths)?;
+    dict.set_item("mean_years_lost_per_death", metrics.mean_years_lost_per_death)?;
+    dict.set_item("cutoff_age", metrics.cutoff_age)?;
+    dict.set_item("apvp_rate_per_100k", metrics.apvp_rate_per_100k)?;
+    Ok(dict)
+}
+
+/// Calcula a Taxa Padronizada Direta de Mortalidade por 100.000 habitantes
+/// utilizando a População Padrão Mundial da OMS (2000-2025).
+///
+/// Requer duas listas com exatamente 18 elementos para as faixas etárias quinquenais (0 a 85+ anos).
+#[pyfunction]
+pub fn compute_age_standardized_mortality_rate(
+    observed_deaths: Vec<u64>,
+    local_pop: Vec<u64>,
+) -> PyResult<f64> {
+    core_compute_age_standardized_mortality_rate(&observed_deaths, &local_pop)
+        .map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+// ---------------------------------------------------------------------------
+// CSAP, Ontologias Médicas e Economia da Saúde
+// ---------------------------------------------------------------------------
 
 /// Classifica um código de diagnóstico CID-10 conforme os 19 grupos da Portaria MS/SAS nº 221/2008.
 #[pyfunction]
@@ -303,6 +565,67 @@ pub fn classify_cid10(cid: &str) -> Option<u8> {
 #[pyfunction]
 pub fn is_csap(cid: &str) -> bool {
     core_is_csap(cid)
+}
+
+/// Retorna o título descritivo oficial de um grupo CSAP (1 a 19) segundo a Portaria MS/SAS nº 221/2008.
+#[pyfunction]
+pub fn csap_group_name(group_id: u8) -> PyResult<String> {
+    let group = match group_id {
+        1 => CsapGroup::Imunopreveniveis,
+        2 => CsapGroup::Gastroenterites,
+        3 => CsapGroup::Anemia,
+        4 => CsapGroup::DeficienciasNutricionais,
+        5 => CsapGroup::InfeccoesOuvidoNarizGarganta,
+        6 => CsapGroup::PneumoniasBacterianas,
+        7 => CsapGroup::Asma,
+        8 => CsapGroup::DoencasPulmonares,
+        9 => CsapGroup::Hipertensao,
+        10 => CsapGroup::Angina,
+        11 => CsapGroup::InsuficienciaCardiaca,
+        12 => CsapGroup::DoencasCerebrovasculares,
+        13 => CsapGroup::DiabetesMellitus,
+        14 => CsapGroup::Epilepsias,
+        15 => CsapGroup::InfeccaoTratoUrinario,
+        16 => CsapGroup::InfeccoesPele,
+        17 => CsapGroup::DoencaInflamatoriaPelvica,
+        18 => CsapGroup::UlceraGastrointestinal,
+        19 => CsapGroup::DoencasPreNatalParto,
+        other => {
+            return Err(PyValueError::new_err(format!(
+                "Grupo CSAP inválido: {other}. Os grupos válidos são de 1 a 19."
+            )))
+        }
+    };
+    Ok(group.name().to_string())
+}
+
+/// Retorna os metadados do capítulo da CID-10 para o código informado (número, numeral romano e título em português).
+#[pyfunction]
+pub fn icd10_chapter<'py>(py: Python<'py>, code: &str) -> PyResult<Bound<'py, PyDict>> {
+    let chapter = Icd10Chapter::from_code(code).ok_or_else(|| {
+        PyValueError::new_err(format!("Código CID-10 '{code}' inválido ou não reconhecido"))
+    })?;
+
+    let dict = PyDict::new_bound(py);
+    dict.set_item("number", chapter as u8)?;
+    dict.set_item("roman", chapter.roman_numeral())?;
+    dict.set_item("title_pt", chapter.title_pt())?;
+    Ok(dict)
+}
+
+/// Valida a consistência biológica de um evento médico de acordo com sexo biológico e idade.
+#[pyfunction]
+pub fn validate_biological_consistency(
+    icd10: &str,
+    sex: &str,
+    age_years: u16,
+) -> PyResult<bool> {
+    let harmonizer = MedicalOntologyHarmonizer::new();
+    let bio_sex = BiologicalSex::from_str_lenient(sex);
+    match harmonizer.validate_biological_consistency(icd10, bio_sex, age_years) {
+        Ok(()) => Ok(true),
+        Err(e) => Err(PyValueError::new_err(e.to_string())),
+    }
 }
 
 /// Mapeia código histórico CID-9 para o equivalente canônico na CID-10.
@@ -389,6 +712,10 @@ pub fn compute_roi(
     compute_primary_care_roi(avoidable_cost, investment, attributable_fraction)
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
+
+// ---------------------------------------------------------------------------
+// Accessors Semânticos Especializados
+// ---------------------------------------------------------------------------
 
 /// Acessor semântico para Morbidade Hospitalar do SUS (SIH-SUS / RD3).
 #[pyclass]
@@ -587,6 +914,170 @@ impl GlobalClimateAccessor {
     }
 }
 
+/// Acessor semântico para Dados Demográficos e Censitários do IBGE.
+#[pyclass]
+pub struct DemographicsAccessor {
+    engine: Py<Engine>,
+}
+
+#[pymethods]
+impl DemographicsAccessor {
+    /// Ingestão de pesquisas do IBGE: censo, pnad, pof, pense ou munic.
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (source="censo", jurisdiction=None, year=2022, month=None, harmonize_ibge=true))]
+    pub fn fetch(
+        &self,
+        py: Python<'_>,
+        source: &str,
+        jurisdiction: Option<String>,
+        year: u16,
+        month: Option<u8>,
+        harmonize_ibge: bool,
+    ) -> PyResult<RecordBatchWrapper> {
+        let engine_borrow = self.engine.borrow(py);
+        let src_id = match source.to_lowercase().as_str() {
+            "censo" => "ibge.censo",
+            "pnad" => "ibge.pnad",
+            "pof" => "ibge.pof",
+            "pense" => "ibge.pense",
+            "munic" => "ibge.munic",
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "Pesquisa IBGE desconhecida '{other}'. Opções: 'censo', 'pnad', 'pof', 'pense', 'munic'"
+                )))
+            }
+        };
+
+        engine_borrow.fetch(
+            src_id,
+            jurisdiction,
+            year,
+            month,
+            harmonize_ibge,
+            None,
+            false,
+            None,
+        )
+    }
+}
+
+/// Acessor semântico para Atenção Ambulatorial e Estabelecimentos (SIA-SUS e CNES).
+#[pyclass]
+pub struct AmbulatoryAccessor {
+    engine: Py<Engine>,
+}
+
+#[pymethods]
+impl AmbulatoryAccessor {
+    /// Ingestão de SIA (Produção Ambulatorial) ou CNES (Cadastro de Estabelecimentos).
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (source="SIA", jurisdiction=None, year=2024, month=None, harmonize_ibge=true))]
+    pub fn fetch(
+        &self,
+        py: Python<'_>,
+        source: &str,
+        jurisdiction: Option<String>,
+        year: u16,
+        month: Option<u8>,
+        harmonize_ibge: bool,
+    ) -> PyResult<RecordBatchWrapper> {
+        let engine_borrow = self.engine.borrow(py);
+        let src_id = match source.to_uppercase().as_str() {
+            "SIA" | "SIASUS" => "datasus.sia",
+            "CNES" => "datasus.cnes",
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "Fonte ambulatorial desconhecida '{other}'. Use 'SIA' ou 'CNES'"
+                )))
+            }
+        };
+
+        engine_borrow.fetch(
+            src_id,
+            jurisdiction,
+            year,
+            month,
+            harmonize_ibge,
+            None,
+            false,
+            None,
+        )
+    }
+}
+
+/// Acessor semântico para Determinantes Ambientais e Climáticos Nacionais.
+#[pyclass]
+pub struct EnvironmentalAccessor {
+    engine: Py<Engine>,
+}
+
+#[pymethods]
+impl EnvironmentalAccessor {
+    /// Ingestão de dados de ambiente: inmet, bdqueimadas, prodes ou sisagua.
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (source="inmet", jurisdiction=None, year=2024, month=None))]
+    pub fn fetch(
+        &self,
+        py: Python<'_>,
+        source: &str,
+        jurisdiction: Option<String>,
+        year: u16,
+        month: Option<u8>,
+    ) -> PyResult<RecordBatchWrapper> {
+        let engine_borrow = self.engine.borrow(py);
+        let src_id = match source.to_lowercase().as_str() {
+            "inmet" => "environmental.inmet",
+            "bdqueimadas" | "queimadas" => "environmental.bdqueimadas",
+            "prodes" | "desmatamento" => "environmental.prodes",
+            "sisagua" | "agua" => "environmental.sisagua",
+            other => {
+                return Err(PyValueError::new_err(format!(
+                    "Fonte ambiental desconhecida '{other}'. Opções: 'inmet', 'bdqueimadas', 'prodes', 'sisagua'"
+                )))
+            }
+        };
+
+        engine_borrow.fetch(src_id, jurisdiction, year, month, false, None, false, None)
+    }
+}
+
+/// Acessor semântico para Vulnerabilidade Social e CadÚnico (MDS).
+#[pyclass]
+pub struct SocialAccessor {
+    engine: Py<Engine>,
+}
+
+#[pymethods]
+impl SocialAccessor {
+    /// Ingestão de microdados do Cadastro Único para Programas Sociais (CadÚnico).
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (jurisdiction=None, year=2024, month=None, harmonize_ibge=true))]
+    pub fn fetch(
+        &self,
+        py: Python<'_>,
+        jurisdiction: Option<String>,
+        year: u16,
+        month: Option<u8>,
+        harmonize_ibge: bool,
+    ) -> PyResult<RecordBatchWrapper> {
+        let engine_borrow = self.engine.borrow(py);
+        engine_borrow.fetch(
+            "mds.cadunico",
+            jurisdiction,
+            year,
+            month,
+            harmonize_ibge,
+            None,
+            false,
+            None,
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Motor Analítico BRHealth (Engine)
+// ---------------------------------------------------------------------------
+
 /// Motor de computação e registro analítico do BRHealth.
 #[pyclass]
 pub struct Engine {
@@ -635,6 +1126,30 @@ impl Engine {
     #[getter]
     pub fn global_climate(slf: PyRef<'_, Self>) -> GlobalClimateAccessor {
         GlobalClimateAccessor { engine: slf.into() }
+    }
+
+    /// Acessor especializado para Demografia e Condições Censitárias (IBGE).
+    #[getter]
+    pub fn demographics(slf: PyRef<'_, Self>) -> DemographicsAccessor {
+        DemographicsAccessor { engine: slf.into() }
+    }
+
+    /// Acessor especializado para Assistência Ambulatorial e Estabelecimentos (SIA-SUS e CNES).
+    #[getter]
+    pub fn ambulatory(slf: PyRef<'_, Self>) -> AmbulatoryAccessor {
+        AmbulatoryAccessor { engine: slf.into() }
+    }
+
+    /// Acessor especializado para Clima e Determinantes Ambientais Nacionais (INMET, BDQueimadas, Prodes, Sisagua).
+    #[getter]
+    pub fn environmental(slf: PyRef<'_, Self>) -> EnvironmentalAccessor {
+        EnvironmentalAccessor { engine: slf.into() }
+    }
+
+    /// Acessor especializado para Vulnerabilidade Social (CadÚnico / MDS).
+    #[getter]
+    pub fn social(slf: PyRef<'_, Self>) -> SocialAccessor {
+        SocialAccessor { engine: slf.into() }
     }
 
     /// Retorna a lista de identificadores das fontes registradas.
@@ -754,8 +1269,7 @@ impl Engine {
         age_years: u16,
     ) -> PyResult<bool> {
         let harmonizer = MedicalOntologyHarmonizer::new();
-        let bio_sex =
-            brhealth_core::domain::transforms::ontology::BiologicalSex::from_str_lenient(sex);
+        let bio_sex = BiologicalSex::from_str_lenient(sex);
         match harmonizer.validate_biological_consistency(icd10, bio_sex, age_years) {
             Ok(()) => Ok(true),
             Err(e) => Err(PyValueError::new_err(e.to_string())),
@@ -773,27 +1287,92 @@ impl Engine {
     }
 }
 
-impl Default for Engine {
-    fn default() -> Self {
-        Self::new().expect("Falha ao inicializar Engine com configuração padrão")
+// ---------------------------------------------------------------------------
+// Singleton Global e Função Top-Level fetch()
+// ---------------------------------------------------------------------------
+
+static GLOBAL_ENGINE: OnceLock<Engine> = OnceLock::new();
+
+fn get_global_engine() -> PyResult<&'static Engine> {
+    if let Some(engine) = GLOBAL_ENGINE.get() {
+        return Ok(engine);
     }
+    let engine = Engine::new()?;
+    let _ = GLOBAL_ENGINE.set(engine);
+    GLOBAL_ENGINE
+        .get()
+        .ok_or_else(|| PyValueError::new_err("Falha ao inicializar o motor analítico global"))
 }
+
+/// Executa ingestão e harmonização de qualquer fonte registrada usando o motor global do BRHealth.
+#[allow(clippy::too_many_arguments)]
+#[pyfunction]
+#[pyo3(signature = (source_id, jurisdiction=None, year=2024, month=None, harmonize_ibge=true, assign_h3=None, enrich_csap=false, extra_filters=None))]
+pub fn fetch(
+    source_id: &str,
+    jurisdiction: Option<String>,
+    year: u16,
+    month: Option<u8>,
+    harmonize_ibge: bool,
+    assign_h3: Option<u8>,
+    enrich_csap: bool,
+    extra_filters: Option<HashMap<String, String>>,
+) -> PyResult<RecordBatchWrapper> {
+    let engine = get_global_engine()?;
+    engine.fetch(
+        source_id,
+        jurisdiction,
+        year,
+        month,
+        harmonize_ibge,
+        assign_h3,
+        enrich_csap,
+        extra_filters,
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Registro de Módulo PyO3
+// ---------------------------------------------------------------------------
 
 /// Módulo Python do BRHealth.
 #[pymodule]
 fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Decodificadores
+    m.add_function(wrap_pyfunction!(read_dbc, m)?)?;
+    m.add_function(wrap_pyfunction!(read_dbf, m)?)?;
+    m.add_function(wrap_pyfunction!(decompress_dbc, m)?)?;
+
+    // Harmonização Territorial IBGE
     m.add_function(wrap_pyfunction!(calculate_ibge_dv, m)?)?;
     m.add_function(wrap_pyfunction!(harmonize_ibge_code, m)?)?;
     m.add_function(wrap_pyfunction!(validate_ibge_code, m)?)?;
+    m.add_function(wrap_pyfunction!(reconcile_historical_ibge_code, m)?)?;
+
+    // Geoespacial
     m.add_function(wrap_pyfunction!(latlng_to_h3, m)?)?;
+    m.add_function(wrap_pyfunction!(h3_to_latlng, m)?)?;
+    m.add_function(wrap_pyfunction!(h3_index_to_coord, m)?)?;
+    m.add_function(wrap_pyfunction!(h3_grid_disk, m)?)?;
+    m.add_function(wrap_pyfunction!(h3_grid_distance, m)?)?;
     m.add_function(wrap_pyfunction!(latlng_to_s2, m)?)?;
     m.add_function(wrap_pyfunction!(coord_to_s2_cell, m)?)?;
     m.add_function(wrap_pyfunction!(s2_cell_to_coord, m)?)?;
+
+    // Bioestatística & Mortalidade
     m.add_function(wrap_pyfunction!(compute_apvp, m)?)?;
     m.add_function(wrap_pyfunction!(compute_apvp_rate, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_batch_apvp, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_age_standardized_mortality_rate, m)?)?;
+
+    // CSAP, Ontologias & Farmácia
     m.add_function(wrap_pyfunction!(classify_cid10, m)?)?;
     m.add_function(wrap_pyfunction!(is_csap, m)?)?;
+    m.add_function(wrap_pyfunction!(csap_group_name, m)?)?;
+    m.add_function(wrap_pyfunction!(icd10_chapter, m)?)?;
+    m.add_function(wrap_pyfunction!(validate_biological_consistency, m)?)?;
     m.add_function(wrap_pyfunction!(map_icd9_to_icd10, m)?)?;
     m.add_function(wrap_pyfunction!(map_icd10_to_icd9, m)?)?;
     m.add_function(wrap_pyfunction!(map_icd10_to_icd11, m)?)?;
@@ -804,12 +1383,21 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(lookup_atc, m)?)?;
     m.add_function(wrap_pyfunction!(map_atc_to_rxnorm, m)?)?;
     m.add_function(wrap_pyfunction!(compute_roi, m)?)?;
+
+    // Ingestão Top-Level
+    m.add_function(wrap_pyfunction!(fetch, m)?)?;
+
+    // Classes & Accessors
     m.add_class::<Engine>()?;
     m.add_class::<RecordBatchWrapper>()?;
     m.add_class::<HospitalMorbidityAccessor>()?;
     m.add_class::<VitalStatisticsAccessor>()?;
     m.add_class::<NotificationsAccessor>()?;
     m.add_class::<GlobalClimateAccessor>()?;
+    m.add_class::<DemographicsAccessor>()?;
+    m.add_class::<AmbulatoryAccessor>()?;
+    m.add_class::<EnvironmentalAccessor>()?;
+    m.add_class::<SocialAccessor>()?;
 
     Ok(())
 }

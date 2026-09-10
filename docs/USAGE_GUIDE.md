@@ -164,24 +164,38 @@ pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/
 ```python
 import brhealth
 
-# 1. Validação canônica do IBGE
-dv = brhealth.calculate_ibge_dv("355030") # Retorna 8
-municipio_canônico = brhealth.harmonize_ibge_code("355030") # "3550308"
-valido = brhealth.validate_ibge_code(3550308) # True (aceita int ou str)
+# 1. Leitura Nativa de Arquivos .dbc e .dbf do DATASUS
+batch_dbc = brhealth.read_dbc("RDSP2401.dbc")
+df_pandas = batch_dbc.to_pandas() # Conversão Zero-Copy para Pandas
+df_polars = batch_dbc.to_polars() # Conversão Zero-Copy para Polars
 
-# 2. Avaliação de CSAP (Portaria 221/2008)
+# 2. Validação e Harmonização canônica do IBGE
+dv = brhealth.calculate_ibge_dv("355030") # Retorna 8
+municipio_canonico = brhealth.harmonize_ibge_code("355030") # "3550308"
+valido = brhealth.validate_ibge_code(3550308) # True (aceita int ou str)
+fn_canonico = brhealth.reconcile_historical_ibge_code("200001", reference_year=1980) # "2605459"
+
+# 3. Avaliação de CSAP (Portaria 221/2008)
 assert brhealth.is_csap("J45.0") == True
 grupo_id = brhealth.classify_cid10("J45.0") # Grupo 7 (Asma)
+nome_grupo = brhealth.csap_group_name(grupo_id) # 'Asma'
 
-# 3. Transição de Ontologias Médicas
+# 4. Transição de Ontologias Médicas
 cid10 = brhealth.map_icd9_to_icd10("493")     # "J45" (Asma)
 cid11 = brhealth.map_icd10_to_icd11("I10")    # "BA00" (Hipertensão)
 snomed = brhealth.map_icd10_to_snomed("I10")  # "38341003" (Hipertensão Essencial)
 
-# 4. Verificação de Procedimentos SIGTAP
+# 5. Geoprocessamento Hexagonal H3 e Google S2
+h3_idx = brhealth.latlng_to_h3(-23.55052, -46.633308, resolution=7)
+lat, lon = brhealth.h3_to_latlng(h3_idx)
+
+# 6. Verificação de Procedimentos SIGTAP
 if brhealth.is_amputation_procedure("0407040011"):
     print("Alerta: Procedimento de amputação de membro detectado.")
 ```
+
+> [!TIP]
+> Para o manual completo de Python detalhando cada parâmetro, função e exemplos para Google Colab, consulte [`docs/python_guide.md`](python_guide.md).
 
 ---
 
