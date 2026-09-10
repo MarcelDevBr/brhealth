@@ -11,16 +11,16 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Tag version to release (e.g. v1.0.0)"
+        description: "Tag version to release (e.g. v0.1.0)"
         required: true
-        default: "v1.0.0"
+        default: "v0.1.0"
 
 permissions:
   contents: write
 
 env:
   CARGO_TERM_COLOR: always
-  RELEASE_TAG: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name) || 'v1.0.0' }}
+  RELEASE_TAG: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name) || 'v0.1.0' }}
 
 jobs:
   build-release:

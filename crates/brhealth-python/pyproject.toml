@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "brhealth"
-version = "1.0.0"
+version = "0.1.0"
 description = "BRHealth: High-Performance Columnar Health Analytics Engine"
 readme = "../../README.md"
 requires-python = ">=3.10"

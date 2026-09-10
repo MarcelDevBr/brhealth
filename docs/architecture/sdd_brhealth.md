@@ -2,7 +2,7 @@
 ## Documento de Especificação Arquitetural e Design de Sistema
 
 **Document ID:** SDD-BRHEALTH-001  
-**Versão:** 1.0.0-Draft  
+**Versão:** 0.1.0-Draft  
 **Data:** 2026-09-09  
 **Autor Principal e Arquiteto:** Marcel (`MarcelDevBr`)  
 **Licença:** GNU Affero General Public License v3 (AGPL-3.0-or-later) / Commercial Dual-Licensing  

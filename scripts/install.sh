@@ -60,7 +60,7 @@ if [ -z "${VERSION}" ]; then
     VERSION="$(echo "${LATEST_RELEASE_JSON}" | grep -o '"tag_name": *"[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)"
     
     if [ -z "${VERSION}" ]; then
-        VERSION="v1.0.0"
+        VERSION="v0.1.0"
         echo "-> Não foi possível consultar a API do GitHub (rate limit?). Usando versão padrão: ${VERSION}"
     else
         echo "-> Versão mais recente encontrada: ${VERSION}"

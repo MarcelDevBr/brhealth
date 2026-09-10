@@ -364,7 +364,7 @@ mod tests {
         let ptr = brhealth_version();
         assert!(!ptr.is_null());
         let c_str = unsafe { CStr::from_ptr(ptr) };
-        assert_eq!(c_str.to_str().unwrap(), "1.0.0");
+        assert_eq!(c_str.to_str().unwrap(), "0.1.0");
     }
 
     #[test]

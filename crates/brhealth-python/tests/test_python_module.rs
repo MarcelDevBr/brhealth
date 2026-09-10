@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 #[test]
 fn test_python_module_metadata() {
     let version = env!("CARGO_PKG_VERSION");
-    assert_eq!(version, "1.0.0");
+    assert_eq!(version, "0.1.0");
 }
 
 #[test]

@@ -411,7 +411,7 @@ dependencies = [
 
 [[package]]
 name = "brhealth-cli"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "arrow",
  "brhealth-core",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "brhealth-core"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "arrow",
  "async-trait",
@@ -447,7 +447,7 @@ dependencies = [
 
 [[package]]
 name = "brhealth-ffi"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "arrow",
  "brhealth-core",
@@ -458,14 +458,14 @@ dependencies = [
 
 [[package]]
 name = "brhealth-jni"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "brhealth-core",
 ]
 
 [[package]]
 name = "brhealth-python"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "arrow",
  "brhealth-core",

@@ -27,7 +27,7 @@ if (-not $Version) {
         Write-Host "-> Versão mais recente encontrada: $Version" -ForegroundColor Green
     }
     catch {
-        $Version = "v1.0.0"
+        $Version = "v0.1.0"
         Write-Host "-> Não foi possível consultar API do GitHub. Usando versão padrão: $Version" -ForegroundColor Yellow
     }
 } else {
