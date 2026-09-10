@@ -306,8 +306,9 @@ impl RecordBatchWrapper {
 pub fn read_dbc(path: &str) -> PyResult<RecordBatchWrapper> {
     let input = std::fs::read(path)
         .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{path}': {e}")))?;
-    let decompressor = DbcDecompressor::new()
-        .map_err(|e| PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}")))?;
+    let decompressor = DbcDecompressor::new().map_err(|e| {
+        PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}"))
+    })?;
     let dbf_bytes = decompressor
         .decompress_dbc(&input)
         .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
@@ -342,15 +343,17 @@ pub fn decompress_dbc<'py>(
 ) -> PyResult<Bound<'py, PyBytes>> {
     let input = std::fs::read(input_path)
         .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{input_path}': {e}")))?;
-    let decompressor = DbcDecompressor::new()
-        .map_err(|e| PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}")))?;
+    let decompressor = DbcDecompressor::new().map_err(|e| {
+        PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}"))
+    })?;
     let dbf_bytes = decompressor
         .decompress_dbc(&input)
         .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
 
     if let Some(ref out_path) = output_path {
-        std::fs::write(out_path, &dbf_bytes)
-            .map_err(|e| PyValueError::new_err(format!("Erro ao gravar DBF em '{out_path}': {e}")))?;
+        std::fs::write(out_path, &dbf_bytes).map_err(|e| {
+            PyValueError::new_err(format!("Erro ao gravar DBF em '{out_path}': {e}"))
+        })?;
     }
 
     Ok(PyBytes::new_bound(py, &dbf_bytes))
@@ -532,7 +535,10 @@ pub fn compute_batch_apvp<'py>(
     let dict = PyDict::new_bound(py);
     dict.set_item("total_apvp", metrics.total_apvp)?;
     dict.set_item("premature_deaths", metrics.premature_deaths)?;
-    dict.set_item("mean_years_lost_per_death", metrics.mean_years_lost_per_death)?;
+    dict.set_item(
+        "mean_years_lost_per_death",
+        metrics.mean_years_lost_per_death,
+    )?;
     dict.set_item("cutoff_age", metrics.cutoff_age)?;
     dict.set_item("apvp_rate_per_100k", metrics.apvp_rate_per_100k)?;
     Ok(dict)
@@ -603,7 +609,9 @@ pub fn csap_group_name(group_id: u8) -> PyResult<String> {
 #[pyfunction]
 pub fn icd10_chapter<'py>(py: Python<'py>, code: &str) -> PyResult<Bound<'py, PyDict>> {
     let chapter = Icd10Chapter::from_code(code).ok_or_else(|| {
-        PyValueError::new_err(format!("Código CID-10 '{code}' inválido ou não reconhecido"))
+        PyValueError::new_err(format!(
+            "Código CID-10 '{code}' inválido ou não reconhecido"
+        ))
     })?;
 
     let dict = PyDict::new_bound(py);
@@ -615,11 +623,7 @@ pub fn icd10_chapter<'py>(py: Python<'py>, code: &str) -> PyResult<Bound<'py, Py
 
 /// Valida a consistência biológica de um evento médico de acordo com sexo biológico e idade.
 #[pyfunction]
-pub fn validate_biological_consistency(
-    icd10: &str,
-    sex: &str,
-    age_years: u16,
-) -> PyResult<bool> {
+pub fn validate_biological_consistency(icd10: &str, sex: &str, age_years: u16) -> PyResult<bool> {
     let harmonizer = MedicalOntologyHarmonizer::new();
     let bio_sex = BiologicalSex::from_str_lenient(sex);
     match harmonizer.validate_biological_consistency(icd10, bio_sex, age_years) {
@@ -1365,7 +1369,10 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compute_apvp, m)?)?;
     m.add_function(wrap_pyfunction!(compute_apvp_rate, m)?)?;
     m.add_function(wrap_pyfunction!(compute_batch_apvp, m)?)?;
-    m.add_function(wrap_pyfunction!(compute_age_standardized_mortality_rate, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        compute_age_standardized_mortality_rate,
+        m
+    )?)?;
 
     // CSAP, Ontologias & Farmácia
     m.add_function(wrap_pyfunction!(classify_cid10, m)?)?;

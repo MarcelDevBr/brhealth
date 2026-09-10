@@ -203,8 +203,14 @@ fn test_python_record_batch_wrapper_utilities() {
         assert!(html.contains("3 linhas &times; 2 colunas"));
 
         // Cálculo de APVP em lote sobre wrapper
-        let apvp_dict = brhealth::compute_batch_apvp(py, &wrapper, "age", Some(70), Some(10_000)).unwrap();
-        let total_apvp: u64 = apvp_dict.get_item("total_apvp").unwrap().unwrap().extract().unwrap();
+        let apvp_dict =
+            brhealth::compute_batch_apvp(py, &wrapper, "age", Some(70), Some(10_000)).unwrap();
+        let total_apvp: u64 = apvp_dict
+            .get_item("total_apvp")
+            .unwrap()
+            .unwrap()
+            .extract()
+            .unwrap();
         // (70 - 25) + (70 - 40) + (70 - 65) = 45 + 30 + 5 = 80
         assert_eq!(total_apvp, 80);
     });

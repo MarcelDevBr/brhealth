@@ -2,6 +2,9 @@
 # Git pre-commit hook para o BRHealth
 # Bloqueia commits se o código não estiver formatado ou se o clippy falhar.
 
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 echo "🔍 [pre-commit] Verificando formatação de código com cargo fmt..."
 if ! cargo fmt --all --check; then
     echo "❌ Erro: O código Rust não está formatado de acordo com o padrão do projeto!"
