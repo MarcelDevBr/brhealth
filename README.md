@@ -226,7 +226,7 @@ brhealth fetch --source datasus_sih --uf RJ --year 2023 --month 3 --enrich-csap 
 
 ---
 
-### 3. Engenheiros de Sistemas (Rust / `brhealth-core`)
+### 4. Engenheiros de Sistemas (Rust / `brhealth-core`)
 
 ```rust
 use brhealth_core::domain::analytics::csap::{classify_cid10, compute_primary_care_roi, CsapGroup};
