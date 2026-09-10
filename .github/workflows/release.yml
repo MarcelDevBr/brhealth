@@ -20,6 +20,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name) || 'v1.0.0' }}
 
 jobs:
   build-release:
@@ -93,52 +94,41 @@ jobs:
         run: |
           cross build --release --package brhealth-cli --bin brhealth --target ${{ matrix.target }}
 
-      - name: Determine Version Tag
-        shell: bash
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then
-            TAG="${{ github.event.inputs.tag_name || 'v1.0.0' }}"
-          fi
-          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
-
       - name: Package Unix Archive (.tar.gz)
         if: "!matrix.is_windows"
         shell: bash
         run: |
+          mkdir -p dist
           BIN_PATH="target/${{ matrix.target }}/release/brhealth"
           if command -v strip &>/dev/null; then
             strip "$BIN_PATH" || true
           fi
-          ARCHIVE_NAME="brhealth-${RELEASE_TAG}-${{ matrix.target }}.tar.gz"
-          tar -czvf "$ARCHIVE_NAME" -C "target/${{ matrix.target }}/release" brhealth
+          BASE_NAME="brhealth-${RELEASE_TAG}-${{ matrix.target }}.tar.gz"
+          ARCHIVE_PATH="dist/${BASE_NAME}"
+          tar -czvf "$ARCHIVE_PATH" -C "target/${{ matrix.target }}/release" brhealth
           if command -v sha256sum &>/dev/null; then
-            sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+            (cd dist && sha256sum "$BASE_NAME" > "${BASE_NAME}.sha256")
           else
-            shasum -a 256 "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+            (cd dist && shasum -a 256 "$BASE_NAME" > "${BASE_NAME}.sha256")
           fi
-          echo "ARCHIVE_PATH=$ARCHIVE_NAME" >> $GITHUB_ENV
-          echo "CHECKSUM_PATH=${ARCHIVE_NAME}.sha256" >> $GITHUB_ENV
 
       - name: Package Windows Archive (.zip)
         if: matrix.is_windows
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Path "dist" -Force | Out-Null
           $binPath = "target/${{ matrix.target }}/release/brhealth.exe"
-          $archiveName = "brhealth-${env:RELEASE_TAG}-${{ matrix.target }}.zip"
-          Compress-Archive -Path $binPath -DestinationPath $archiveName -Force
-          $hash = (Get-FileHash -Path $archiveName -Algorithm SHA256).Hash.ToLower()
-          "$hash  $archiveName" | Out-File -FilePath "${archiveName}.sha256" -Encoding ascii
-          "ARCHIVE_PATH=$archiveName" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "CHECKSUM_PATH=${archiveName}.sha256" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $baseName = "brhealth-${env:RELEASE_TAG}-${{ matrix.target }}.zip"
+          $archivePath = Join-Path "dist" $baseName
+          Compress-Archive -Path $binPath -DestinationPath $archivePath -Force
+          $hash = (Get-FileHash -Path $archivePath -Algorithm SHA256).Hash.ToLower()
+          "$hash  $baseName" | Out-File -FilePath "${archivePath}.sha256" -Encoding ascii
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.target }}
-          path: |
-            ${{ env.ARCHIVE_PATH }}
-            ${{ env.CHECKSUM_PATH }}
+          path: dist/*
 
   publish-release:
     name: Publish GitHub Release
@@ -147,15 +137,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Determine Version Tag
-        shell: bash
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then
-            TAG="${{ github.event.inputs.tag_name || 'v1.0.0' }}"
-          fi
-          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
