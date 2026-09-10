@@ -167,6 +167,7 @@ import brhealth
 # 1. Validação canônica do IBGE
 dv = brhealth.calculate_ibge_dv("355030") # Retorna 8
 municipio_canônico = brhealth.harmonize_ibge_code("355030") # "3550308"
+valido = brhealth.validate_ibge_code(3550308) # True (aceita int ou str)
 
 # 2. Avaliação de CSAP (Portaria 221/2008)
 assert brhealth.is_csap("J45.0") == True

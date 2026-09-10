@@ -74,3 +74,43 @@ fn test_python_extended_features() {
         assert_eq!(drug, Some("Metformina".to_string()));
     });
 }
+
+#[test]
+fn test_python_ibge_validation() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        // Validação de São Paulo/SP (3550308) - inteiro e string
+        let sp_int = py.eval_bound("3550308", None, None).unwrap();
+        let sp_str = py.eval_bound("'3550308'", None, None).unwrap();
+        assert!(brhealth::validate_ibge_code(&sp_int));
+        assert!(brhealth::validate_ibge_code(&sp_str));
+
+        // Validação do Rio de Janeiro/RJ (3304557) - inteiro e string
+        let rj_int = py.eval_bound("3304557", None, None).unwrap();
+        let rj_str = py.eval_bound("'3304557'", None, None).unwrap();
+        assert!(brhealth::validate_ibge_code(&rj_int));
+        assert!(brhealth::validate_ibge_code(&rj_str));
+
+        // Código com DV inválido
+        let invalid_dv = py.eval_bound("3550309", None, None).unwrap();
+        assert!(!brhealth::validate_ibge_code(&invalid_dv));
+
+        // Código malformado
+        let invalid_str = py.eval_bound("'35503A8'", None, None).unwrap();
+        assert!(!brhealth::validate_ibge_code(&invalid_str));
+
+        // Cálculo de DV e harmonização aceitando int e str
+        let sp_6_int = py.eval_bound("355030", None, None).unwrap();
+        let sp_6_str = py.eval_bound("'355030'", None, None).unwrap();
+        assert_eq!(brhealth::calculate_ibge_dv(&sp_6_int).unwrap(), 8);
+        assert_eq!(brhealth::calculate_ibge_dv(&sp_6_str).unwrap(), 8);
+        assert_eq!(brhealth::harmonize_ibge_code(&sp_6_int).unwrap(), "3550308");
+        assert_eq!(brhealth::harmonize_ibge_code(&sp_6_str).unwrap(), "3550308");
+
+        // Via Engine
+        let engine = brhealth::Engine::new().unwrap();
+        assert!(engine.validate_ibge_code(&sp_int));
+        assert!(engine.validate_ibge_code(&rj_int));
+        assert!(!engine.validate_ibge_code(&invalid_dv));
+    });
+}

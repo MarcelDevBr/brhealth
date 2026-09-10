@@ -155,6 +155,66 @@ pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
         .to_string())
 }
 
+/// Valida se um código municipal do IBGE é canônico e matematicamente consistente com o algoritmo Módulo 10 (Luhn).
+///
+/// ## Formulação Matemática
+///
+/// Dado o vetor de dígitos $D = [d_1, d_2, d_3, d_4, d_5, d_6, d_7] \in \{0, \dots, 9\}^7$:
+/// 1. Os 6 primeiros dígitos $D_{1..6}$ são submetidos à ponderação por pesos alternados $W = [1, 2, 1, 2, 1, 2]$:
+///    $$p_i = d_i \times w_i, \quad s_i = \lfloor p_i / 10 \rfloor + (p_i \pmod{10})$$
+/// 2. Soma acumulada $S = \sum_{i=1}^6 s_i$ e resto da divisão euclidiana por 10:
+///    $$R = S \pmod{10}$$
+/// 3. O Dígito Verificador (DV) teórico é dado por:
+///    $$\text{DV} = (10 - R) \pmod{10}$$
+/// 4. O código de 7 dígitos é considerado válido se e somente se:
+///    $$d_7 = \text{DV}$$
+///
+/// Caso o código fornecido possua 6 dígitos ($|D| = 6$), valida-se se todos os caracteres são dígitos
+/// numéricos capazes de gerar um DV canônico.
+/// Para códigos com tamanho divergente de 6 ou 7, com caracteres não-numéricos ou cujo DV divirja
+/// do cálculo oficial, a função retorna deterministicamente `false`.
+///
+/// # Exemplos
+///
+/// ```rust
+/// use brhealth_core::validate_ibge_code;
+///
+/// // São Paulo / SP: 3550308 (7 dígitos canônico)
+/// assert!(validate_ibge_code("3550308"));
+///
+/// // Rio de Janeiro / RJ: 3304557 (7 dígitos canônico)
+/// assert!(validate_ibge_code("3304557"));
+///
+/// // Belo Horizonte / MG: 3106200
+/// assert!(validate_ibge_code("3106200"));
+///
+/// // Código com Dígito Verificador inconsistente (esperado 8 para São Paulo)
+/// assert!(!validate_ibge_code("3550309"));
+///
+/// // Códigos inválidos por tamanho ou caracteres não-dígitos
+/// assert!(!validate_ibge_code("35503A8"));
+/// assert!(!validate_ibge_code("12345"));
+/// ```
+pub fn validate_ibge_code(raw_code: &str) -> bool {
+    let trimmed = raw_code.trim();
+    match trimmed.len() {
+        7 => {
+            if !trimmed.bytes().all(|b| b.is_ascii_digit()) {
+                return false;
+            }
+            match calculate_ibge_dv(&trimmed[..6]) {
+                Ok(expected_dv) => {
+                    let actual_dv = trimmed.as_bytes()[6] - b'0';
+                    actual_dv == expected_dv
+                }
+                Err(_) => false,
+            }
+        }
+        6 => calculate_ibge_dv(trimmed).is_ok(),
+        _ => false,
+    }
+}
+
 /// Registro de transição territorial histórica de municípios brasileiros (1970–2026).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HistoricalTransition {
@@ -390,6 +450,52 @@ mod tests {
         fn prop_test_rejects_arbitrary_long_strings(s in "[0-9]{8,20}") {
             prop_assert!(calculate_ibge_dv(&s).is_err());
             prop_assert!(harmonize_ibge_code(&s).is_err());
+            prop_assert!(!validate_ibge_code(&s));
         }
+
+        #[test]
+        fn prop_test_validate_ibge_code_consistency(code in "[0-9]{6}") {
+            let harm = harmonize_ibge_code(&code).unwrap();
+            prop_assert!(validate_ibge_code(&harm));
+            prop_assert!(validate_ibge_code(&code));
+
+            // Mutando o último dígito garante que o DV se torna inválido
+            let mut bytes = harm.into_bytes();
+            let last = bytes[6];
+            bytes[6] = if last == b'9' { b'0' } else { last + 1 };
+            let corrupted = String::from_utf8(bytes).unwrap();
+            prop_assert!(!validate_ibge_code(&corrupted));
+        }
+    }
+
+    #[test]
+    fn test_validate_canonical_cities() {
+        // São Paulo / SP
+        assert!(validate_ibge_code("3550308"));
+        assert!(validate_ibge_code("355030"));
+        assert!(!validate_ibge_code("3550309"));
+
+        // Rio de Janeiro / RJ
+        assert!(validate_ibge_code("3304557"));
+        assert!(validate_ibge_code("330455"));
+        assert!(!validate_ibge_code("3304558"));
+
+        // Belo Horizonte / MG
+        assert!(validate_ibge_code("3106200"));
+        assert!(!validate_ibge_code("3106201"));
+
+        // Campinas / SP
+        assert!(validate_ibge_code("3509502"));
+        assert!(!validate_ibge_code("3509503"));
+
+        // Salvador / BA
+        assert!(validate_ibge_code("2927408"));
+        assert!(!validate_ibge_code("2927400"));
+
+        // Casos malformados
+        assert!(!validate_ibge_code(""));
+        assert!(!validate_ibge_code("123"));
+        assert!(!validate_ibge_code("12345678"));
+        assert!(!validate_ibge_code("35503A8"));
     }
 }

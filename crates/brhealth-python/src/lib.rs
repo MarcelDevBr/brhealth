@@ -38,6 +38,7 @@ use brhealth_core::domain::spatial::s2::{
 };
 use brhealth_core::domain::transforms::ibge::{
     calculate_ibge_dv as core_calculate_ibge_dv, harmonize_ibge_code as core_harmonize_ibge_code,
+    validate_ibge_code as core_validate_ibge_code,
 };
 use brhealth_core::domain::transforms::ontology::MedicalOntologyHarmonizer;
 use brhealth_core::domain::transforms::pharmacy::PharmacyHarmonizer;
@@ -200,15 +201,56 @@ impl RecordBatchWrapper {
 }
 
 /// Calcula o Dígito Verificador oficial do IBGE (Módulo 10 Luhn) para um código de 6 dígitos.
+///
+/// Aceita string ou inteiro (ex: `"355030"` ou `355030`).
 #[pyfunction]
-pub fn calculate_ibge_dv(code_6_digits: &str) -> PyResult<u8> {
-    core_calculate_ibge_dv(code_6_digits).map_err(|e| PyValueError::new_err(e.to_string()))
+pub fn calculate_ibge_dv(code_6_digits: &Bound<'_, PyAny>) -> PyResult<u8> {
+    let s = if let Ok(s) = code_6_digits.extract::<String>() {
+        s
+    } else if let Ok(n) = code_6_digits.extract::<i64>() {
+        n.to_string()
+    } else {
+        return Err(PyValueError::new_err(
+            "Código IBGE deve ser string ou inteiro",
+        ));
+    };
+    core_calculate_ibge_dv(&s).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Harmoniza um código municipal (de 6 ou 7 dígitos) para a representação canônica de 7 dígitos.
+///
+/// Aceita string ou inteiro (ex: `"355030"` ou `3550308`).
 #[pyfunction]
-pub fn harmonize_ibge_code(raw_code: &str) -> PyResult<String> {
-    core_harmonize_ibge_code(raw_code).map_err(|e| PyValueError::new_err(e.to_string()))
+pub fn harmonize_ibge_code(raw_code: &Bound<'_, PyAny>) -> PyResult<String> {
+    let s = if let Ok(s) = raw_code.extract::<String>() {
+        s
+    } else if let Ok(n) = raw_code.extract::<i64>() {
+        n.to_string()
+    } else {
+        return Err(PyValueError::new_err(
+            "Código IBGE deve ser string ou inteiro",
+        ));
+    };
+    core_harmonize_ibge_code(&s).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Valida se um código municipal do IBGE (de 6 ou 7 dígitos) é canônico e consistente com o algoritmo Módulo 10 (Luhn).
+///
+/// Aceita inteiros ou strings (ex: `3550308` ou `"3550308"`).
+/// Retorna `True` se o código for válido e `False` caso contrário.
+#[pyfunction]
+pub fn validate_ibge_code(code: &Bound<'_, PyAny>) -> bool {
+    if let Ok(s) = code.extract::<String>() {
+        core_validate_ibge_code(&s)
+    } else if let Ok(n) = code.extract::<i64>() {
+        if n < 0 {
+            false
+        } else {
+            core_validate_ibge_code(&n.to_string())
+        }
+    } else {
+        false
+    }
 }
 
 /// Converte coordenadas de latitude e longitude em um índice hexagonal Uber H3.
@@ -720,6 +762,11 @@ impl Engine {
         }
     }
 
+    /// Valida se um código municipal do IBGE é canônico e consistente com o algoritmo Módulo 10 (Luhn).
+    pub fn validate_ibge_code(&self, code: &Bound<'_, PyAny>) -> bool {
+        validate_ibge_code(code)
+    }
+
     /// Retorna a versão do motor analítico.
     pub fn version(&self) -> String {
         env!("CARGO_PKG_VERSION").to_string()
@@ -738,6 +785,7 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_function(wrap_pyfunction!(calculate_ibge_dv, m)?)?;
     m.add_function(wrap_pyfunction!(harmonize_ibge_code, m)?)?;
+    m.add_function(wrap_pyfunction!(validate_ibge_code, m)?)?;
     m.add_function(wrap_pyfunction!(latlng_to_h3, m)?)?;
     m.add_function(wrap_pyfunction!(latlng_to_s2, m)?)?;
     m.add_function(wrap_pyfunction!(coord_to_s2_cell, m)?)?;
