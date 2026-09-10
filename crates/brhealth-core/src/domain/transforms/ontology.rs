@@ -81,151 +81,144 @@ impl MedicalOntologyHarmonizer {
 
     fn get_icd11_map() -> &'static HashMap<&'static str, &'static str> {
         ICD10_TO_ICD11_MAP.get_or_init(|| {
-            let mut m = HashMap::new();
-            // Doenças Cardiovasculares e Hipertensão
-            m.insert("I10", "BA00");
-            m.insert("I11", "BA01");
-            m.insert("I20", "BA40");
-            m.insert("I21", "BA41");
-            m.insert("I50", "BD10");
-            m.insert("I64", "8B20");
-
-            // Doenças Metabólicas e Endócrinas
-            m.insert("E10", "5A10");
-            m.insert("E11", "5A11");
-            m.insert("E14", "5A14");
-            m.insert("E40", "5B50");
-            m.insert("E66", "5B81");
-
-            // Doenças Respiratórias
-            m.insert("J18", "CA40");
-            m.insert("J44", "CA22");
-            m.insert("J45", "CA23");
-
-            // Doenças Infecciosas
-            m.insert("A09", "1A40");
-            m.insert("A15", "1B10");
-            m.insert("A90", "1D20");
-            m.insert("B20", "1C60");
-
-            // Neoplasias
-            m.insert("C34", "2C25");
-            m.insert("C50", "2C60");
-            m.insert("C53", "2C77");
-            m.insert("C61", "2C82");
-
-            // Causas Perinatais
-            m.insert("P07", "KA21");
-            m.insert("P22", "KB23");
-
-            // Causas Maternas
-            m.insert("O00", "JA00");
-            m.insert("O14", "JA21");
-            m.insert("O72", "JA43");
-
-            m
+            HashMap::from([
+                // Doenças Cardiovasculares e Hipertensão
+                ("I10", "BA00"),
+                ("I11", "BA01"),
+                ("I20", "BA40"),
+                ("I21", "BA41"),
+                ("I50", "BD10"),
+                ("I64", "8B20"),
+                // Doenças Metabólicas e Endócrinas
+                ("E10", "5A10"),
+                ("E11", "5A11"),
+                ("E14", "5A14"),
+                ("E40", "5B50"),
+                ("E66", "5B81"),
+                // Doenças Respiratórias
+                ("J18", "CA40"),
+                ("J44", "CA22"),
+                ("J45", "CA23"),
+                // Doenças Infecciosas
+                ("A09", "1A40"),
+                ("A15", "1B10"),
+                ("A90", "1D20"),
+                ("B20", "1C60"),
+                // Neoplasias
+                ("C34", "2C25"),
+                ("C50", "2C60"),
+                ("C53", "2C77"),
+                ("C61", "2C82"),
+                // Causas Perinatais
+                ("P07", "KA21"),
+                ("P22", "KB23"),
+                // Causas Maternas
+                ("O00", "JA00"),
+                ("O14", "JA21"),
+                ("O72", "JA43"),
+            ])
         })
     }
 
     fn get_snomed_map() -> &'static HashMap<&'static str, &'static str> {
         ICD10_TO_SNOMED_MAP.get_or_init(|| {
-            let mut m = HashMap::new();
-            m.insert("I10", "38341003"); // Essential hypertension
-            m.insert("I21", "22298006"); // Myocardial infarction
-            m.insert("I50", "84114007"); // Heart failure
-            m.insert("I64", "230690007"); // Stroke
-            m.insert("E11", "44054006"); // Type 2 diabetes mellitus
-            m.insert("J45", "195967001"); // Asthma
-            m.insert("J18", "233604007"); // Pneumonia
-            m.insert("C50", "254837009"); // Malignant neoplasm of breast
-            m.insert("C61", "254900004"); // Malignant neoplasm of prostate
-            m
+            HashMap::from([
+                ("I10", "38341003"),  // Essential hypertension
+                ("I21", "22298006"),  // Myocardial infarction
+                ("I50", "84114007"),  // Heart failure
+                ("I64", "230690007"), // Stroke
+                ("E11", "44054006"),  // Type 2 diabetes mellitus
+                ("J45", "195967001"), // Asthma
+                ("J18", "233604007"), // Pneumonia
+                ("C50", "254837009"), // Malignant neoplasm of breast
+                ("C61", "254900004"), // Malignant neoplasm of prostate
+            ])
         })
     }
 
     fn get_icd9_to_icd10_map() -> &'static HashMap<&'static str, &'static str> {
         ICD9_TO_ICD10_MAP.get_or_init(|| {
-            let mut m = HashMap::new();
-            // Infecciosas
-            m.insert("009", "A09"); // Diarreia infecciosa
-            m.insert("010", "A15"); // Tuberculose pulmonar
-            m.insert("036", "A39"); // Infecção meningocócica
-            m.insert("042", "B20"); // Doença pelo HIV
-            m.insert("061", "A90"); // Dengue
-            // Neoplasias
-            m.insert("150", "C15"); // Esôfago
-            m.insert("151", "C16"); // Estômago
-            m.insert("153", "C18"); // Cólon
-            m.insert("162", "C34"); // Brônquios e pulmão
-            m.insert("174", "C50"); // Mama feminina
-            m.insert("180", "C53"); // Colo do útero
-            m.insert("185", "C61"); // Próstata
-            m.insert("204", "C91"); // Leucemia linfoide
-            // Endócrinas
-            m.insert("250", "E14"); // Diabetes mellitus
-            m.insert("260", "E40"); // Kwashiorkor / Desnutrição
-            // Cardiovasculares
-            m.insert("401", "I10"); // Hipertensão essencial
-            m.insert("410", "I21"); // Infarto agudo do miocárdio
-            m.insert("413", "I20"); // Angina pectoris
-            m.insert("428", "I50"); // Insuficiência cardíaca
-            m.insert("436", "I64"); // AVC / Doença cerebrovascular aguda
-            m.insert("440", "I70"); // Aterosclerose
-            // Respiratórias
-            m.insert("486", "J18"); // Pneumonia
-            m.insert("491", "J44"); // Bronquite crônica / DPOC
-            m.insert("493", "J45"); // Asma
-            // Digestivas
-            m.insert("531", "K25"); // Úlcera gástrica
-            m.insert("540", "K35"); // Apendicite aguda
-            m.insert("571", "K70"); // Doença hepática crônica / Cirrose
-            // Causas Externas
-            m.insert("E810", "V89"); // Acidente de trânsito
-            m.insert("E819", "V89");
-            m.insert("E950", "X60"); // Suicídio e autolesão
-            m.insert("E960", "X85"); // Homicídio e agressão
-            m.insert("E965", "X95"); // Agressão por arma de fogo
-            m
+            HashMap::from([
+                // Infecciosas
+                ("009", "A09"), // Diarreia infecciosa
+                ("010", "A15"), // Tuberculose pulmonar
+                ("036", "A39"), // Infecção meningocócica
+                ("042", "B20"), // Doença pelo HIV
+                ("061", "A90"), // Dengue
+                // Neoplasias
+                ("150", "C15"), // Esôfago
+                ("151", "C16"), // Estômago
+                ("153", "C18"), // Cólon
+                ("162", "C34"), // Brônquios e pulmão
+                ("174", "C50"), // Mama feminina
+                ("180", "C53"), // Colo do útero
+                ("185", "C61"), // Próstata
+                ("204", "C91"), // Leucemia linfoide
+                // Endócrinas
+                ("250", "E14"), // Diabetes mellitus
+                ("260", "E40"), // Kwashiorkor / Desnutrição
+                // Cardiovasculares
+                ("401", "I10"), // Hipertensão essencial
+                ("410", "I21"), // Infarto agudo do miocárdio
+                ("413", "I20"), // Angina pectoris
+                ("428", "I50"), // Insuficiência cardíaca
+                ("436", "I64"), // AVC / Doença cerebrovascular aguda
+                ("440", "I70"), // Aterosclerose
+                // Respiratórias
+                ("486", "J18"), // Pneumonia
+                ("491", "J44"), // Bronquite crônica / DPOC
+                ("493", "J45"), // Asma
+                // Digestivas
+                ("531", "K25"), // Úlcera gástrica
+                ("540", "K35"), // Apendicite aguda
+                ("571", "K70"), // Doença hepática crônica / Cirrose
+                // Causas Externas
+                ("E810", "V89"), // Acidente de trânsito
+                ("E819", "V89"),
+                ("E950", "X60"), // Suicídio e autolesão
+                ("E960", "X85"), // Homicídio e agressão
+                ("E965", "X95"), // Agressão por arma de fogo
+            ])
         })
     }
 
     fn get_icd10_to_icd9_map() -> &'static HashMap<&'static str, &'static str> {
         ICD10_TO_ICD9_MAP.get_or_init(|| {
-            let mut m = HashMap::new();
-            m.insert("A09", "009");
-            m.insert("A15", "010");
-            m.insert("A39", "036");
-            m.insert("B20", "042");
-            m.insert("A90", "061");
-            m.insert("C15", "150");
-            m.insert("C16", "151");
-            m.insert("C18", "153");
-            m.insert("C34", "162");
-            m.insert("C50", "174");
-            m.insert("C53", "180");
-            m.insert("C61", "185");
-            m.insert("C91", "204");
-            m.insert("E10", "250");
-            m.insert("E11", "250");
-            m.insert("E14", "250");
-            m.insert("E40", "260");
-            m.insert("I10", "401");
-            m.insert("I20", "413");
-            m.insert("I21", "410");
-            m.insert("I50", "428");
-            m.insert("I64", "436");
-            m.insert("I70", "440");
-            m.insert("J18", "486");
-            m.insert("J44", "491");
-            m.insert("J45", "493");
-            m.insert("K25", "531");
-            m.insert("K35", "540");
-            m.insert("K70", "571");
-            m.insert("V89", "E819");
-            m.insert("X60", "E950");
-            m.insert("X85", "E960");
-            m.insert("X95", "E965");
-            m
+            HashMap::from([
+                ("A09", "009"),
+                ("A15", "010"),
+                ("A39", "036"),
+                ("B20", "042"),
+                ("A90", "061"),
+                ("C15", "150"),
+                ("C16", "151"),
+                ("C18", "153"),
+                ("C34", "162"),
+                ("C50", "174"),
+                ("C53", "180"),
+                ("C61", "185"),
+                ("C91", "204"),
+                ("E10", "250"),
+                ("E11", "250"),
+                ("E14", "250"),
+                ("E40", "260"),
+                ("I10", "401"),
+                ("I20", "413"),
+                ("I21", "410"),
+                ("I50", "428"),
+                ("I64", "436"),
+                ("I70", "440"),
+                ("J18", "486"),
+                ("J44", "491"),
+                ("J45", "493"),
+                ("K25", "531"),
+                ("K35", "540"),
+                ("K70", "571"),
+                ("V89", "E819"),
+                ("X60", "E950"),
+                ("X85", "E960"),
+                ("X95", "E965"),
+            ])
         })
     }
 

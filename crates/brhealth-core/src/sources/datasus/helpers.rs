@@ -101,3 +101,226 @@ pub fn get_bool_value(batch: &RecordBatch, col_name: &str, row: usize) -> Option
         None
     }
 }
+
+use std::sync::Arc;
+use arrow::array::{
+    new_null_array, ArrayRef, Date32Builder, Float64Builder, StringBuilder,
+    UInt16Builder, UInt32Builder, UInt8Builder,
+};
+use arrow::datatypes::DataType;
+use crate::domain::transforms::ibge::harmonize_ibge_code;
+
+/// Constrói um array de nulos de alta performance $O(1)$ para um tipo de dado.
+#[inline]
+pub fn build_null_col(data_type: &DataType, len: usize) -> ArrayRef {
+    new_null_array(data_type, len)
+}
+
+/// Constrói uma coluna com valor constante de string sem alocações repetidas.
+#[inline]
+pub fn build_constant_str_col(val: &str, len: usize) -> ArrayRef {
+    Arc::new(StringArray::from_iter_values(std::iter::repeat_n(val, len)))
+}
+
+/// Constrói a coluna canônica de identificador de registro (`record_id`).
+pub fn build_record_id_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    prefix: &str,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
+    for i in 0..num_rows {
+        let id = get_str_value(batch, col_name, i).unwrap_or("");
+        if id.is_empty() {
+            builder.append_value(format!("{prefix}_{i}"));
+        } else {
+            builder.append_value(id);
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói a coluna canônica de município harmonizado para 7 dígitos do IBGE.
+pub fn build_harmonized_ibge_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_mun: &str,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
+    for i in 0..num_rows {
+        let resolved = get_str_value(batch, col_name, i)
+            .and_then(|m| harmonize_ibge_code(m).ok())
+            .unwrap_or_else(|| default_mun.to_string());
+        builder.append_value(resolved);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói a coluna canônica de sexo biológico ("M", "F", "U").
+pub fn build_sex_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 2);
+    for i in 0..num_rows {
+        let s = match get_str_value(batch, col_name, i) {
+            Some("1" | "M") => "M",
+            Some("2" | "F") => "F",
+            _ => "U",
+        };
+        builder.append_value(s);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói a coluna canônica de raça/etnia conforme categorização do DATASUS/IBGE.
+pub fn build_race_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
+    for i in 0..num_rows {
+        let r = match get_str_value(batch, col_name, i) {
+            Some("1") => Some("Branca"),
+            Some("2") => Some("Preta"),
+            Some("3") => Some("Amarela"),
+            Some("4") => Some("Parda"),
+            Some("5") => Some("Indígena"),
+            _ => None,
+        };
+        if let Some(race) = r {
+            builder.append_value(race);
+        } else {
+            builder.append_null();
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `Date32` com valor padrão caso nulo.
+pub fn build_date32_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_val: i32,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = Date32Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let d = get_date32_value(batch, col_name, i).unwrap_or(default_val);
+        builder.append_value(d);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `Date32` opcional (nulo se ausente).
+pub fn build_date32_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut builder = Date32Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        if let Some(d) = get_date32_value(batch, col_name, i) {
+            builder.append_value(d);
+        } else {
+            builder.append_null();
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `Utf8` com valor padrão caso nulo.
+pub fn build_str_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_val: &str,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * default_val.len().max(6));
+    for i in 0..num_rows {
+        let s = get_str_value(batch, col_name, i).unwrap_or(default_val);
+        builder.append_value(s);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `Utf8` opcional (nulo se ausente).
+pub fn build_str_opt_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    avg_len: usize,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = StringBuilder::with_capacity(num_rows, num_rows * avg_len);
+    for i in 0..num_rows {
+        if let Some(s) = get_str_value(batch, col_name, i) {
+            builder.append_value(s);
+        } else {
+            builder.append_null();
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `UInt8` opcional (nulo se ausente).
+pub fn build_u8_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut builder = UInt8Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        if let Some(v) = get_u8_value(batch, col_name, i) {
+            builder.append_value(v);
+        } else {
+            builder.append_null();
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `UInt16` com valor padrão caso nulo.
+pub fn build_u16_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_val: u16,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = UInt16Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let v = get_u16_value(batch, col_name, i).unwrap_or(default_val);
+        builder.append_value(v);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `UInt16` opcional (nulo se ausente).
+pub fn build_u16_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
+    let mut builder = UInt16Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        if let Some(v) = get_u16_value(batch, col_name, i) {
+            builder.append_value(v);
+        } else {
+            builder.append_null();
+        }
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `UInt32` com valor padrão caso nulo.
+pub fn build_u32_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_val: u32,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = UInt32Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let v = get_u32_value(batch, col_name, i).unwrap_or(default_val);
+        builder.append_value(v);
+    }
+    Arc::new(builder.finish())
+}
+
+/// Constrói coluna `Float64` com valor padrão caso nulo.
+pub fn build_f64_col(
+    batch: &RecordBatch,
+    col_name: &str,
+    default_val: f64,
+    num_rows: usize,
+) -> ArrayRef {
+    let mut builder = Float64Builder::with_capacity(num_rows);
+    for i in 0..num_rows {
+        let v = get_float64_value(batch, col_name, i).unwrap_or(default_val);
+        builder.append_value(v);
+    }
+    Arc::new(builder.finish())
+}

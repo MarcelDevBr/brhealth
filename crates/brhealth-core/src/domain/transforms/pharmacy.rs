@@ -28,125 +28,120 @@ pub struct StandardDrugConcept {
 static PHARMACY_REGISTRY: OnceLock<HashMap<&'static str, StandardDrugConcept>> = OnceLock::new();
 
 fn init_pharmacy_registry() -> HashMap<&'static str, StandardDrugConcept> {
-    let mut m = HashMap::new();
-
-    // Antidiabéticos (A10)
-    m.insert(
-        "A10BA02",
-        StandardDrugConcept {
-            atc_code: "A10BA02",
-            active_ingredient: "Metformina",
-            rxnorm_cui: "6809",
-            anatomical_group: "Trato Digestivo e Metabolismo",
-        },
-    );
-    m.insert(
-        "A10BB01",
-        StandardDrugConcept {
-            atc_code: "A10BB01",
-            active_ingredient: "Glibenclamida",
-            rxnorm_cui: "4815",
-            anatomical_group: "Trato Digestivo e Metabolismo",
-        },
-    );
-    m.insert(
-        "A10AC01",
-        StandardDrugConcept {
-            atc_code: "A10AC01",
-            active_ingredient: "Insulina NPH",
-            rxnorm_cui: "5856",
-            anatomical_group: "Trato Digestivo e Metabolismo",
-        },
-    );
-
-    // Anti-hipertensivos e Cardiovasculares (C02, C03, C07, C09)
-    m.insert(
-        "C09CA01",
-        StandardDrugConcept {
-            atc_code: "C09CA01",
-            active_ingredient: "Losartana Potássica",
-            rxnorm_cui: "52175",
-            anatomical_group: "Aparelho Cardiovascular",
-        },
-    );
-    m.insert(
-        "C09AA02",
-        StandardDrugConcept {
-            atc_code: "C09AA02",
-            active_ingredient: "Maleato de Enalapril",
-            rxnorm_cui: "3827",
-            anatomical_group: "Aparelho Cardiovascular",
-        },
-    );
-    m.insert(
-        "C03AA03",
-        StandardDrugConcept {
-            atc_code: "C03AA03",
-            active_ingredient: "Hidroclorotiazida",
-            rxnorm_cui: "5487",
-            anatomical_group: "Aparelho Cardiovascular",
-        },
-    );
-    m.insert(
-        "C07AB03",
-        StandardDrugConcept {
-            atc_code: "C07AB03",
-            active_ingredient: "Atenolol",
-            rxnorm_cui: "1202",
-            anatomical_group: "Aparelho Cardiovascular",
-        },
-    );
-    m.insert(
-        "B01AC06",
-        StandardDrugConcept {
-            atc_code: "B01AC06",
-            active_ingredient: "Ácido Acetilsalicílico",
-            rxnorm_cui: "1191",
-            anatomical_group: "Sangue e Órgãos Hematopoéticos",
-        },
-    );
-
-    // Respiratórios (R03)
-    m.insert(
-        "R03AC02",
-        StandardDrugConcept {
-            atc_code: "R03AC02",
-            active_ingredient: "Sulfato de Salbutamol",
-            rxnorm_cui: "435",
-            anatomical_group: "Aparelho Respiratório",
-        },
-    );
-    m.insert(
-        "R03BA01",
-        StandardDrugConcept {
-            atc_code: "R03BA01",
-            active_ingredient: "Dipropionato de Beclometasona",
-            rxnorm_cui: "1343",
-            anatomical_group: "Aparelho Respiratório",
-        },
-    );
-
-    // Antimicrobianos (J01)
-    m.insert(
-        "J01CA04",
-        StandardDrugConcept {
-            atc_code: "J01CA04",
-            active_ingredient: "Amoxicilina",
-            rxnorm_cui: "723",
-            anatomical_group: "Anti-infecciosos Gerais para Uso Sistêmico",
-        },
-    );
-    m.insert(
-        "J01FA10",
-        StandardDrugConcept {
-            atc_code: "J01FA10",
-            active_ingredient: "Azitromicina",
-            rxnorm_cui: "18631",
-            anatomical_group: "Anti-infecciosos Gerais para Uso Sistêmico",
-        },
-    );
-
-    m
+    HashMap::from([
+        // Antidiabéticos (A10)
+        (
+            "A10BA02",
+            StandardDrugConcept {
+                atc_code: "A10BA02",
+                active_ingredient: "Metformina",
+                rxnorm_cui: "6809",
+                anatomical_group: "Trato Digestivo e Metabolismo",
+            },
+        ),
+        (
+            "A10BB01",
+            StandardDrugConcept {
+                atc_code: "A10BB01",
+                active_ingredient: "Glibenclamida",
+                rxnorm_cui: "4815",
+                anatomical_group: "Trato Digestivo e Metabolismo",
+            },
+        ),
+        (
+            "A10AC01",
+            StandardDrugConcept {
+                atc_code: "A10AC01",
+                active_ingredient: "Insulina NPH",
+                rxnorm_cui: "5856",
+                anatomical_group: "Trato Digestivo e Metabolismo",
+            },
+        ),
+        // Anti-hipertensivos e Cardiovasculares (C02, C03, C07, C09)
+        (
+            "C09CA01",
+            StandardDrugConcept {
+                atc_code: "C09CA01",
+                active_ingredient: "Losartana Potássica",
+                rxnorm_cui: "52175",
+                anatomical_group: "Aparelho Cardiovascular",
+            },
+        ),
+        (
+            "C09AA02",
+            StandardDrugConcept {
+                atc_code: "C09AA02",
+                active_ingredient: "Maleato de Enalapril",
+                rxnorm_cui: "3827",
+                anatomical_group: "Aparelho Cardiovascular",
+            },
+        ),
+        (
+            "C03AA03",
+            StandardDrugConcept {
+                atc_code: "C03AA03",
+                active_ingredient: "Hidroclorotiazida",
+                rxnorm_cui: "5487",
+                anatomical_group: "Aparelho Cardiovascular",
+            },
+        ),
+        (
+            "C07AB03",
+            StandardDrugConcept {
+                atc_code: "C07AB03",
+                active_ingredient: "Atenolol",
+                rxnorm_cui: "1202",
+                anatomical_group: "Aparelho Cardiovascular",
+            },
+        ),
+        (
+            "B01AC06",
+            StandardDrugConcept {
+                atc_code: "B01AC06",
+                active_ingredient: "Ácido Acetilsalicílico",
+                rxnorm_cui: "1191",
+                anatomical_group: "Sangue e Órgãos Hematopoéticos",
+            },
+        ),
+        // Respiratórios (R03)
+        (
+            "R03AC02",
+            StandardDrugConcept {
+                atc_code: "R03AC02",
+                active_ingredient: "Sulfato de Salbutamol",
+                rxnorm_cui: "435",
+                anatomical_group: "Aparelho Respiratório",
+            },
+        ),
+        (
+            "R03BA01",
+            StandardDrugConcept {
+                atc_code: "R03BA01",
+                active_ingredient: "Dipropionato de Beclometasona",
+                rxnorm_cui: "1343",
+                anatomical_group: "Aparelho Respiratório",
+            },
+        ),
+        // Antimicrobianos (J01)
+        (
+            "J01CA04",
+            StandardDrugConcept {
+                atc_code: "J01CA04",
+                active_ingredient: "Amoxicilina",
+                rxnorm_cui: "723",
+                anatomical_group: "Anti-infecciosos Gerais para Uso Sistêmico",
+            },
+        ),
+        (
+            "J01FA10",
+            StandardDrugConcept {
+                atc_code: "J01FA10",
+                active_ingredient: "Azitromicina",
+                rxnorm_cui: "18631",
+                anatomical_group: "Anti-infecciosos Gerais para Uso Sistêmico",
+            },
+        ),
+    ])
 }
 
 /// Harmonizador e pesquisador de ontologias farmacêuticas.

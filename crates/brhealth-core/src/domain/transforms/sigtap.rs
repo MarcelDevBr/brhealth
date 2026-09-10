@@ -77,14 +77,28 @@ impl SigtapCode {
 ///
 /// Aceita códigos com pontuação (`04.07.04.010-1`) ou apenas dígitos (`0407040101`).
 pub fn parse_sigtap_code(raw: &str) -> Result<SigtapCode, PortError> {
-    let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
+    let mut buf = [0u8; 10];
+    let mut len = 0;
+    for b in raw.bytes() {
+        if b.is_ascii_digit() {
+            if len >= 10 {
+                return Err(PortError::ValidationError(format!(
+                    "Código SIGTAP '{raw}' inválido: mais de 10 dígitos encontrados"
+                )));
+            }
+            buf[len] = b;
+            len += 1;
+        }
+    }
 
-    if digits.len() != 10 {
+    if len != 10 {
         return Err(PortError::ValidationError(format!(
-            "Código SIGTAP '{raw}' inválido: esperado 10 dígitos, encontrado {}",
-            digits.len()
+            "Código SIGTAP '{raw}' inválido: esperado 10 dígitos, encontrado {len}"
         )));
     }
+
+    let digits = std::str::from_utf8(&buf)
+        .map_err(|_| PortError::ValidationError("Bytes inválidos no código SIGTAP".into()))?;
 
     let group = digits[0..2]
         .parse::<u8>()

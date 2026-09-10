@@ -6,15 +6,13 @@
 
 use std::sync::Arc;
 
-use arrow::array::{
-    ArrayRef, Date32Builder, Float64Builder, StringBuilder, UInt16Builder, UInt32Builder,
-};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
 use super::helpers::{
-    get_date32_value, get_float64_value, get_str_value, get_u16_value, get_u32_value,
+    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col,
+    build_str_col, build_str_opt_col, build_u16_opt_col, build_u32_col,
 };
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
@@ -23,7 +21,6 @@ use crate::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-use crate::domain::transforms::ibge::harmonize_ibge_code;
 
 /// Adaptador SPI para o SIASUS (Produção Ambulatorial) do DATASUS.
 #[derive(Debug, Default, Clone)]
@@ -41,110 +38,17 @@ impl SiasusDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_ambulatory_schema();
 
-        // 1. record_id (PA_DOC_ID ou gerado)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "PA_DOC_ID", i).unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("AMB_{i}"));
-            } else {
-                id_builder.append_value(id);
-            }
-        }
-        let record_id_col: ArrayRef = Arc::new(id_builder.finish());
-
-        // 2. patient_municipality (PA_MUNPCN)
-        let mut pcn_mun_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "PA_MUNPCN", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            pcn_mun_builder.append_value(resolved);
-        }
-        let patient_mun_col: ArrayRef = Arc::new(pcn_mun_builder.finish());
-
-        // 3. facility_cnes (PA_CODUNI)
-        let mut cnes_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let cnes = get_str_value(raw_batch, "PA_CODUNI", i).unwrap_or("0000000");
-            cnes_builder.append_value(cnes);
-        }
-        let cnes_col: ArrayRef = Arc::new(cnes_builder.finish());
-
-        // 4. facility_municipality (PA_UFMUN)
-        let mut fac_mun_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "PA_UFMUN", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            fac_mun_builder.append_value(resolved);
-        }
-        let fac_mun_col: ArrayRef = Arc::new(fac_mun_builder.finish());
-
-        // 5. procedure_sigtap (PA_PROC_ID)
-        let mut proc_builder = StringBuilder::with_capacity(num_rows, num_rows * 10);
-        for i in 0..num_rows {
-            let proc_id = get_str_value(raw_batch, "PA_PROC_ID", i).unwrap_or("0000000000");
-            proc_builder.append_value(proc_id);
-        }
-        let proc_col: ArrayRef = Arc::new(proc_builder.finish());
-
-        // 6. service_date (PA_CMP)
-        let mut date_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let dt = get_date32_value(raw_batch, "PA_CMP", i).unwrap_or(0);
-            date_builder.append_value(dt);
-        }
-        let date_col: ArrayRef = Arc::new(date_builder.finish());
-
-        // 7. main_diagnosis_icd10 (PA_CIDPRI)
-        let mut cid_builder = StringBuilder::with_capacity(num_rows, num_rows * 5);
-        for i in 0..num_rows {
-            if let Some(cid) = get_str_value(raw_batch, "PA_CIDPRI", i) {
-                cid_builder.append_value(cid);
-            } else {
-                cid_builder.append_null();
-            }
-        }
-        let cid_col: ArrayRef = Arc::new(cid_builder.finish());
-
-        // 8. quantity_produced (PA_QTDPRO)
-        let mut qty_builder = UInt32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let q = get_u32_value(raw_batch, "PA_QTDPRO", i).unwrap_or(1);
-            qty_builder.append_value(q);
-        }
-        let qty_col: ArrayRef = Arc::new(qty_builder.finish());
-
-        // 9. total_paid_amount (PA_VALPRO)
-        let mut cost_builder = Float64Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let val = get_float64_value(raw_batch, "PA_VALPRO", i).unwrap_or(0.0);
-            cost_builder.append_value(val);
-        }
-        let cost_col: ArrayRef = Arc::new(cost_builder.finish());
-
-        // 10. patient_sex (PA_SEXO)
-        let mut sex_builder = StringBuilder::with_capacity(num_rows, num_rows);
-        for i in 0..num_rows {
-            if let Some(s) = get_str_value(raw_batch, "PA_SEXO", i) {
-                sex_builder.append_value(s);
-            } else {
-                sex_builder.append_null();
-            }
-        }
-        let sex_col: ArrayRef = Arc::new(sex_builder.finish());
-
-        // 11. patient_age_years (PA_IDADE)
-        let mut age_builder = UInt16Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            if let Some(age) = get_u16_value(raw_batch, "PA_IDADE", i) {
-                age_builder.append_value(age);
-            } else {
-                age_builder.append_null();
-            }
-        }
-        let age_col: ArrayRef = Arc::new(age_builder.finish());
+        let record_id_col = build_record_id_col(raw_batch, "PA_DOC_ID", "AMB", num_rows);
+        let patient_mun_col = build_harmonized_ibge_col(raw_batch, "PA_MUNPCN", "0000000", num_rows);
+        let cnes_col = build_str_col(raw_batch, "PA_CODUNI", "0000000", num_rows);
+        let fac_mun_col = build_harmonized_ibge_col(raw_batch, "PA_UFMUN", "0000000", num_rows);
+        let proc_col = build_str_col(raw_batch, "PA_PROC_ID", "0000000000", num_rows);
+        let date_col = build_date32_col(raw_batch, "PA_CMP", 0, num_rows);
+        let cid_col = build_str_opt_col(raw_batch, "PA_CIDPRI", 5, num_rows);
+        let qty_col = build_u32_col(raw_batch, "PA_QTDPRO", 1, num_rows);
+        let cost_col = build_f64_col(raw_batch, "PA_VALPRO", 0.0, num_rows);
+        let sex_col = build_str_opt_col(raw_batch, "PA_SEXO", 2, num_rows);
+        let age_col = build_u16_opt_col(raw_batch, "PA_IDADE", num_rows);
 
         RecordBatch::try_new(
             target_schema,

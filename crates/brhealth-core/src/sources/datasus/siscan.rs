@@ -6,12 +6,14 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, BooleanBuilder, Date32Builder, StringBuilder, UInt8Builder};
+use arrow::array::{ArrayRef, BooleanBuilder};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{get_bool_value, get_date32_value, get_str_value, get_u8_value};
+use super::helpers::{
+    build_str_opt_col, get_bool_value, get_date32_value, get_str_value, get_u8_value,
+};
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -38,89 +40,94 @@ impl SiscanDataSource {
         let target_schema = CanonicalSchemas::canonical_cancer_screening_schema();
 
         // 1. exam_id (CO_EXAME ou NU_PEDIDO)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "CO_EXAME", i)
-                .or_else(|| get_str_value(raw_batch, "NU_PEDIDO", i))
-                .unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("EXAM_{i}"));
-            } else {
-                id_builder.append_value(id);
+        let id_col: ArrayRef = {
+            let mut id_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 12);
+            for i in 0..num_rows {
+                let id = get_str_value(raw_batch, "CO_EXAME", i)
+                    .or_else(|| get_str_value(raw_batch, "NU_PEDIDO", i))
+                    .unwrap_or("");
+                if id.is_empty() {
+                    id_builder.append_value(format!("EXAM_{i}"));
+                } else {
+                    id_builder.append_value(id);
+                }
             }
-        }
-        let id_col: ArrayRef = Arc::new(id_builder.finish());
+            Arc::new(id_builder.finish())
+        };
 
         // 2. cancer_type (TP_EXAME: "MAMO" -> "BREAST", "CITO" -> "CERVICAL")
-        let mut type_builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
-        for i in 0..num_rows {
-            let raw_type = get_str_value(raw_batch, "TP_EXAME", i).unwrap_or("MAMO");
-            let normed = if raw_type.contains("CITO") || raw_type.contains("COLO") {
-                "CERVICAL"
-            } else {
-                "BREAST"
-            };
-            type_builder.append_value(normed);
-        }
-        let type_col: ArrayRef = Arc::new(type_builder.finish());
+        let type_col: ArrayRef = {
+            let mut type_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 8);
+            for i in 0..num_rows {
+                let raw_type = get_str_value(raw_batch, "TP_EXAME", i).unwrap_or("MAMO");
+                let normed = if raw_type.contains("CITO") || raw_type.contains("COLO") {
+                    "CERVICAL"
+                } else {
+                    "BREAST"
+                };
+                type_builder.append_value(normed);
+            }
+            Arc::new(type_builder.finish())
+        };
 
         // 3. exam_date (DT_EXAME ou DT_COLETA)
-        let mut dt_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let dt = get_date32_value(raw_batch, "DT_EXAME", i)
-                .or_else(|| get_date32_value(raw_batch, "DT_COLETA", i))
-                .unwrap_or(0);
-            dt_builder.append_value(dt);
-        }
-        let dt_col: ArrayRef = Arc::new(dt_builder.finish());
+        let dt_col: ArrayRef = {
+            let mut dt_builder = arrow::array::Date32Builder::with_capacity(num_rows);
+            for i in 0..num_rows {
+                let dt = get_date32_value(raw_batch, "DT_EXAME", i)
+                    .or_else(|| get_date32_value(raw_batch, "DT_COLETA", i))
+                    .unwrap_or(0);
+                dt_builder.append_value(dt);
+            }
+            Arc::new(dt_builder.finish())
+        };
 
         // 4. patient_municipality (CO_MUNICIPIO_IBGE ou CODMUNRES)
-        let mut mun_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "CO_MUNICIPIO_IBGE", i)
-                .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
-                .and_then(|m| harmonize_ibge_code(m).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            mun_builder.append_value(resolved);
-        }
-        let mun_col: ArrayRef = Arc::new(mun_builder.finish());
+        let mun_col: ArrayRef = {
+            let mut mun_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
+            for i in 0..num_rows {
+                let resolved = get_str_value(raw_batch, "CO_MUNICIPIO_IBGE", i)
+                    .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
+                    .and_then(|m| harmonize_ibge_code(m).ok())
+                    .unwrap_or_else(|| "0000000".to_string());
+                mun_builder.append_value(resolved);
+            }
+            Arc::new(mun_builder.finish())
+        };
 
         // 5. patient_age_years (NU_IDADE)
-        let mut age_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let age = get_u8_value(raw_batch, "NU_IDADE", i).unwrap_or(50);
-            age_builder.append_value(age);
-        }
-        let age_col: ArrayRef = Arc::new(age_builder.finish());
-
-        // 6. clinical_indication (DS_INDICACAO_CLINICA)
-        let mut ind_builder = StringBuilder::with_capacity(num_rows, num_rows * 16);
-        for i in 0..num_rows {
-            if let Some(ind) = get_str_value(raw_batch, "DS_INDICACAO_CLINICA", i) {
-                ind_builder.append_value(ind);
-            } else {
-                ind_builder.append_null();
+        let age_col: ArrayRef = {
+            let mut age_builder = arrow::array::UInt8Builder::with_capacity(num_rows);
+            for i in 0..num_rows {
+                let age = get_u8_value(raw_batch, "NU_IDADE", i).unwrap_or(50);
+                age_builder.append_value(age);
             }
-        }
-        let ind_col: ArrayRef = Arc::new(ind_builder.finish());
+            Arc::new(age_builder.finish())
+        };
+
+        let ind_col = build_str_opt_col(raw_batch, "DS_INDICACAO_CLINICA", 16, num_rows);
 
         // 7. diagnostic_result (DS_RESULTADO_DIAGNOSTICO ou DS_CONCLUSAO)
-        let mut res_builder = StringBuilder::with_capacity(num_rows, num_rows * 20);
-        for i in 0..num_rows {
-            let res = get_str_value(raw_batch, "DS_RESULTADO_DIAGNOSTICO", i)
-                .or_else(|| get_str_value(raw_batch, "DS_CONCLUSAO", i))
-                .unwrap_or("BI-RADS 1 / NORMAL");
-            res_builder.append_value(res);
-        }
-        let res_col: ArrayRef = Arc::new(res_builder.finish());
+        let res_col: ArrayRef = {
+            let mut res_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
+            for i in 0..num_rows {
+                let res = get_str_value(raw_batch, "DS_RESULTADO_DIAGNOSTICO", i)
+                    .or_else(|| get_str_value(raw_batch, "DS_CONCLUSAO", i))
+                    .unwrap_or("BI-RADS 1 / NORMAL");
+                res_builder.append_value(res);
+            }
+            Arc::new(res_builder.finish())
+        };
 
         // 8. biopsy_recommended (ST_RECOMENDA_BIOPSIA)
-        let mut bio_builder = BooleanBuilder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let bio = get_bool_value(raw_batch, "ST_RECOMENDA_BIOPSIA", i).unwrap_or(false);
-            bio_builder.append_value(bio);
-        }
-        let bio_col: ArrayRef = Arc::new(bio_builder.finish());
+        let bio_col: ArrayRef = {
+            let mut bio_builder = BooleanBuilder::with_capacity(num_rows);
+            for i in 0..num_rows {
+                let bio = get_bool_value(raw_batch, "ST_RECOMENDA_BIOPSIA", i).unwrap_or(false);
+                bio_builder.append_value(bio);
+            }
+            Arc::new(bio_builder.finish())
+        };
 
         RecordBatch::try_new(
             target_schema,

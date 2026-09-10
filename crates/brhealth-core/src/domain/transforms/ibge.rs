@@ -62,12 +62,16 @@ pub fn calculate_ibge_dv(code_6_digits: &str) -> Result<u8, PortError> {
         )));
     }
 
+    let bytes = trimmed.as_bytes();
     let mut sum: u32 = 0;
-    for (i, ch) in trimmed.chars().enumerate() {
-        let digit = ch.to_digit(10).ok_or_else(|| {
-            PortError::ValidationError(format!("Caractere inválido no código IBGE: '{}'", ch))
-        })?;
-
+    for (i, &b) in bytes.iter().enumerate() {
+        if !b.is_ascii_digit() {
+            return Err(PortError::ValidationError(format!(
+                "Caractere inválido no código IBGE: '{}'",
+                b as char
+            )));
+        }
+        let digit = (b - b'0') as u32;
         let product = digit * IBGE_WEIGHTS[i];
         let term = (product / 10) + (product % 10);
         sum += term;
@@ -107,14 +111,13 @@ pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
         7 => {
             let base_6 = &trimmed[0..6];
             let expected_dv = calculate_ibge_dv(base_6)?;
-            let current_dv = trimmed
-                .chars()
-                .nth(6)
-                .ok_or_else(|| PortError::ValidationError("7º dígito ausente".into()))?
-                .to_digit(10)
-                .ok_or_else(|| {
-                    PortError::ValidationError("7º dígito do código IBGE não é numérico".into())
-                })? as u8;
+            let b7 = trimmed.as_bytes()[6];
+            if !b7.is_ascii_digit() {
+                return Err(PortError::ValidationError(
+                    "7º dígito do código IBGE não é numérico".into(),
+                ));
+            }
+            let current_dv = b7 - b'0';
 
             if current_dv != expected_dv {
                 return Err(PortError::ValidationError(format!(

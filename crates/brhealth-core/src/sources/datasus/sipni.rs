@@ -6,12 +6,15 @@
 
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Date32Builder, StringBuilder, UInt8Builder};
+use arrow::array::ArrayRef;
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{get_date32_value, get_str_value, get_u8_value};
+use super::helpers::{
+    build_record_id_col, build_sex_col, build_str_col, build_str_opt_col, build_u8_opt_col,
+    get_date32_value, get_str_value,
+};
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -37,106 +40,73 @@ impl SipniDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_immunization_schema();
 
-        // 1. vaccination_event_id (ID_DOSE ou índice)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "ID_DOSE", i).unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("VAC_{i}"));
-            } else {
-                id_builder.append_value(id);
+        let id_col = build_record_id_col(raw_batch, "ID_DOSE", "VAC", num_rows);
+
+        // vaccine_code (COD_VACINA ou IMUNO)
+        let code_col: ArrayRef = {
+            let mut code_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 6);
+            for i in 0..num_rows {
+                let code = get_str_value(raw_batch, "COD_VACINA", i)
+                    .or_else(|| get_str_value(raw_batch, "IMUNO", i))
+                    .unwrap_or("00");
+                code_builder.append_value(code);
             }
-        }
-        let id_col: ArrayRef = Arc::new(id_builder.finish());
+            Arc::new(code_builder.finish())
+        };
 
-        // 2. vaccine_code (COD_VACINA ou IMUNO)
-        let mut code_builder = StringBuilder::with_capacity(num_rows, num_rows * 6);
-        for i in 0..num_rows {
-            let code = get_str_value(raw_batch, "COD_VACINA", i)
-                .or_else(|| get_str_value(raw_batch, "IMUNO", i))
-                .unwrap_or("00");
-            code_builder.append_value(code);
-        }
-        let code_col: ArrayRef = Arc::new(code_builder.finish());
-
-        // 3. vaccine_name (DS_VACINA ou NOME_VAC)
-        let mut name_builder = StringBuilder::with_capacity(num_rows, num_rows * 20);
-        for i in 0..num_rows {
-            let name = get_str_value(raw_batch, "DS_VACINA", i)
-                .or_else(|| get_str_value(raw_batch, "NOME_VAC", i))
-                .unwrap_or("VACINA PADRAO SUS");
-            name_builder.append_value(name);
-        }
-        let name_col: ArrayRef = Arc::new(name_builder.finish());
-
-        // 4. dose_order (DOSE ou TP_DOSE)
-        let mut dose_builder = StringBuilder::with_capacity(num_rows, num_rows * 4);
-        for i in 0..num_rows {
-            let dose = get_str_value(raw_batch, "DOSE", i)
-                .or_else(|| get_str_value(raw_batch, "TP_DOSE", i))
-                .unwrap_or("D1");
-            dose_builder.append_value(dose);
-        }
-        let dose_col: ArrayRef = Arc::new(dose_builder.finish());
-
-        // 5. vaccination_date (DT_VACINA ou DATA_APLIC)
-        let mut date_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let dt = get_date32_value(raw_batch, "DT_VACINA", i)
-                .or_else(|| get_date32_value(raw_batch, "DATA_APLIC", i))
-                .unwrap_or(0);
-            date_builder.append_value(dt);
-        }
-        let date_col: ArrayRef = Arc::new(date_builder.finish());
-
-        // 6. patient_municipality (MUN_RESID ou CODMUNRES)
-        let mut mun_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "MUN_RESID", i)
-                .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
-                .and_then(|m| harmonize_ibge_code(m).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            mun_builder.append_value(resolved);
-        }
-        let mun_col: ArrayRef = Arc::new(mun_builder.finish());
-
-        // 7. vaccination_facility_cnes (CNES_ESTAB)
-        let mut cnes_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let cnes = get_str_value(raw_batch, "CNES_ESTAB", i).unwrap_or("0000000");
-            cnes_builder.append_value(cnes);
-        }
-        let cnes_col: ArrayRef = Arc::new(cnes_builder.finish());
-
-        // 8. lot_number (LOTE)
-        let mut lot_builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
-        for i in 0..num_rows {
-            if let Some(lote) = get_str_value(raw_batch, "LOTE", i) {
-                lot_builder.append_value(lote);
-            } else {
-                lot_builder.append_null();
+        // vaccine_name (DS_VACINA ou NOME_VAC)
+        let name_col: ArrayRef = {
+            let mut name_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
+            for i in 0..num_rows {
+                let name = get_str_value(raw_batch, "DS_VACINA", i)
+                    .or_else(|| get_str_value(raw_batch, "NOME_VAC", i))
+                    .unwrap_or("VACINA PADRAO SUS");
+                name_builder.append_value(name);
             }
-        }
-        let lot_col: ArrayRef = Arc::new(lot_builder.finish());
+            Arc::new(name_builder.finish())
+        };
 
-        // 9. patient_age_years (IDADE)
-        let mut age_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            if let Some(age) = get_u8_value(raw_batch, "IDADE", i) {
-                age_builder.append_value(age);
-            } else {
-                age_builder.append_null();
+        // dose_order (DOSE ou TP_DOSE)
+        let dose_col: ArrayRef = {
+            let mut dose_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 4);
+            for i in 0..num_rows {
+                let dose = get_str_value(raw_batch, "DOSE", i)
+                    .or_else(|| get_str_value(raw_batch, "TP_DOSE", i))
+                    .unwrap_or("D1");
+                dose_builder.append_value(dose);
             }
-        }
-        let age_col: ArrayRef = Arc::new(age_builder.finish());
+            Arc::new(dose_builder.finish())
+        };
 
-        // 10. patient_sex (SEXO)
-        let mut sex_builder = StringBuilder::with_capacity(num_rows, num_rows);
-        for i in 0..num_rows {
-            let s = get_str_value(raw_batch, "SEXO", i).unwrap_or("U");
-            sex_builder.append_value(s);
-        }
-        let sex_col: ArrayRef = Arc::new(sex_builder.finish());
+        // vaccination_date (DT_VACINA ou DATA_APLIC)
+        let date_col: ArrayRef = {
+            let mut date_builder = arrow::array::Date32Builder::with_capacity(num_rows);
+            for i in 0..num_rows {
+                let dt = get_date32_value(raw_batch, "DT_VACINA", i)
+                    .or_else(|| get_date32_value(raw_batch, "DATA_APLIC", i))
+                    .unwrap_or(0);
+                date_builder.append_value(dt);
+            }
+            Arc::new(date_builder.finish())
+        };
+
+        // patient_municipality (MUN_RESID ou CODMUNRES)
+        let mun_col: ArrayRef = {
+            let mut mun_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
+            for i in 0..num_rows {
+                let resolved = get_str_value(raw_batch, "MUN_RESID", i)
+                    .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
+                    .and_then(|m| harmonize_ibge_code(m).ok())
+                    .unwrap_or_else(|| "0000000".to_string());
+                mun_builder.append_value(resolved);
+            }
+            Arc::new(mun_builder.finish())
+        };
+
+        let cnes_col = build_str_col(raw_batch, "CNES_ESTAB", "0000000", num_rows);
+        let lot_col = build_str_opt_col(raw_batch, "LOTE", 8, num_rows);
+        let age_col = build_u8_opt_col(raw_batch, "IDADE", num_rows);
+        let sex_col = build_sex_col(raw_batch, "SEXO", num_rows);
 
         RecordBatch::try_new(
             target_schema,

@@ -6,14 +6,15 @@
 
 use std::sync::Arc;
 
-use arrow::array::{
-    ArrayRef, BooleanBuilder, Date32Builder, Float64Builder, StringBuilder, UInt16Builder,
-};
+use arrow::array::{ArrayRef, BooleanArray, BooleanBuilder};
 use arrow::datatypes::Schema;
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{get_date32_value, get_float64_value, get_str_value};
+use super::helpers::{
+    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col,
+    build_str_col, build_str_opt_col, build_u16_col, get_str_value,
+};
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -21,7 +22,6 @@ use crate::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-use crate::domain::transforms::ibge::harmonize_ibge_code;
 
 /// Adaptador SPI para o SIHSUS (AIH Reduzida - RD) do DATASUS.
 #[derive(Debug, Default, Clone)]
@@ -40,108 +40,39 @@ impl SihDataSource {
         let target_schema = CanonicalSchemas::canonical_hospital_morbidity_schema();
 
         // 1. record_id (N_AIH)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 14);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "N_AIH", i).unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("AIH_{i}"));
-            } else {
-                id_builder.append_value(id);
-            }
-        }
-        let record_id_col: ArrayRef = Arc::new(id_builder.finish());
+        let record_id_col = build_record_id_col(raw_batch, "N_AIH", "AIH", num_rows);
 
         // 2. municipality_residence (MUNIC_RES)
-        let mut res_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "MUNIC_RES", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            res_builder.append_value(resolved);
-        }
-        let municipality_residence_col: ArrayRef = Arc::new(res_builder.finish());
+        let municipality_residence_col =
+            build_harmonized_ibge_col(raw_batch, "MUNIC_RES", "0000000", num_rows);
 
         // 3. municipality_hospital (MUNIC_MOV)
-        let mut mov_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "MUNIC_MOV", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            mov_builder.append_value(resolved);
-        }
-        let municipality_hospital_col: ArrayRef = Arc::new(mov_builder.finish());
+        let municipality_hospital_col =
+            build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", "0000000", num_rows);
 
         // 4. admission_date (DT_INTER)
-        let mut adm_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let date_val = get_date32_value(raw_batch, "DT_INTER", i).unwrap_or(0);
-            adm_builder.append_value(date_val);
-        }
-        let admission_date_col: ArrayRef = Arc::new(adm_builder.finish());
+        let admission_date_col = build_date32_col(raw_batch, "DT_INTER", 0, num_rows);
 
         // 5. discharge_date (DT_SAIDA)
-        let mut dis_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let date_val = get_date32_value(raw_batch, "DT_SAIDA", i).unwrap_or(0);
-            dis_builder.append_value(date_val);
-        }
-        let discharge_date_col: ArrayRef = Arc::new(dis_builder.finish());
+        let discharge_date_col = build_date32_col(raw_batch, "DT_SAIDA", 0, num_rows);
 
         // 6. length_of_stay_days (DIAS_PERM)
-        let mut stay_builder = UInt16Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let stay_val = get_str_value(raw_batch, "DIAS_PERM", i)
-                .and_then(|s| s.parse::<u16>().ok())
-                .unwrap_or(0);
-            stay_builder.append_value(stay_val);
-        }
-        let stay_col: ArrayRef = Arc::new(stay_builder.finish());
+        let stay_col = build_u16_col(raw_batch, "DIAS_PERM", 0, num_rows);
 
         // 7. main_diagnosis_icd10 (DIAG_PRINC)
-        let mut diag_p_builder = StringBuilder::with_capacity(num_rows, num_rows * 5);
-        for i in 0..num_rows {
-            let diag = get_str_value(raw_batch, "DIAG_PRINC", i).unwrap_or("Z00");
-            diag_p_builder.append_value(diag);
-        }
-        let diag_p_col: ArrayRef = Arc::new(diag_p_builder.finish());
+        let diag_p_col = build_str_col(raw_batch, "DIAG_PRINC", "Z00", num_rows);
 
         // 8. secondary_diagnosis_icd10 (DIAG_SECUN)
-        let mut diag_s_builder = StringBuilder::with_capacity(num_rows, num_rows * 5);
-        for i in 0..num_rows {
-            let diag = get_str_value(raw_batch, "DIAG_SECUN", i);
-            if let Some(d) = diag {
-                diag_s_builder.append_value(d);
-            } else {
-                diag_s_builder.append_null();
-            }
-        }
-        let diag_s_col: ArrayRef = Arc::new(diag_s_builder.finish());
+        let diag_s_col = build_str_opt_col(raw_batch, "DIAG_SECUN", 5, num_rows);
 
         // 9. procedure_sigtap (PROC_REA)
-        let mut proc_builder = StringBuilder::with_capacity(num_rows, num_rows * 10);
-        for i in 0..num_rows {
-            let proc_str = get_str_value(raw_batch, "PROC_REA", i).unwrap_or("0000000000");
-            proc_builder.append_value(proc_str);
-        }
-        let proc_col: ArrayRef = Arc::new(proc_builder.finish());
+        let proc_col = build_str_col(raw_batch, "PROC_REA", "0000000000", num_rows);
 
         // 10. total_paid_amount (VAL_TOT)
-        let mut val_builder = Float64Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let amount = get_float64_value(raw_batch, "VAL_TOT", i).unwrap_or(0.0);
-            val_builder.append_value(amount);
-        }
-        let val_col: ArrayRef = Arc::new(val_builder.finish());
+        let val_col = build_f64_col(raw_batch, "VAL_TOT", 0.0, num_rows);
 
         // 11. icu_days (UTI_MES_TO)
-        let mut uti_builder = UInt16Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let uti_val = get_str_value(raw_batch, "UTI_MES_TO", i)
-                .and_then(|s| s.parse::<u16>().ok())
-                .unwrap_or(0);
-            uti_builder.append_value(uti_val);
-        }
-        let uti_col: ArrayRef = Arc::new(uti_builder.finish());
+        let uti_col = build_u16_col(raw_batch, "UTI_MES_TO", 0, num_rows);
 
         // 12. death_outcome (MORTE: 1=Sim, 0=Não)
         let mut morte_builder = BooleanBuilder::with_capacity(num_rows);
@@ -152,11 +83,7 @@ impl SihDataSource {
         let morte_col: ArrayRef = Arc::new(morte_builder.finish());
 
         // 13. is_csap (Inicialmente falso até enriquecimento com módulo CSAP)
-        let mut csap_builder = BooleanBuilder::with_capacity(num_rows);
-        for _ in 0..num_rows {
-            csap_builder.append_value(false);
-        }
-        let csap_col: ArrayRef = Arc::new(csap_builder.finish());
+        let csap_col: ArrayRef = Arc::new(BooleanArray::from(vec![false; num_rows]));
 
         let columns = vec![
             record_id_col,

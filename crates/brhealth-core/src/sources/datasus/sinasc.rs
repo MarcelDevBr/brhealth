@@ -6,15 +6,16 @@
 
 use std::sync::Arc;
 
-use arrow::array::{
-    ArrayRef, BooleanBuilder, Date32Builder, StringBuilder, UInt8Builder, UInt16Builder,
-    UInt64Builder,
-};
-use arrow::datatypes::Schema;
+use arrow::array::{ArrayRef, BooleanBuilder, StringBuilder};
+use arrow::datatypes::{DataType, Schema};
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{get_date32_value, get_str_value};
+use super::helpers::{
+    build_constant_str_col, build_date32_col, build_harmonized_ibge_col, build_null_col,
+    build_race_col, build_record_id_col, build_sex_col, build_u16_opt_col, build_u8_opt_col,
+    get_str_value,
+};
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -22,7 +23,6 @@ use crate::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-use crate::domain::transforms::ibge::harmonize_ibge_code;
 
 /// Adaptador SPI para o SINASC (Nascidos Vivos) do DATASUS.
 #[derive(Debug, Default, Clone)]
@@ -41,142 +41,41 @@ impl SinascDataSource {
         let target_schema = CanonicalSchemas::canonical_birth_schema();
 
         // 1. record_id (NUMERODN)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "NUMERODN", i).unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("DN_{i}"));
-            } else {
-                id_builder.append_value(id);
-            }
-        }
-        let record_id_col: ArrayRef = Arc::new(id_builder.finish());
+        let record_id_col = build_record_id_col(raw_batch, "NUMERODN", "DN", num_rows);
 
         // 2. country_iso3 ("BRA")
-        let mut country_builder = StringBuilder::with_capacity(num_rows, num_rows * 3);
-        for _ in 0..num_rows {
-            country_builder.append_value("BRA");
-        }
-        let country_col: ArrayRef = Arc::new(country_builder.finish());
+        let country_col = build_constant_str_col("BRA", num_rows);
 
         // 3. jurisdiction_code (CODMUNRES)
-        let mut juris_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "CODMUNRES", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            juris_builder.append_value(resolved);
-        }
-        let jurisdiction_col: ArrayRef = Arc::new(juris_builder.finish());
+        let jurisdiction_col =
+            build_harmonized_ibge_col(raw_batch, "CODMUNRES", "0000000", num_rows);
 
         // 4. h3_index_res8 (Nulo inicial)
-        let mut h3_builder = UInt64Builder::with_capacity(num_rows);
-        for _ in 0..num_rows {
-            h3_builder.append_null();
-        }
-        let h3_col: ArrayRef = Arc::new(h3_builder.finish());
+        let h3_col = build_null_col(&DataType::UInt64, num_rows);
 
         // 5. birth_date (DTNASC)
-        let mut date_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let date_val = get_date32_value(raw_batch, "DTNASC", i).unwrap_or(0);
-            date_builder.append_value(date_val);
-        }
-        let birth_date_col: ArrayRef = Arc::new(date_builder.finish());
+        let birth_date_col = build_date32_col(raw_batch, "DTNASC", 0, num_rows);
 
         // 6. birth_weight_grams (PESO)
-        let mut weight_builder = UInt16Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let weight_val =
-                get_str_value(raw_batch, "PESO", i).and_then(|s| s.parse::<u16>().ok());
-            if let Some(w) = weight_val {
-                weight_builder.append_value(w);
-            } else {
-                weight_builder.append_null();
-            }
-        }
-        let weight_col: ArrayRef = Arc::new(weight_builder.finish());
+        let weight_col = build_u16_opt_col(raw_batch, "PESO", num_rows);
 
         // 7. gestational_weeks (SEMAGESTAC)
-        let mut gest_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let sema_val =
-                get_str_value(raw_batch, "SEMAGESTAC", i).and_then(|s| s.parse::<u8>().ok());
-            if let Some(s) = sema_val {
-                gest_builder.append_value(s);
-            } else {
-                gest_builder.append_null();
-            }
-        }
-        let gest_col: ArrayRef = Arc::new(gest_builder.finish());
+        let gest_col = build_u8_opt_col(raw_batch, "SEMAGESTAC", num_rows);
 
         // 8. apgar_1min (APGAR1)
-        let mut ap1_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let ap1_val = get_str_value(raw_batch, "APGAR1", i).and_then(|s| s.parse::<u8>().ok());
-            if let Some(v) = ap1_val {
-                ap1_builder.append_value(v);
-            } else {
-                ap1_builder.append_null();
-            }
-        }
-        let ap1_col: ArrayRef = Arc::new(ap1_builder.finish());
+        let ap1_col = build_u8_opt_col(raw_batch, "APGAR1", num_rows);
 
         // 9. apgar_5min (APGAR5)
-        let mut ap5_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let ap5_val = get_str_value(raw_batch, "APGAR5", i).and_then(|s| s.parse::<u8>().ok());
-            if let Some(v) = ap5_val {
-                ap5_builder.append_value(v);
-            } else {
-                ap5_builder.append_null();
-            }
-        }
-        let ap5_col: ArrayRef = Arc::new(ap5_builder.finish());
+        let ap5_col = build_u8_opt_col(raw_batch, "APGAR5", num_rows);
 
         // 10. sex (SEXO)
-        let mut sex_builder = StringBuilder::with_capacity(num_rows, num_rows * 2);
-        for i in 0..num_rows {
-            let sex_str = match get_str_value(raw_batch, "SEXO", i) {
-                Some("1" | "M") => "M",
-                Some("2" | "F") => "F",
-                _ => "U",
-            };
-            sex_builder.append_value(sex_str);
-        }
-        let sex_col: ArrayRef = Arc::new(sex_builder.finish());
+        let sex_col = build_sex_col(raw_batch, "SEXO", num_rows);
 
         // 11. race_ethnicity (RACACOR)
-        let mut race_builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
-        for i in 0..num_rows {
-            let race_str = match get_str_value(raw_batch, "RACACOR", i) {
-                Some("1") => Some("Branca"),
-                Some("2") => Some("Preta"),
-                Some("3") => Some("Amarela"),
-                Some("4") => Some("Parda"),
-                Some("5") => Some("Indígena"),
-                _ => None,
-            };
-            if let Some(r) = race_str {
-                race_builder.append_value(r);
-            } else {
-                race_builder.append_null();
-            }
-        }
-        let race_col: ArrayRef = Arc::new(race_builder.finish());
+        let race_col = build_race_col(raw_batch, "RACACOR", num_rows);
 
         // 12. mother_age_years (IDADEMAE)
-        let mut mae_builder = UInt8Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let mae_val =
-                get_str_value(raw_batch, "IDADEMAE", i).and_then(|s| s.parse::<u8>().ok());
-            if let Some(v) = mae_val {
-                mae_builder.append_value(v);
-            } else {
-                mae_builder.append_null();
-            }
-        }
-        let mae_col: ArrayRef = Arc::new(mae_builder.finish());
+        let mae_col = build_u8_opt_col(raw_batch, "IDADEMAE", num_rows);
 
         // 13. delivery_type (PARTO: 1="vaginal", 2="cesarean")
         let mut parto_builder = StringBuilder::with_capacity(num_rows, num_rows * 8);

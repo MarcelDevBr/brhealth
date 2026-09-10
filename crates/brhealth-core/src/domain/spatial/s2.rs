@@ -226,7 +226,6 @@ mod tests {
         assert_ne!(cell, 0);
 
         let (lat, lon) = s2_cell_to_coord(cell).unwrap();
-        println!("DEBUG S2: lat={lat}, lon={lon}");
         assert!((lat - (-23.55)).abs() < 0.2);
         assert!((lon - (-46.63)).abs() < 0.2);
     }

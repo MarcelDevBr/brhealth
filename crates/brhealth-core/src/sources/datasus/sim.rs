@@ -6,14 +6,15 @@
 
 use std::sync::Arc;
 
-use arrow::array::{
-    ArrayRef, BooleanBuilder, Date32Builder, StringBuilder, UInt16Builder, UInt64Builder,
-};
-use arrow::datatypes::Schema;
+use arrow::array::{ArrayRef, BooleanBuilder, UInt16Builder};
+use arrow::datatypes::{DataType, Schema};
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
-use super::helpers::{get_date32_value, get_str_value};
+use super::helpers::{
+    build_constant_str_col, build_date32_col, build_harmonized_ibge_col, build_null_col,
+    build_race_col, build_record_id_col, build_sex_col, build_str_col, get_str_value,
+};
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
 use crate::domain::schema::CanonicalSchemas;
@@ -21,7 +22,6 @@ use crate::domain::source_spi::{
     DataQueryParams, GeographicScope, HealthDataSourceSPI, SourceCategory, SourceExecutionContext,
     SourceMetadata,
 };
-use crate::domain::transforms::ibge::harmonize_ibge_code;
 
 /// Adaptador SPI para o SIM (Mortalidade Geral) do DATASUS.
 #[derive(Debug, Default, Clone)]
@@ -40,63 +40,26 @@ impl SimDataSource {
         let target_schema = CanonicalSchemas::canonical_mortality_schema();
 
         // 1. record_id (NUMERODO ou índice sequencial)
-        let mut id_builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
-        for i in 0..num_rows {
-            let id = get_str_value(raw_batch, "NUMERODO", i).unwrap_or("");
-            if id.is_empty() {
-                id_builder.append_value(format!("SIM_{i}"));
-            } else {
-                id_builder.append_value(id);
-            }
-        }
-        let record_id_col: ArrayRef = Arc::new(id_builder.finish());
+        let record_id_col = build_record_id_col(raw_batch, "NUMERODO", "SIM", num_rows);
 
         // 2. country_iso3 ("BRA")
-        let mut country_builder = StringBuilder::with_capacity(num_rows, num_rows * 3);
-        for _ in 0..num_rows {
-            country_builder.append_value("BRA");
-        }
-        let country_col: ArrayRef = Arc::new(country_builder.finish());
+        let country_col = build_constant_str_col("BRA", num_rows);
 
         // 3. jurisdiction_code (CODMUNRES harmonizado para 7 dígitos)
-        let mut juris_builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
-        for i in 0..num_rows {
-            let resolved = get_str_value(raw_batch, "CODMUNRES", i)
-                .and_then(|raw_mun| harmonize_ibge_code(raw_mun).ok())
-                .unwrap_or_else(|| "0000000".to_string());
-            juris_builder.append_value(resolved);
-        }
-        let jurisdiction_col: ArrayRef = Arc::new(juris_builder.finish());
+        let jurisdiction_col =
+            build_harmonized_ibge_col(raw_batch, "CODMUNRES", "0000000", num_rows);
 
         // 4. h3_index_res8 (Nulo por padrão até join com centróides ou endereços)
-        let mut h3_builder = UInt64Builder::with_capacity(num_rows);
-        for _ in 0..num_rows {
-            h3_builder.append_null();
-        }
-        let h3_col: ArrayRef = Arc::new(h3_builder.finish());
+        let h3_col = build_null_col(&DataType::UInt64, num_rows);
 
         // 5. event_date (DTOBITO)
-        let mut date_builder = Date32Builder::with_capacity(num_rows);
-        for i in 0..num_rows {
-            let date_val = get_date32_value(raw_batch, "DTOBITO", i).unwrap_or(0);
-            date_builder.append_value(date_val);
-        }
-        let event_date_col: ArrayRef = Arc::new(date_builder.finish());
+        let event_date_col = build_date32_col(raw_batch, "DTOBITO", 0, num_rows);
 
         // 6. underlying_cause_icd10 (CAUSABAS)
-        let mut causa_builder = StringBuilder::with_capacity(num_rows, num_rows * 5);
-        for i in 0..num_rows {
-            let causa = get_str_value(raw_batch, "CAUSABAS", i).unwrap_or("R99");
-            causa_builder.append_value(causa);
-        }
-        let causa_col: ArrayRef = Arc::new(causa_builder.finish());
+        let causa_col = build_str_col(raw_batch, "CAUSABAS", "R99", num_rows);
 
         // 7. underlying_cause_icd11 (Nulo nesta etapa)
-        let mut causa11_builder = StringBuilder::with_capacity(num_rows, 0);
-        for _ in 0..num_rows {
-            causa11_builder.append_null();
-        }
-        let causa11_col: ArrayRef = Arc::new(causa11_builder.finish());
+        let causa11_col = build_null_col(&DataType::Utf8, num_rows);
 
         // 8. age_years (IDADE calculada do SIM)
         let mut age_builder = UInt16Builder::with_capacity(num_rows);
@@ -123,35 +86,10 @@ impl SimDataSource {
         let age_col: ArrayRef = Arc::new(age_builder.finish());
 
         // 9. sex (SEXO: 1="M", 2="F", 0="I")
-        let mut sex_builder = StringBuilder::with_capacity(num_rows, num_rows * 2);
-        for i in 0..num_rows {
-            let sex_str = match get_str_value(raw_batch, "SEXO", i) {
-                Some("1" | "M") => "M",
-                Some("2" | "F") => "F",
-                _ => "U",
-            };
-            sex_builder.append_value(sex_str);
-        }
-        let sex_col: ArrayRef = Arc::new(sex_builder.finish());
+        let sex_col = build_sex_col(raw_batch, "SEXO", num_rows);
 
         // 10. race_ethnicity (RACACOR)
-        let mut race_builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
-        for i in 0..num_rows {
-            let race_str = match get_str_value(raw_batch, "RACACOR", i) {
-                Some("1") => Some("Branca"),
-                Some("2") => Some("Preta"),
-                Some("3") => Some("Amarela"),
-                Some("4") => Some("Parda"),
-                Some("5") => Some("Indígena"),
-                _ => None,
-            };
-            if let Some(r) = race_str {
-                race_builder.append_value(r);
-            } else {
-                race_builder.append_null();
-            }
-        }
-        let race_col: ArrayRef = Arc::new(race_builder.finish());
+        let race_col = build_race_col(raw_batch, "RACACOR", num_rows);
 
         // 11. maternal_death (OBITOMATER)
         let mut mat_builder = BooleanBuilder::with_capacity(num_rows);

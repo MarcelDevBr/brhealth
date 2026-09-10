@@ -141,19 +141,33 @@ impl CsapGroup {
 /// assert_eq!(classify_cid10("S060"), None); // Trauma não é CSAP
 /// ```
 pub fn classify_cid10(cid: &str) -> Option<CsapGroup> {
-    let raw = cid.trim().to_uppercase();
-    if raw.is_empty() {
+    let trimmed = cid.trim();
+    if trimmed.is_empty() {
         return None;
     }
 
-    // Normalizar removendo pontos (ex: "J45.0" -> "J450")
-    let cleaned: String = raw.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-    if cleaned.len() < 3 {
+    // Normalizar removendo pontos (ex: "J45.0" -> "J450") em buffer de stack sem alocações
+    let mut buf = [0u8; 8];
+    let mut len = 0;
+    for b in trimmed.bytes() {
+        if b.is_ascii_alphanumeric() {
+            if len >= 8 {
+                return None;
+            }
+            buf[len] = b.to_ascii_uppercase();
+            len += 1;
+        }
+    }
+
+    if len < 3 {
         return None;
     }
 
-    let prefix3 = &cleaned[..3];
-    let full = cleaned.as_str();
+    let full = match std::str::from_utf8(&buf[..len]) {
+        Ok(s) => s,
+        Err(_) => return None,
+    };
+    let prefix3 = &full[..3];
 
     // 1. Imunopreveníveis: A33-A37, A95, B16, B05, B06, B26, G000, A170, A19 (exc A192)
     if matches!(
