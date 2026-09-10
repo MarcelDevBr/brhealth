@@ -172,9 +172,10 @@ impl<T: TransportPort> ResilientTransport<T> {
                 };
             }
             Err(e) => {
-                tracing_or_eprintln(
-                    &format!("Fonte primária temporariamente inacessível ('{}'): {}", primary_uri, e),
-                );
+                tracing_or_eprintln(&format!(
+                    "Fonte primária temporariamente inacessível ('{}'): {}",
+                    primary_uri, e
+                ));
             }
         }
 
@@ -199,9 +200,12 @@ impl<T: TransportPort> ResilientTransport<T> {
                     };
                 }
                 Err(e) => {
-                    tracing_or_eprintln(
-                        &format!("Falha no espelho #{} ('{}'): {}", i + 1, mirror_uri, e),
-                    );
+                    tracing_or_eprintln(&format!(
+                        "Falha no espelho #{} ('{}'): {}",
+                        i + 1,
+                        mirror_uri,
+                        e
+                    ));
                 }
             }
         }

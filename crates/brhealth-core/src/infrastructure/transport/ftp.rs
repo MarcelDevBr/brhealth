@@ -130,7 +130,9 @@ impl AsyncFtpTransport {
             PortError::TransportError(format!("Resposta PASV malformada (sem parênteses): {resp}"))
         })?;
         let end = resp.find(')').ok_or_else(|| {
-            PortError::TransportError(format!("Resposta PASV malformada (sem fecha parêntese): {resp}"))
+            PortError::TransportError(format!(
+                "Resposta PASV malformada (sem fecha parêntese): {resp}"
+            ))
         })?;
 
         let numbers: Vec<u16> = resp[start + 1..end]
@@ -171,7 +173,9 @@ impl TransportPort for AsyncFtpTransport {
 
             let connect_fut = tokio::time::timeout(self.config.timeout, async {
                 let mut ctrl_stream = TcpStream::connect(&addr).await.map_err(|e| {
-                    PortError::TransportError(format!("Falha ao conectar canal de controle {addr}: {e}"))
+                    PortError::TransportError(format!(
+                        "Falha ao conectar canal de controle {addr}: {e}"
+                    ))
                 })?;
 
                 // 1. Banner inicial (220)
@@ -189,8 +193,7 @@ impl TransportPort for AsyncFtpTransport {
                     ctrl_stream
                         .write_all(b"PASS brhealth@healthanalytics.org\r\n")
                         .await?;
-                    let (code_pass, resp_pass) =
-                        Self::read_ftp_response(&mut ctrl_stream).await?;
+                    let (code_pass, resp_pass) = Self::read_ftp_response(&mut ctrl_stream).await?;
                     if code_pass != 230 {
                         return Err(PortError::TransportError(format!(
                             "Falha na autenticação FTP (PASS) código {code_pass}: {resp_pass}"
@@ -297,8 +300,9 @@ mod tests {
     #[test]
     fn test_parse_ftp_uri() {
         let client = AsyncFtpTransport::new_datasus();
-        let (host, path) =
-            client.parse_ftp_uri("ftp://ftp.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/DOAC2022.dbc");
+        let (host, path) = client.parse_ftp_uri(
+            "ftp://ftp.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/DOAC2022.dbc",
+        );
         assert_eq!(host, "ftp.datasus.gov.br");
         assert_eq!(path, "/dissemin/publicos/SIM/CID10/DORES/DOAC2022.dbc");
     }

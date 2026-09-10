@@ -214,13 +214,17 @@ impl HealthDataSourceSPI for Era5DataSource {
                 PortError::TabularDecodeError(format!("Falha ao ler cabeçalho Parquet ERA5: {e}"))
             })?;
             let reader = builder.build().map_err(|e| {
-                PortError::TabularDecodeError(format!("Falha ao construir leitor Parquet ERA5: {e}"))
+                PortError::TabularDecodeError(format!(
+                    "Falha ao construir leitor Parquet ERA5: {e}"
+                ))
             })?;
 
             let mut harmonized_batches = Vec::new();
             for batch_res in reader {
                 let batch = batch_res.map_err(|e| {
-                    PortError::TabularDecodeError(format!("Erro na leitura de batch Parquet ERA5: {e}"))
+                    PortError::TabularDecodeError(format!(
+                        "Erro na leitura de batch Parquet ERA5: {e}"
+                    ))
                 })?;
                 let harmonized = self.harmonize_batch(&batch)?;
                 harmonized_batches.push(harmonized);

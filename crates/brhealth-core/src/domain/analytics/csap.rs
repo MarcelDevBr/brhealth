@@ -13,8 +13,8 @@ use std::sync::Arc;
 
 use arrow::array::{
     Array, ArrayRef, BooleanBuilder, Float32Array, Float64Array, Int32Array, Int64Array,
-    RecordBatch, StringArray, StringBuilder, UInt16Array, UInt32Array, UInt64Array,
-    UInt8Array, UInt8Builder,
+    RecordBatch, StringArray, StringBuilder, UInt8Array, UInt8Builder, UInt16Array, UInt32Array,
+    UInt64Array,
 };
 use arrow::datatypes::{DataType, Field, Schema};
 
@@ -372,12 +372,7 @@ enum CostExtractor<'a> {
 
 impl<'a> CostExtractor<'a> {
     fn resolve(batch: &'a RecordBatch) -> Self {
-        const COST_CANDIDATES: &[&str] = &[
-            "total_cost",
-            "total_paid_amount",
-            "val_tot",
-            "VAL_TOT",
-        ];
+        const COST_CANDIDATES: &[&str] = &["total_cost", "total_paid_amount", "val_tot", "VAL_TOT"];
 
         for &name in COST_CANDIDATES {
             if let Ok(idx) = batch.schema().index_of(name) {
@@ -401,10 +396,34 @@ impl<'a> CostExtractor<'a> {
     #[inline]
     fn get(&self, row: usize) -> f64 {
         match self {
-            Self::F64(arr) => if arr.is_valid(row) { arr.value(row) } else { 0.0 },
-            Self::F32(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
-            Self::I64(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
-            Self::U64(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
+            Self::F64(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row)
+                } else {
+                    0.0
+                }
+            }
+            Self::F32(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as f64
+                } else {
+                    0.0
+                }
+            }
+            Self::I64(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as f64
+                } else {
+                    0.0
+                }
+            }
+            Self::U64(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as f64
+                } else {
+                    0.0
+                }
+            }
             Self::Str(arr) => {
                 if arr.is_valid(row) {
                     arr.value(row).trim().parse::<f64>().unwrap_or(0.0)
@@ -460,11 +479,41 @@ impl<'a> DaysExtractor<'a> {
     #[inline]
     fn get(&self, row: usize) -> u64 {
         match self {
-            Self::U16(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
-            Self::U8(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
-            Self::U32(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
-            Self::I64(arr) => if arr.is_valid(row) { arr.value(row).max(0) as u64 } else { 0 },
-            Self::I32(arr) => if arr.is_valid(row) { arr.value(row).max(0) as u64 } else { 0 },
+            Self::U16(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as u64
+                } else {
+                    0
+                }
+            }
+            Self::U8(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as u64
+                } else {
+                    0
+                }
+            }
+            Self::U32(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row) as u64
+                } else {
+                    0
+                }
+            }
+            Self::I64(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row).max(0) as u64
+                } else {
+                    0
+                }
+            }
+            Self::I32(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row).max(0) as u64
+                } else {
+                    0
+                }
+            }
             Self::Str(arr) => {
                 if arr.is_valid(row) {
                     arr.value(row).trim().parse::<u64>().unwrap_or(0)
@@ -539,7 +588,11 @@ pub fn enrich_sih_batch_with_csap(batch: &RecordBatch) -> Result<RecordBatch, Po
                 has_group_id = true;
             }
             "csap_group_name" => {
-                new_fields.push(Arc::new(Field::new("csap_group_name", DataType::Utf8, true)));
+                new_fields.push(Arc::new(Field::new(
+                    "csap_group_name",
+                    DataType::Utf8,
+                    true,
+                )));
                 new_columns.push(Arc::clone(&group_name_arr));
                 has_group_name = true;
             }
@@ -559,7 +612,11 @@ pub fn enrich_sih_batch_with_csap(batch: &RecordBatch) -> Result<RecordBatch, Po
         new_columns.push(group_id_arr);
     }
     if !has_group_name {
-        new_fields.push(Arc::new(Field::new("csap_group_name", DataType::Utf8, true)));
+        new_fields.push(Arc::new(Field::new(
+            "csap_group_name",
+            DataType::Utf8,
+            true,
+        )));
         new_columns.push(group_name_arr);
     }
 
@@ -847,7 +904,11 @@ mod tests {
             Some("S060"), // Não-CSAP (Trauma) - R$ 2500, 8 dias
             Some("I10"),  // CSAP (Hipertensão) - R$ 800, 2 dias
         ]));
-        let costs = Arc::new(Float64Array::from(vec![Some(1200.0), Some(2500.0), Some(800.0)]));
+        let costs = Arc::new(Float64Array::from(vec![
+            Some(1200.0),
+            Some(2500.0),
+            Some(800.0),
+        ]));
         let days = Arc::new(UInt16Array::from(vec![Some(4), Some(8), Some(2)]));
         let initial_is_csap = Arc::new(BooleanArray::from(vec![false, false, false]));
 

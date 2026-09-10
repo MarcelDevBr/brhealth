@@ -8,19 +8,15 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
 
+use brhealth_core::SourceRegistry;
 use brhealth_core::decoders::dbc::DbcDecompressor;
-use brhealth_core::domain::application::{
-    BRHealthApplicationService, PipelineExecutionOptions,
-};
+use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
 use brhealth_core::domain::ports::outbound::{
     LocalCachePort, PortError, SyncStatePort, TransportPort,
 };
-use brhealth_core::domain::source_spi::{
-    DataQueryParams, GeographicScope, SourceExecutionContext,
-};
+use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope, SourceExecutionContext};
 use brhealth_core::infrastructure::state::disk::DiskSyncState;
 use brhealth_core::sources::datasus::SimDataSource;
-use brhealth_core::SourceRegistry;
 
 struct FixtureTransport {
     data: Vec<u8>,
@@ -66,14 +62,15 @@ async fn test_application_service_full_pipeline_with_sim() {
     registry.register(SimDataSource::new());
 
     let context = Arc::new(SourceExecutionContext {
-        transport: Arc::new(FixtureTransport { data: compressed_bytes }),
+        transport: Arc::new(FixtureTransport {
+            data: compressed_bytes,
+        }),
         decompressor: Arc::new(DbcDecompressor::new().unwrap()),
         cache: Arc::new(MockCache),
         state: sync_state.clone() as Arc<dyn SyncStatePort>,
     });
 
-    let app_service =
-        BRHealthApplicationService::new(Arc::new(registry), context, sync_state);
+    let app_service = BRHealthApplicationService::new(Arc::new(registry), context, sync_state);
 
     let params = DataQueryParams {
         scope: GeographicScope::National {
@@ -108,4 +105,3 @@ async fn test_application_service_full_pipeline_with_sim() {
     assert!(result.persisted_snapshot_id.is_some());
     assert!(cache_dir.exists());
 }
-

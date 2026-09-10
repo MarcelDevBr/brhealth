@@ -16,7 +16,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 
-
 use crate::domain::source_spi::{DataQueryParams, GeographicScope, HealthDataSourceSPI};
 
 /// Status de saúde de uma fonte de dados individual.
@@ -151,10 +150,7 @@ impl SourceHealthChecker {
     /// - FTP: conexão TCP na porta 21
     /// - HTTP/HTTPS: requisição HEAD
     /// - Fontes sem autenticação ou locais: marcadas como `Skipped`
-    pub async fn check_all(
-        &self,
-        sources: &[Arc<dyn HealthDataSourceSPI>],
-    ) -> HealthReport {
+    pub async fn check_all(&self, sources: &[Arc<dyn HealthDataSourceSPI>]) -> HealthReport {
         let started_at = Utc::now();
         let start_instant = Instant::now();
 
@@ -208,12 +204,7 @@ impl SourceHealthChecker {
     }
 
     /// Executa probe individual em uma URI.
-    async fn probe_uri(
-        &self,
-        source_id: &str,
-        display_name: &str,
-        uri: &str,
-    ) -> SourceHealthEntry {
+    async fn probe_uri(&self, source_id: &str, display_name: &str, uri: &str) -> SourceHealthEntry {
         let start = Instant::now();
 
         let status = if uri.starts_with("ftp://") {

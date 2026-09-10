@@ -12,7 +12,7 @@ pub mod resilience;
 pub use ftp::{AsyncFtpTransport, FtpClientConfig};
 pub use health_check::{HealthReport, SourceHealthChecker, SourceHealthEntry, SourceStatus};
 pub use http::{AsyncHttpTransport, HttpClientConfig};
-pub use resilience::{DataFreshness, FetchOutcome, ResilientTransport, ResiliencePolicy};
+pub use resilience::{DataFreshness, FetchOutcome, ResiliencePolicy, ResilientTransport};
 
 use std::collections::HashMap;
 use std::path::Path;

@@ -12,8 +12,8 @@ use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
 use super::helpers::{
-    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col,
-    build_str_col, build_str_opt_col, build_u16_col, get_str_value,
+    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col, build_str_col,
+    build_str_opt_col, build_u16_col, get_str_value,
 };
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
@@ -49,8 +49,7 @@ impl SihDataSource {
             build_harmonized_ibge_col(raw_batch, "MUNIC_RES", num_rows);
 
         // 3. municipality_hospital (MUNIC_MOV)
-        let municipality_hospital_col =
-            build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", num_rows);
+        let municipality_hospital_col = build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", num_rows);
 
         // 4. admission_date (DT_INTER)
         let admission_date_col = build_date32_col(raw_batch, "DT_INTER", 0, num_rows);

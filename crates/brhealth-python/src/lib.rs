@@ -29,12 +29,8 @@ use brhealth_core::domain::analytics::csap::{
 use brhealth_core::domain::analytics::mortality::{
     compute_apvp as core_compute_apvp, compute_apvp_rate as core_compute_apvp_rate,
 };
-use brhealth_core::domain::application::{
-    BRHealthApplicationService, PipelineExecutionOptions,
-};
-use brhealth_core::domain::source_spi::{
-    DataQueryParams, GeographicScope, SourceExecutionContext,
-};
+use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
+use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope, SourceExecutionContext};
 use brhealth_core::domain::spatial::h3::coord_to_h3_index;
 use brhealth_core::domain::spatial::s2::{
     coord_to_s2_cell as core_coord_to_s2_cell, s2_cell_to_coord as core_s2_cell_to_coord,
@@ -115,7 +111,8 @@ impl RecordBatchWrapper {
         let (_, ffi_schema) = to_ffi(&data)
             .map_err(|e| PyValueError::new_err(format!("Falha ao gerar schema FFI: {e}")))?;
 
-        let name = CString::new("arrow_schema").map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let name =
+            CString::new("arrow_schema").map_err(|e| PyValueError::new_err(e.to_string()))?;
         PyCapsule::new_bound(py, ffi_schema, Some(name))
     }
 
@@ -255,8 +252,7 @@ pub fn compute_apvp(ages: Vec<u16>, cutoff_age: Option<u16>) -> u64 {
 /// Calcula a taxa padronizada de APVP por habitante.
 #[pyfunction]
 pub fn compute_apvp_rate(total_apvp: u64, population: u64) -> PyResult<f64> {
-    core_compute_apvp_rate(total_apvp, population)
-        .map_err(|e| PyValueError::new_err(e.to_string()))
+    core_compute_apvp_rate(total_apvp, population).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Classifica um código de diagnóstico CID-10 conforme os 19 grupos da Portaria MS/SAS nº 221/2008.
@@ -315,7 +311,15 @@ pub fn is_dialysis_procedure(code: &str) -> bool {
 #[pyfunction]
 pub fn parse_sigtap_code(code: &str) -> PyResult<(u8, u8, u8, u16, u8)> {
     core_parse_sigtap_code(code)
-        .map(|s| (s.group, s.subgroup, s.form_of_organization, s.sequential, s.dv))
+        .map(|s| {
+            (
+                s.group,
+                s.subgroup,
+                s.form_of_organization,
+                s.sequential,
+                s.dv,
+            )
+        })
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
@@ -323,14 +327,18 @@ pub fn parse_sigtap_code(code: &str) -> PyResult<(u8, u8, u8, u16, u8)> {
 #[pyfunction]
 pub fn lookup_atc(atc_code: &str) -> Option<String> {
     let harmonizer = PharmacyHarmonizer::new();
-    harmonizer.lookup_atc(atc_code).map(|d| d.active_ingredient.to_string())
+    harmonizer
+        .lookup_atc(atc_code)
+        .map(|d| d.active_ingredient.to_string())
 }
 
 /// Mapeia um código ATC da OMS para o conceito RxNorm internacional.
 #[pyfunction]
 pub fn map_atc_to_rxnorm(atc_code: &str) -> Option<String> {
     let harmonizer = PharmacyHarmonizer::new();
-    harmonizer.map_atc_to_rxnorm(atc_code).map(|s| s.to_string())
+    harmonizer
+        .map_atc_to_rxnorm(atc_code)
+        .map(|s| s.to_string())
 }
 
 /// Calcula o Retorno sobre Investimento (ROI) em Saúde Coletiva na Atenção Primária.
@@ -562,12 +570,13 @@ impl Engine {
         let registry = Arc::new(reg);
 
         let ftp_transport = Arc::new(AsyncFtpTransport::new_datasus());
-        let _http_transport = match AsyncHttpTransport::new_default() {
-            Ok(t) => Arc::new(t),
-            Err(_) => Arc::new(AsyncHttpTransport::new_default().map_err(|e| {
-                PyValueError::new_err(format!("Falha ao inicializar HTTP: {e}"))
-            })?),
-        };
+        let _http_transport =
+            match AsyncHttpTransport::new_default() {
+                Ok(t) => Arc::new(t),
+                Err(_) => Arc::new(AsyncHttpTransport::new_default().map_err(|e| {
+                    PyValueError::new_err(format!("Falha ao inicializar HTTP: {e}"))
+                })?),
+            };
 
         let decompressor = match brhealth_core::decoders::dbc::DbcDecompressor::new() {
             Ok(d) => Arc::new(d),
@@ -582,8 +591,9 @@ impl Engine {
             state: sync_state.clone(),
         });
 
-        let app_service =
-            Arc::new(BRHealthApplicationService::new(registry, context, sync_state));
+        let app_service = Arc::new(BRHealthApplicationService::new(
+            registry, context, sync_state,
+        ));
 
         Ok(Self {
             app_service,
@@ -694,7 +704,10 @@ impl Engine {
             result.batches[0].clone()
         };
 
-        Ok(RecordBatchWrapper::new(combined_batch, Some(result.manifest)))
+        Ok(RecordBatchWrapper::new(
+            combined_batch,
+            Some(result.manifest),
+        ))
     }
 
     /// Avalia um RecordBatch de internações hospitalares e calcula métricas de CSAP.

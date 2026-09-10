@@ -205,10 +205,7 @@ mod tests {
         let concept = harmonizer.lookup_atc("A10BA02").unwrap();
         assert_eq!(concept.active_ingredient, "Metformina");
         assert_eq!(concept.rxnorm_cui, "6809");
-        assert_eq!(
-            harmonizer.map_atc_to_rxnorm("A10BA02"),
-            Some("6809")
-        );
+        assert_eq!(harmonizer.map_atc_to_rxnorm("A10BA02"), Some("6809"));
     }
 
     #[test]

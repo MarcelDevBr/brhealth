@@ -43,7 +43,8 @@ impl BpsDataSource {
 
         // 1. purchase_id (NU_COMPRA ou ID_ITEM)
         let id_col: ArrayRef = {
-            let mut id_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 12);
+            let mut id_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 12);
             for i in 0..num_rows {
                 let id = get_str_value(raw_batch, "NU_COMPRA", i)
                     .or_else(|| get_str_value(raw_batch, "ID_ITEM", i))
@@ -73,7 +74,8 @@ impl BpsDataSource {
 
         // 4. active_ingredient (DS_PRINCIPIO_ATIVO ou NOME_MEDICAMENTO)
         let drug_col: ArrayRef = {
-            let mut drug_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
+            let mut drug_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
             for i in 0..num_rows {
                 let drug = get_str_value(raw_batch, "DS_PRINCIPIO_ATIVO", i)
                     .or_else(|| get_str_value(raw_batch, "NOME_MEDICAMENTO", i))

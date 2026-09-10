@@ -212,9 +212,10 @@ impl BRHealthApplicationService {
 
         for mut batch in raw_batches {
             // 3.1 Atribuição espacial H3 (se solicitado)
-            if let (Some(res), Some((lat_col, lon_col))) =
-                (options.assign_h3_resolution, options.h3_coord_columns.as_ref())
-                && batch.column_by_name(lat_col).is_some()
+            if let (Some(res), Some((lat_col, lon_col))) = (
+                options.assign_h3_resolution,
+                options.h3_coord_columns.as_ref(),
+            ) && batch.column_by_name(lat_col).is_some()
                 && batch.column_by_name(lon_col).is_some()
             {
                 batch = self.assign_h3_indices(&batch, lat_col, lon_col, res)?;
@@ -237,7 +238,9 @@ impl BRHealthApplicationService {
 
         // 5. Persistência em cache particionado Hive-Parquet (se configurado)
         let mut persisted_snapshot_id = None;
-        if let (true, Some(base_path)) = (options.persist_to_cache, options.cache_base_path.as_ref()) {
+        if let (true, Some(base_path)) =
+            (options.persist_to_cache, options.cache_base_path.as_ref())
+        {
             let store = HiveParquetStore::new(base_path)?;
             let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
             for batch in &processed_batches {

@@ -45,7 +45,8 @@ impl CnesDataSource {
 
         // facility_name (NOMEFANT ou RAZAOSOC)
         let name_col: ArrayRef = {
-            let mut name_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 30);
+            let mut name_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 30);
             for i in 0..num_rows {
                 let name = get_str_value(raw_batch, "NOMEFANT", i)
                     .or_else(|| get_str_value(raw_batch, "RAZAOSOC", i))

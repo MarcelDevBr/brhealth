@@ -164,7 +164,6 @@ pub fn s2_cell_to_coord(cell_id: u64) -> Result<(f64, f64), PortError> {
     Ok((lat_deg, lon_deg))
 }
 
-
 /// Anexa uma coluna colunar `s2_cell_id` em um lote Arrow existente a partir de colunas de latitude e longitude.
 pub fn append_s2_column(
     batch: &RecordBatch,

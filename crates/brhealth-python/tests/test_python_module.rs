@@ -74,4 +74,3 @@ fn test_python_extended_features() {
         assert_eq!(drug, Some("Metformina".to_string()));
     });
 }
-

@@ -13,7 +13,7 @@ use async_trait::async_trait;
 
 use super::helpers::{
     build_constant_str_col, build_date32_col, build_harmonized_ibge_col, build_null_col,
-    build_race_col, build_record_id_col, build_sex_col, build_u16_opt_col, build_u8_opt_col,
+    build_race_col, build_record_id_col, build_sex_col, build_u8_opt_col, build_u16_opt_col,
     get_str_value,
 };
 use crate::decoders::dbf::DbfDecoder;

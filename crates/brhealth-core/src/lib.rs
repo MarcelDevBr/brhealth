@@ -33,8 +33,7 @@ pub use domain::transforms::ibge::{
 };
 pub use infrastructure::cache::{default_cache_dir, default_data_dir};
 pub use infrastructure::transport::{
-    DataFreshness, FetchOutcome, HealthReport, ResilientTransport, ResiliencePolicy,
+    DataFreshness, FetchOutcome, HealthReport, ResiliencePolicy, ResilientTransport,
     SourceHealthChecker, SourceHealthEntry, SourceStatus,
 };
 pub use sources::{create_pack_brasil, create_pack_global};
-

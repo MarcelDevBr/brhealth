@@ -16,7 +16,9 @@ pub use datasus::{
     BpsDataSource, CnesDataSource, SiasusDataSource, SihDataSource, SimDataSource, SinanDataSource,
     SinascDataSource, SipniDataSource, SiscanDataSource, SisvanDataSource,
 };
-pub use environmental::{BdQueimadasDataSource, InmetDataSource, ProdesDataSource, SisaguaDataSource};
+pub use environmental::{
+    BdQueimadasDataSource, InmetDataSource, ProdesDataSource, SisaguaDataSource,
+};
 pub use global::{
     Era5DataSource, IhmeGbdDataSource, OpenAqDataSource, PahoPlisaDataSource, WhoGhoDataSource,
     WorldPopDataSource,

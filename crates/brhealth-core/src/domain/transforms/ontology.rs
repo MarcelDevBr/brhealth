@@ -25,7 +25,7 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use crate::domain::analytics::csap::{classify_cid10, CsapGroup};
+use crate::domain::analytics::csap::{CsapGroup, classify_cid10};
 use crate::domain::ports::outbound::PortError;
 
 /// Os 22 Capítulos canônicos da CID-10 definidos pela Organização Mundial da Saúde (OMS).
@@ -173,15 +173,25 @@ impl Icd10Chapter {
             Self::RespiratorySystem => "Doenças do aparelho respiratório",
             Self::DigestiveSystem => "Doenças do aparelho digestivo",
             Self::SkinAndSubcutaneous => "Doenças da pele e do tecido subcutâneo",
-            Self::MusculoskeletalAndConnective => "Doenças do sistema osteomuscular e tecido conjuntivo",
+            Self::MusculoskeletalAndConnective => {
+                "Doenças do sistema osteomuscular e tecido conjuntivo"
+            }
             Self::GenitourinarySystem => "Doenças do aparelho geniturinário",
             Self::PregnancyChildbirthPuerperium => "Gravidez, parto e puerpério",
             Self::PerinatalPeriod => "Algumas afecções originadas no período perinatal",
-            Self::CongenitalMalformations => "Malformações congênitas, deformidades e anomalias cromossômicas",
-            Self::SymptomsAndAbnormalFindings => "Sintomas, sinais e achados anormais de exames clínicos e laboratoriais",
-            Self::InjuryPoisoningExternalCauses => "Lesões, envenenamento e consequências de causas externas",
+            Self::CongenitalMalformations => {
+                "Malformações congênitas, deformidades e anomalias cromossômicas"
+            }
+            Self::SymptomsAndAbnormalFindings => {
+                "Sintomas, sinais e achados anormais de exames clínicos e laboratoriais"
+            }
+            Self::InjuryPoisoningExternalCauses => {
+                "Lesões, envenenamento e consequências de causas externas"
+            }
             Self::ExternalCausesMorbidityMortality => "Causas externas de morbidade e mortalidade",
-            Self::HealthStatusFactors => "Fatores que influenciam o estado de saúde e o contato com serviços de saúde",
+            Self::HealthStatusFactors => {
+                "Fatores que influenciam o estado de saúde e o contato com serviços de saúde"
+            }
             Self::SpecialPurposes => "Códigos para propósitos especiais",
         }
     }
@@ -521,7 +531,9 @@ impl MedicalOntologyHarmonizer {
             &cleaned
         };
 
-        Self::get_icd9_to_icd10_map().get(prefix).map(|&v| v.to_string())
+        Self::get_icd9_to_icd10_map()
+            .get(prefix)
+            .map(|&v| v.to_string())
     }
 
     /// Mapeia um código da CID-10 para a representação histórica equivalente na CID-9.
@@ -534,7 +546,9 @@ impl MedicalOntologyHarmonizer {
             &cleaned
         };
 
-        Self::get_icd10_to_icd9_map().get(prefix).map(|&v| v.to_string())
+        Self::get_icd10_to_icd9_map()
+            .get(prefix)
+            .map(|&v| v.to_string())
     }
 
     /// Valida a consistência biológica de um evento médico segundo idade e sexo.
@@ -646,8 +660,14 @@ mod tests {
             Icd10Chapter::from_code("A09"),
             Some(Icd10Chapter::InfectiousAndParasitic)
         );
-        assert_eq!(Icd10Chapter::from_code("C50.9"), Some(Icd10Chapter::Neoplasms));
-        assert_eq!(Icd10Chapter::from_code("D50"), Some(Icd10Chapter::BloodAndImmune));
+        assert_eq!(
+            Icd10Chapter::from_code("C50.9"),
+            Some(Icd10Chapter::Neoplasms)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("D50"),
+            Some(Icd10Chapter::BloodAndImmune)
+        );
         assert_eq!(
             Icd10Chapter::from_code("E11"),
             Some(Icd10Chapter::EndocrineNutritionalMetabolic)

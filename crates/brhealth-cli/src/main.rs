@@ -14,19 +14,16 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 
+use brhealth_core::SourceRegistry;
 use brhealth_core::decoders::dbc::DbcDecompressor;
 use brhealth_core::domain::analytics::csap::{
     classify_cid10, compute_csap_metrics, compute_primary_care_roi,
 };
 use brhealth_core::domain::analytics::mortality::{compute_apvp, compute_apvp_rate};
-use brhealth_core::domain::application::{
-    BRHealthApplicationService, PipelineExecutionOptions,
-};
-use brhealth_core::domain::source_spi::{
-    DataQueryParams, GeographicScope, SourceExecutionContext,
-};
+use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
+use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope, SourceExecutionContext};
 use brhealth_core::domain::spatial::s2::{
-    coord_to_s2_cell, s2_cell_to_coord, DEFAULT_S2_MUNICIPAL_LEVEL,
+    DEFAULT_S2_MUNICIPAL_LEVEL, coord_to_s2_cell, s2_cell_to_coord,
 };
 use brhealth_core::domain::transforms::ibge::{calculate_ibge_dv, harmonize_ibge_code};
 use brhealth_core::domain::transforms::ontology::MedicalOntologyHarmonizer;
@@ -34,7 +31,6 @@ use brhealth_core::infrastructure::cache::MemoryCache;
 use brhealth_core::infrastructure::state::MemorySyncState;
 use brhealth_core::infrastructure::transport::AsyncFtpTransport;
 use brhealth_core::sources::{create_pack_brasil, create_pack_global};
-use brhealth_core::SourceRegistry;
 
 #[derive(Parser)]
 #[command(
@@ -177,28 +173,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Version => {
-            println!("┌───────────────────────────────────────────────────────────────────────────┐");
+            println!(
+                "┌───────────────────────────────────────────────────────────────────────────┐"
+            );
             println!("│ BRHealth v{:<63} │", env!("CARGO_PKG_VERSION"));
-            println!("├───────────────────────────────────────────────────────────────────────────┤");
-            println!("│ Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.   │");
-            println!("│ Licença: GNU Affero General Public License v3 (AGPLv3) com opção comercial│");
-            println!("│ Arquitetura: Hexagonal Data-Oriented Design (Hexagonal DOD)               │");
-            println!("│ Padrão Tabular: Apache Arrow (Zero-Copy Columnar Memory)                  │");
-            println!("│ Padrão Científico: FAIR Data Principles + W3C PROV-O Lineage              │");
-            println!("└───────────────────────────────────────────────────────────────────────────┘");
+            println!(
+                "├───────────────────────────────────────────────────────────────────────────┤"
+            );
+            println!(
+                "│ Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.   │"
+            );
+            println!(
+                "│ Licença: GNU Affero General Public License v3 (AGPLv3) com opção comercial│"
+            );
+            println!(
+                "│ Arquitetura: Hexagonal Data-Oriented Design (Hexagonal DOD)               │"
+            );
+            println!(
+                "│ Padrão Tabular: Apache Arrow (Zero-Copy Columnar Memory)                  │"
+            );
+            println!(
+                "│ Padrão Científico: FAIR Data Principles + W3C PROV-O Lineage              │"
+            );
+            println!(
+                "└───────────────────────────────────────────────────────────────────────────┘"
+            );
         }
 
         Commands::Sources => {
             let br_pack = create_pack_brasil();
             let global_pack = create_pack_global();
 
-            println!("┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐");
-            println!("│ BRHealth Engine - Catálogo de Fontes Oficiais de Saúde Coletiva e Determinantes Sociais                     │");
-            println!("├──────────────────────┬────────────────────────────────────────────┬──────────────────┬──────────────────────┤");
-            println!("│ {:<20} │ {:<42} │ {:<16} │ {:<20} │", "IDENTIFICADOR", "NOME DA FONTE", "ÓRGÃO EMISSOR", "RESOLUÇÃO TEMPORAL");
-            println!("├──────────────────────┼────────────────────────────────────────────┼──────────────────┼──────────────────────┤");
+            println!(
+                "┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐"
+            );
+            println!(
+                "│ BRHealth Engine - Catálogo de Fontes Oficiais de Saúde Coletiva e Determinantes Sociais                     │"
+            );
+            println!(
+                "├──────────────────────┬────────────────────────────────────────────┬──────────────────┬──────────────────────┤"
+            );
+            println!(
+                "│ {:<20} │ {:<42} │ {:<16} │ {:<20} │",
+                "IDENTIFICADOR", "NOME DA FONTE", "ÓRGÃO EMISSOR", "RESOLUÇÃO TEMPORAL"
+            );
+            println!(
+                "├──────────────────────┼────────────────────────────────────────────┼──────────────────┼──────────────────────┤"
+            );
 
-            println!("│ --- PACOTE BRASIL (DATASUS / IBGE / MINISTÉRIO DA SAÚDE) ------------------------------------------------- │");
+            println!(
+                "│ --- PACOTE BRASIL (DATASUS / IBGE / MINISTÉRIO DA SAÚDE) ------------------------------------------------- │"
+            );
             for source in br_pack.iter() {
                 let meta = source.metadata();
                 println!(
@@ -207,8 +232,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
 
-            println!("├──────────────────────┼────────────────────────────────────────────┼──────────────────┼──────────────────────┤");
-            println!("│ --- PACOTE GLOBAL & AMBIENTAL (OMS / PAHO / IHME / COPERNICUS) ------------------------------------------- │");
+            println!(
+                "├──────────────────────┼────────────────────────────────────────────┼──────────────────┼──────────────────────┤"
+            );
+            println!(
+                "│ --- PACOTE GLOBAL & AMBIENTAL (OMS / PAHO / IHME / COPERNICUS) ------------------------------------------- │"
+            );
             for source in global_pack.iter() {
                 let meta = source.metadata();
                 println!(
@@ -216,74 +245,110 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     meta.id, meta.display_name, meta.maintaining_agency, meta.temporal_resolution
                 );
             }
-            println!("└──────────────────────┴────────────────────────────────────────────┴──────────────────┴──────────────────────┘");
-            println!("Total de fontes registradas prontas para consulta: {}\n", br_pack.len() + global_pack.len());
+            println!(
+                "└──────────────────────┴────────────────────────────────────────────┴──────────────────┴──────────────────────┘"
+            );
+            println!(
+                "Total de fontes registradas prontas para consulta: {}\n",
+                br_pack.len() + global_pack.len()
+            );
         }
 
-        Commands::Dv { code } => {
-            match calculate_ibge_dv(&code) {
-                Ok(dv) => {
-                    let harmonized = harmonize_ibge_code(&code)?;
-                    println!("=== Validação Territorial IBGE (Luhn Módulo 10) ===");
-                    println!("Código original:   {}", code);
-                    println!("Dígito Verificador (DV): {}", dv);
-                    println!("Código harmonizado (7 dígitos): {}", harmonized);
-                    println!("Status: ✓ CÓDIGO MUNICIPAL VÁLIDO CONFORME PADRÃO IBGE");
-                }
-                Err(err) => {
-                    eprintln!("✗ Erro ao calcular dígito verificador para '{}': {}", code, err);
-                    std::process::exit(1);
-                }
+        Commands::Dv { code } => match calculate_ibge_dv(&code) {
+            Ok(dv) => {
+                let harmonized = harmonize_ibge_code(&code)?;
+                println!("=== Validação Territorial IBGE (Luhn Módulo 10) ===");
+                println!("Código original:   {}", code);
+                println!("Dígito Verificador (DV): {}", dv);
+                println!("Código harmonizado (7 dígitos): {}", harmonized);
+                println!("Status: ✓ CÓDIGO MUNICIPAL VÁLIDO CONFORME PADRÃO IBGE");
             }
-        }
+            Err(err) => {
+                eprintln!(
+                    "✗ Erro ao calcular dígito verificador para '{}': {}",
+                    code, err
+                );
+                std::process::exit(1);
+            }
+        },
 
-        Commands::Csap { cid } => {
-            match classify_cid10(&cid) {
-                Some(group) => {
-                    println!("=== Classificação Epidemiológica de Internação (Portaria MS/SAS nº 221/2008) ===");
-                    println!("Código CID-10: {}", cid.to_uppercase());
-                    println!("Classificação: CONDIÇÃO SENSÍVEL À ATENÇÃO PRIMÁRIA (CSAP)");
-                    println!("Grupo {}: {}", group.id(), group.name());
-                    println!("Status: ✓ INTERNAÇÃO HOSPITALAR POTENCIALMENTE EVITÁVEL NA APS");
-                }
-                None => {
-                    println!("=== Classificação Epidemiológica de Internação (Portaria MS/SAS nº 221/2008) ===");
-                    println!("Código CID-10: {}", cid.to_uppercase());
-                    println!("Classificação: NÃO-CSAP (Causa geral ou não prevenível na APS)");
-                    println!("Status: ℹ Não integra a lista oficial brasileira de causas evitáveis");
-                }
+        Commands::Csap { cid } => match classify_cid10(&cid) {
+            Some(group) => {
+                println!(
+                    "=== Classificação Epidemiológica de Internação (Portaria MS/SAS nº 221/2008) ==="
+                );
+                println!("Código CID-10: {}", cid.to_uppercase());
+                println!("Classificação: CONDIÇÃO SENSÍVEL À ATENÇÃO PRIMÁRIA (CSAP)");
+                println!("Grupo {}: {}", group.id(), group.name());
+                println!("Status: ✓ INTERNAÇÃO HOSPITALAR POTENCIALMENTE EVITÁVEL NA APS");
             }
-        }
+            None => {
+                println!(
+                    "=== Classificação Epidemiológica de Internação (Portaria MS/SAS nº 221/2008) ==="
+                );
+                println!("Código CID-10: {}", cid.to_uppercase());
+                println!("Classificação: NÃO-CSAP (Causa geral ou não prevenível na APS)");
+                println!("Status: ℹ Não integra a lista oficial brasileira de causas evitáveis");
+            }
+        },
 
         Commands::Roi {
             avoidable_cost,
             investment,
             attributable_fraction,
-        } => {
-            match compute_primary_care_roi(avoidable_cost, investment, attributable_fraction) {
-                Ok(roi) => {
-                    let economizado = avoidable_cost * attributable_fraction;
-                    println!("┌───────────────────────────────────────────────────────────────────────────┐");
-                    println!("│ Avaliação de Economia da Saúde e Retorno sobre Investimento (APS/ESF)     │");
-                    println!("├───────────────────────────────────────────────────────────────────────────┤");
-                    println!("│ • Custo Hospitalar Evitável Direto:   R$ {:>16.2}                 │", avoidable_cost);
-                    println!("│ • Investimento Orçamentário na APS:   R$ {:>16.2}                 │", investment);
-                    println!("│ • Fração Atribuível Epidemiológica:      {:>16.1}%                 │", attributable_fraction * 100.0);
-                    println!("│ • Economia Líquida Estimada ao SUS:   R$ {:>16.2}                 │", economizado);
-                    println!("│ • ROI (Retorno sobre Investimento):      {:>16.2}%                 │", roi * 100.0);
-                    if roi > 0.0 {
-                        println!("│ Status: ✓ ECONÔMICAMENTE SUPERAVITÁRIO (Gera valor líquido ao erário)     │");
-                    } else {
-                        println!("│ Status: ℹ NECESSITA DE OTIMIZAÇÃO DE COBERTURA OU ALOCAÇÃO EFICIENTE      │");
-                    }
-                    println!("└───────────────────────────────────────────────────────────────────────────┘");
+        } => match compute_primary_care_roi(avoidable_cost, investment, attributable_fraction) {
+            Ok(roi) => {
+                let economizado = avoidable_cost * attributable_fraction;
+                println!(
+                    "┌───────────────────────────────────────────────────────────────────────────┐"
+                );
+                println!(
+                    "│ Avaliação de Economia da Saúde e Retorno sobre Investimento (APS/ESF)     │"
+                );
+                println!(
+                    "├───────────────────────────────────────────────────────────────────────────┤"
+                );
+                println!(
+                    "│ • Custo Hospitalar Evitável Direto:   R$ {:>16.2}                 │",
+                    avoidable_cost
+                );
+                println!(
+                    "│ • Investimento Orçamentário na APS:   R$ {:>16.2}                 │",
+                    investment
+                );
+                println!(
+                    "│ • Fração Atribuível Epidemiológica:      {:>16.1}%                 │",
+                    attributable_fraction * 100.0
+                );
+                println!(
+                    "│ • Economia Líquida Estimada ao SUS:   R$ {:>16.2}                 │",
+                    economizado
+                );
+                println!(
+                    "│ • ROI (Retorno sobre Investimento):      {:>16.2}%                 │",
+                    roi * 100.0
+                );
+                if roi > 0.0 {
+                    println!(
+                        "│ Status: ✓ ECONÔMICAMENTE SUPERAVITÁRIO (Gera valor líquido ao erário)     │"
+                    );
+                } else {
+                    println!(
+                        "│ Status: ℹ NECESSITA DE OTIMIZAÇÃO DE COBERTURA OU ALOCAÇÃO EFICIENTE      │"
+                    );
                 }
-                Err(err) => {
-                    eprintln!("✗ Erro no cálculo de retorno de investimento em saúde: {}", err);
-                    std::process::exit(1);
-                }
+                println!(
+                    "└───────────────────────────────────────────────────────────────────────────┘"
+                );
             }
-        }
+            Err(err) => {
+                eprintln!(
+                    "✗ Erro no cálculo de retorno de investimento em saúde: {}",
+                    err
+                );
+                std::process::exit(1);
+            }
+        },
 
         Commands::Fetch {
             source,
@@ -297,9 +362,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             persist_cache,
             out_parquet,
         } => {
-            println!("╔═══════════════════════════════════════════════════════════════════════════╗");
-            println!("║         BRHealth Engine - Pipeline de Consulta e Extração Colunar         ║");
-            println!("╚═══════════════════════════════════════════════════════════════════════════╝");
+            println!(
+                "╔═══════════════════════════════════════════════════════════════════════════╗"
+            );
+            println!(
+                "║         BRHealth Engine - Pipeline de Consulta e Extração Colunar         ║"
+            );
+            println!(
+                "╚═══════════════════════════════════════════════════════════════════════════╝"
+            );
             println!("▸ Fonte solicitada:      {}", source);
             if let Some(ref jurisdiction) = uf {
                 println!("▸ Jurisdição / UF:       {}", jurisdiction.to_uppercase());
@@ -310,7 +381,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(m) = month {
                 println!("▸ Mês de Referência:     {:02}", m);
             }
-            println!("▸ Harmonização IBGE:     {}", if harmonize_ibge { "✓ Ativada (Luhn Módulo 10 -> 7 dígitos)" } else { "✗ Desativada" });
+            println!(
+                "▸ Harmonização IBGE:     {}",
+                if harmonize_ibge {
+                    "✓ Ativada (Luhn Módulo 10 -> 7 dígitos)"
+                } else {
+                    "✗ Desativada"
+                }
+            );
             if let Some(res) = h3_resolution {
                 println!("▸ Indexação Espacial H3: Resolução {}", res);
             }
@@ -319,7 +397,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let resolved_cache_path = cache_dir.unwrap_or_else(brhealth_core::default_cache_dir);
             if persist_cache {
-                println!("▸ Cache Persistente:     ✓ Ativado ({})", resolved_cache_path.display());
+                println!(
+                    "▸ Cache Persistente:     ✓ Ativado ({})",
+                    resolved_cache_path.display()
+                );
             } else {
                 println!("▸ Cache Base (Leitura):  {}", resolved_cache_path.display());
             }
@@ -374,17 +455,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             {
                 Ok(res) => res,
                 Err(err) => {
-                    eprintln!("\n┌───────────────────────────────────────────────────────────────────────────┐");
-                    eprintln!("│ ❌ FALHA NA EXECUÇÃO DA CONSULTA À FONTE DE DADOS                         │");
-                    eprintln!("└───────────────────────────────────────────────────────────────────────────┘");
+                    eprintln!(
+                        "\n┌───────────────────────────────────────────────────────────────────────────┐"
+                    );
+                    eprintln!(
+                        "│ ❌ FALHA NA EXECUÇÃO DA CONSULTA À FONTE DE DADOS                         │"
+                    );
+                    eprintln!(
+                        "└───────────────────────────────────────────────────────────────────────────┘"
+                    );
                     eprintln!("Detalhes do Erro:");
                     eprintln!("  {}\n", err);
                     eprintln!("Orientações e Diagnóstico:");
-                    eprintln!("  • Instabilidade no Servidor Oficial: Servidores do DATASUS frequentemente");
-                    eprintln!("    apresentam lentidão ou interrupções temporárias de conexão FTP.");
-                    eprintln!("  • Parâmetros de Consulta: Verifique se a UF e o ano ({year}) estão");
+                    eprintln!(
+                        "  • Instabilidade no Servidor Oficial: Servidores do DATASUS frequentemente"
+                    );
+                    eprintln!(
+                        "    apresentam lentidão ou interrupções temporárias de conexão FTP."
+                    );
+                    eprintln!(
+                        "  • Parâmetros de Consulta: Verifique se a UF e o ano ({year}) estão"
+                    );
                     eprintln!("    disponíveis para a fonte '{source}'.");
-                    eprintln!("  • Retentativas Automáticas: O BRHealth já executou retentativas com backoff.");
+                    eprintln!(
+                        "  • Retentativas Automáticas: O BRHealth já executou retentativas com backoff."
+                    );
                     eprintln!("    Aguarde alguns minutos e repita a requisição.");
                     std::process::exit(1);
                 }
@@ -392,45 +487,88 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let total_rows: usize = result.batches.iter().map(|b| b.num_rows()).sum();
             println!("\n[2/3] Processamento analítico colunar concluído com sucesso!");
-            println!("┌───────────────────────────────────────────────────────────────────────────┐");
-            println!("│ ESTATÍSTICAS DA EXTRAÇÃO (APACHE ARROW)                                   │");
-            println!("├───────────────────────────────────────────────────────────────────────────┤");
-            println!("│ • Batches gerados em memória:  {:<42} │", result.batches.len());
+            println!(
+                "┌───────────────────────────────────────────────────────────────────────────┐"
+            );
+            println!(
+                "│ ESTATÍSTICAS DA EXTRAÇÃO (APACHE ARROW)                                   │"
+            );
+            println!(
+                "├───────────────────────────────────────────────────────────────────────────┤"
+            );
+            println!(
+                "│ • Batches gerados em memória:  {:<42} │",
+                result.batches.len()
+            );
             println!("│ • Total de registros/linhas:   {:<42} │", total_rows);
 
             if let Some(first_batch) = result.batches.first() {
-                println!("│ • Colunas do esquema canônico: {:<42} │", first_batch.num_columns());
-                println!("└───────────────────────────────────────────────────────────────────────────┘");
+                println!(
+                    "│ • Colunas do esquema canônico: {:<42} │",
+                    first_batch.num_columns()
+                );
+                println!(
+                    "└───────────────────────────────────────────────────────────────────────────┘"
+                );
 
                 println!("\nEsquema de Dados Canônico (Apache Arrow):");
                 for field in first_batch.schema().fields() {
                     println!("  ├─ {:<32} : {:?}", field.name(), field.data_type());
                 }
 
-                if enrich_csap
-                    && let Ok(csap_metrics) = compute_csap_metrics(first_batch, None)
-                {
-                    println!("\n┌───────────────────────────────────────────────────────────────────────────┐");
-                    println!("│ MÉTRICAS EPIDEMIOLÓGICAS CSAP (PORTARIA MS/SAS Nº 221/2008)               │");
-                    println!("├───────────────────────────────────────────────────────────────────────────┤");
-                    println!("│ • Total de Internações Avaliadas: {:<39} │", csap_metrics.total_admissions);
-                    println!("│ • Internações Evitáveis (CSAP):   {:<39} │", csap_metrics.csap_admissions);
-                    println!("│ • Proporção de Evitabilidade:     {:<38.2}% │", csap_metrics.csap_proportion * 100.0);
-                    println!("└───────────────────────────────────────────────────────────────────────────┘");
+                if enrich_csap && let Ok(csap_metrics) = compute_csap_metrics(first_batch, None) {
+                    println!(
+                        "\n┌───────────────────────────────────────────────────────────────────────────┐"
+                    );
+                    println!(
+                        "│ MÉTRICAS EPIDEMIOLÓGICAS CSAP (PORTARIA MS/SAS Nº 221/2008)               │"
+                    );
+                    println!(
+                        "├───────────────────────────────────────────────────────────────────────────┤"
+                    );
+                    println!(
+                        "│ • Total de Internações Avaliadas: {:<39} │",
+                        csap_metrics.total_admissions
+                    );
+                    println!(
+                        "│ • Internações Evitáveis (CSAP):   {:<39} │",
+                        csap_metrics.csap_admissions
+                    );
+                    println!(
+                        "│ • Proporção de Evitabilidade:     {:<38.2}% │",
+                        csap_metrics.csap_proportion * 100.0
+                    );
+                    println!(
+                        "└───────────────────────────────────────────────────────────────────────────┘"
+                    );
                 }
             } else {
-                println!("└───────────────────────────────────────────────────────────────────────────┘");
+                println!(
+                    "└───────────────────────────────────────────────────────────────────────────┘"
+                );
             }
 
             println!("\n[3/3] Linhagem Científica e Proveniência FAIR (W3C PROV-O):");
-            println!("  ├─ Run UUID:          {}", result.manifest.execution_metadata.run_uuid);
-            println!("  ├─ Timestamp UTC:     {}", result.manifest.execution_metadata.timestamp_utc);
+            println!(
+                "  ├─ Run UUID:          {}",
+                result.manifest.execution_metadata.run_uuid
+            );
+            println!(
+                "  ├─ Timestamp UTC:     {}",
+                result.manifest.execution_metadata.timestamp_utc
+            );
             for src in &result.manifest.sources {
-                println!("  ├─ Fonte Oficial:     {} ({})", src.source_name, src.scope);
+                println!(
+                    "  ├─ Fonte Oficial:     {} ({})",
+                    src.source_name, src.scope
+                );
                 println!("  │   URI:              {}", src.uri);
                 println!("  │   SHA-256 Bruto:    {}", src.sha256_raw_payload);
             }
-            println!("  └─ Etapas Auditadas:  {} etapas registradas no manifesto", result.manifest.pipeline_steps.len());
+            println!(
+                "  └─ Etapas Auditadas:  {} etapas registradas no manifesto",
+                result.manifest.pipeline_steps.len()
+            );
 
             if let Some(target_path) = out_parquet {
                 if let Some(batch) = result.batches.first() {
@@ -444,7 +582,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         writer.write(b)?;
                     }
                     writer.close()?;
-                    println!("\n✓ Dados colunares exportados com sucesso em Apache Parquet: {:?}", target_path);
+                    println!(
+                        "\n✓ Dados colunares exportados com sucesso em Apache Parquet: {:?}",
+                        target_path
+                    );
                 } else {
                     println!("\nℹ Nenhum dado retornado para exportação em Parquet.");
                 }
@@ -460,7 +601,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("=== Indicadores de Mortalidade Prematura (APVP / YLL) ===");
             println!("Total de óbitos analisados: {}", ages.len());
             println!("Idade limite de corte:      {} anos", cutoff);
-            println!("Total de APVP acumulado:    {} anos de vida perdidos", total_apvp);
+            println!(
+                "Total de APVP acumulado:    {} anos de vida perdidos",
+                total_apvp
+            );
 
             if let Some(pop) = population {
                 match compute_apvp_rate(total_apvp, pop) {
@@ -476,23 +620,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        Commands::S2 { lat, lon, level } => {
-            match coord_to_s2_cell(lat, lon, level) {
-                Ok(cell_id) => {
-                    let (center_lat, center_lon) = s2_cell_to_coord(cell_id)?;
-                    println!("=== Indexação Espacial Esférica S2 Geometry ===");
-                    println!("Coordenadas de entrada: lat={:.6}, lon={:.6}", lat, lon);
-                    println!("Nível de resolução:     {}", level);
-                    println!("S2 CellID (decimal):    {}", cell_id);
-                    println!("S2 CellID (hexadecimal):0x{:016x}", cell_id);
-                    println!("Centro da célula S2:    lat={:.6}, lon={:.6}", center_lat, center_lon);
-                }
-                Err(err) => {
-                    eprintln!("Erro ao calcular célula S2: {}", err);
-                    std::process::exit(1);
-                }
+        Commands::S2 { lat, lon, level } => match coord_to_s2_cell(lat, lon, level) {
+            Ok(cell_id) => {
+                let (center_lat, center_lon) = s2_cell_to_coord(cell_id)?;
+                println!("=== Indexação Espacial Esférica S2 Geometry ===");
+                println!("Coordenadas de entrada: lat={:.6}, lon={:.6}", lat, lon);
+                println!("Nível de resolução:     {}", level);
+                println!("S2 CellID (decimal):    {}", cell_id);
+                println!("S2 CellID (hexadecimal):0x{:016x}", cell_id);
+                println!(
+                    "Centro da célula S2:    lat={:.6}, lon={:.6}",
+                    center_lat, center_lon
+                );
             }
-        }
+            Err(err) => {
+                eprintln!("Erro ao calcular célula S2: {}", err);
+                std::process::exit(1);
+            }
+        },
 
         Commands::Cid9 { code } => {
             let harmonizer = MedicalOntologyHarmonizer::new();
@@ -502,7 +647,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Código CID-10 mapeado:  {}", icd10);
                 }
                 None => {
-                    eprintln!("Código CID-9 '{}' não possui mapeamento direto cadastrado.", code);
+                    eprintln!(
+                        "Código CID-9 '{}' não possui mapeamento direto cadastrado.",
+                        code
+                    );
                     std::process::exit(1);
                 }
             }
@@ -541,10 +689,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if cargo {
                 println!("Executando 'cargo clean'...");
-                match std::process::Command::new("cargo")
-                    .arg("clean")
-                    .status()
-                {
+                match std::process::Command::new("cargo").arg("clean").status() {
                     Ok(status) => {
                         if status.success() {
                             println!("✓ 'cargo clean' concluído com sucesso.");
@@ -556,7 +701,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            println!("Limpeza concluída com sucesso ({} alvos removidos).", removed);
+            println!(
+                "Limpeza concluída com sucesso ({} alvos removidos).",
+                removed
+            );
         }
     }
 

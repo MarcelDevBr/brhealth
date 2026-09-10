@@ -9,6 +9,6 @@ pub mod state;
 pub mod storage;
 pub mod transport;
 
-pub use cache::{default_cache_dir, default_data_dir, MemoryCache};
+pub use cache::{MemoryCache, default_cache_dir, default_data_dir};
 pub use state::MemorySyncState;
 pub use transport::{FileTransport, MockTransport};

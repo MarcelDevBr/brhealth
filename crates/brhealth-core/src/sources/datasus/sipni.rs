@@ -46,7 +46,8 @@ impl SipniDataSource {
 
         // vaccine_code (COD_VACINA ou IMUNO)
         let code_col: ArrayRef = {
-            let mut code_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 6);
+            let mut code_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 6);
             for i in 0..num_rows {
                 let code = get_str_value(raw_batch, "COD_VACINA", i)
                     .or_else(|| get_str_value(raw_batch, "IMUNO", i))
@@ -58,7 +59,8 @@ impl SipniDataSource {
 
         // vaccine_name (DS_VACINA ou NOME_VAC)
         let name_col: ArrayRef = {
-            let mut name_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
+            let mut name_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
             for i in 0..num_rows {
                 let name = get_str_value(raw_batch, "DS_VACINA", i)
                     .or_else(|| get_str_value(raw_batch, "NOME_VAC", i))
@@ -70,7 +72,8 @@ impl SipniDataSource {
 
         // dose_order (DOSE ou TP_DOSE)
         let dose_col: ArrayRef = {
-            let mut dose_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 4);
+            let mut dose_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 4);
             for i in 0..num_rows {
                 let dose = get_str_value(raw_batch, "DOSE", i)
                     .or_else(|| get_str_value(raw_batch, "TP_DOSE", i))
@@ -94,7 +97,8 @@ impl SipniDataSource {
 
         // patient_municipality (MUN_RESID ou CODMUNRES)
         let mun_col: ArrayRef = {
-            let mut mun_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
+            let mut mun_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
             for i in 0..num_rows {
                 let resolved = get_str_value(raw_batch, "MUN_RESID", i)
                     .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))

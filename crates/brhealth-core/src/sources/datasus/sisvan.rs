@@ -47,7 +47,8 @@ impl SisvanDataSource {
 
         // patient_municipality (CO_MUNICIPIO_IBGE)
         let mun_col: ArrayRef = {
-            let mut mun_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
+            let mut mun_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
             for i in 0..num_rows {
                 let resolved = get_str_value(raw_batch, "CO_MUNICIPIO_IBGE", i)
                     .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
@@ -107,7 +108,8 @@ impl SisvanDataSource {
 
         // who_growth_classification (DS_FAIXA_IMC ou CLAS_ESTADO_NUTRICIONAL)
         let class_col: ArrayRef = {
-            let mut class_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 16);
+            let mut class_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 16);
             for i in 0..num_rows {
                 if let Some(c) = get_str_value(raw_batch, "DS_FAIXA_IMC", i)
                     .or_else(|| get_str_value(raw_batch, "CLAS_ESTADO_NUTRICIONAL", i))

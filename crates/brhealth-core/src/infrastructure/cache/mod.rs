@@ -38,7 +38,9 @@ pub fn default_cache_dir() -> PathBuf {
     if let Ok(userprofile) = std::env::var("USERPROFILE")
         && !userprofile.trim().is_empty()
     {
-        return PathBuf::from(userprofile.trim()).join(".brhealth").join("cache");
+        return PathBuf::from(userprofile.trim())
+            .join(".brhealth")
+            .join("cache");
     }
 
     PathBuf::from(".brhealth_cache")
@@ -64,7 +66,9 @@ pub fn default_data_dir() -> PathBuf {
     if let Ok(userprofile) = std::env::var("USERPROFILE")
         && !userprofile.trim().is_empty()
     {
-        return PathBuf::from(userprofile.trim()).join(".brhealth").join("data");
+        return PathBuf::from(userprofile.trim())
+            .join(".brhealth")
+            .join("data");
     }
 
     PathBuf::from(".brhealth_data")

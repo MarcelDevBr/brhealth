@@ -4,15 +4,14 @@
 
 //! Funções utilitárias seguras para extração colunar dos microdados DATASUS.
 
-use std::sync::Arc;
 use arrow::array::{
-    new_null_array, Array, ArrayRef, Date32Array, Date32Builder,
-    Float32Array, Float64Array, Float64Builder, Int32Array, Int64Array,
-    StringArray, StringBuilder, UInt16Array, UInt16Builder, UInt32Array,
-    UInt32Builder, UInt8Array, UInt8Builder,
+    Array, ArrayRef, Date32Array, Date32Builder, Float32Array, Float64Array, Float64Builder,
+    Int32Array, Int64Array, StringArray, StringBuilder, UInt8Array, UInt8Builder, UInt16Array,
+    UInt16Builder, UInt32Array, UInt32Builder, new_null_array,
 };
 use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
+use std::sync::Arc;
 
 use crate::domain::schema::default_values::DEFAULT_IBGE_MUNICIPALITY;
 use crate::domain::transforms::ibge::harmonize_ibge_code_to_buf;
@@ -180,11 +179,7 @@ pub fn build_record_id_col(
 }
 
 /// Constrói a coluna canônica de município harmonizado para 7 dígitos do IBGE sem alocações em heap.
-pub fn build_harmonized_ibge_col(
-    batch: &RecordBatch,
-    col_name: &str,
-    num_rows: usize,
-) -> ArrayRef {
+pub fn build_harmonized_ibge_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
     let str_col = batch
         .schema()
@@ -398,7 +393,11 @@ pub fn build_str_opt_col(
 /// Constrói coluna `UInt8` opcional (nulo se ausente).
 pub fn build_u8_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
     let mut builder = UInt8Builder::with_capacity(num_rows);
-    let col = batch.schema().index_of(col_name).ok().map(|idx| batch.column(idx));
+    let col = batch
+        .schema()
+        .index_of(col_name)
+        .ok()
+        .map(|idx| batch.column(idx));
 
     if let Some(col) = col {
         if let Some(u8_col) = col.as_any().downcast_ref::<UInt8Array>() {
@@ -444,18 +443,30 @@ pub fn build_u16_col(
     num_rows: usize,
 ) -> ArrayRef {
     let mut builder = UInt16Builder::with_capacity(num_rows);
-    let col = batch.schema().index_of(col_name).ok().map(|idx| batch.column(idx));
+    let col = batch
+        .schema()
+        .index_of(col_name)
+        .ok()
+        .map(|idx| batch.column(idx));
 
     if let Some(col) = col {
         if let Some(u16_col) = col.as_any().downcast_ref::<UInt16Array>() {
             for i in 0..num_rows {
-                let v = if u16_col.is_valid(i) { u16_col.value(i) } else { default_val };
+                let v = if u16_col.is_valid(i) {
+                    u16_col.value(i)
+                } else {
+                    default_val
+                };
                 builder.append_value(v);
             }
         } else if let Some(str_col) = col.as_any().downcast_ref::<StringArray>() {
             for i in 0..num_rows {
                 let v = if str_col.is_valid(i) {
-                    str_col.value(i).trim().parse::<u16>().unwrap_or(default_val)
+                    str_col
+                        .value(i)
+                        .trim()
+                        .parse::<u16>()
+                        .unwrap_or(default_val)
                 } else {
                     default_val
                 };
@@ -478,7 +489,11 @@ pub fn build_u16_col(
 /// Constrói coluna `UInt16` opcional (nulo se ausente).
 pub fn build_u16_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> ArrayRef {
     let mut builder = UInt16Builder::with_capacity(num_rows);
-    let col = batch.schema().index_of(col_name).ok().map(|idx| batch.column(idx));
+    let col = batch
+        .schema()
+        .index_of(col_name)
+        .ok()
+        .map(|idx| batch.column(idx));
 
     if let Some(col) = col {
         if let Some(u16_col) = col.as_any().downcast_ref::<UInt16Array>() {
@@ -524,18 +539,30 @@ pub fn build_u32_col(
     num_rows: usize,
 ) -> ArrayRef {
     let mut builder = UInt32Builder::with_capacity(num_rows);
-    let col = batch.schema().index_of(col_name).ok().map(|idx| batch.column(idx));
+    let col = batch
+        .schema()
+        .index_of(col_name)
+        .ok()
+        .map(|idx| batch.column(idx));
 
     if let Some(col) = col {
         if let Some(u32_col) = col.as_any().downcast_ref::<UInt32Array>() {
             for i in 0..num_rows {
-                let v = if u32_col.is_valid(i) { u32_col.value(i) } else { default_val };
+                let v = if u32_col.is_valid(i) {
+                    u32_col.value(i)
+                } else {
+                    default_val
+                };
                 builder.append_value(v);
             }
         } else if let Some(str_col) = col.as_any().downcast_ref::<StringArray>() {
             for i in 0..num_rows {
                 let v = if str_col.is_valid(i) {
-                    str_col.value(i).trim().parse::<u32>().unwrap_or(default_val)
+                    str_col
+                        .value(i)
+                        .trim()
+                        .parse::<u32>()
+                        .unwrap_or(default_val)
                 } else {
                     default_val
                 };
@@ -563,23 +590,39 @@ pub fn build_f64_col(
     num_rows: usize,
 ) -> ArrayRef {
     let mut builder = Float64Builder::with_capacity(num_rows);
-    let col = batch.schema().index_of(col_name).ok().map(|idx| batch.column(idx));
+    let col = batch
+        .schema()
+        .index_of(col_name)
+        .ok()
+        .map(|idx| batch.column(idx));
 
     if let Some(col) = col {
         if let Some(flt) = col.as_any().downcast_ref::<Float64Array>() {
             for i in 0..num_rows {
-                let v = if flt.is_valid(i) { flt.value(i) } else { default_val };
+                let v = if flt.is_valid(i) {
+                    flt.value(i)
+                } else {
+                    default_val
+                };
                 builder.append_value(v);
             }
         } else if let Some(flt) = col.as_any().downcast_ref::<Float32Array>() {
             for i in 0..num_rows {
-                let v = if flt.is_valid(i) { flt.value(i) as f64 } else { default_val };
+                let v = if flt.is_valid(i) {
+                    flt.value(i) as f64
+                } else {
+                    default_val
+                };
                 builder.append_value(v);
             }
         } else if let Some(str_col) = col.as_any().downcast_ref::<StringArray>() {
             for i in 0..num_rows {
                 let v = if str_col.is_valid(i) {
-                    str_col.value(i).trim().parse::<f64>().unwrap_or(default_val)
+                    str_col
+                        .value(i)
+                        .trim()
+                        .parse::<f64>()
+                        .unwrap_or(default_val)
                 } else {
                     default_val
                 };

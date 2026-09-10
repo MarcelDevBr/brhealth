@@ -159,9 +159,7 @@ impl HealthDataSourceSPI for SimDataSource {
             format!(
                 "https://datasus.saude.gov.br/transferencia-download-de-arquivos/dissemin/publicos/SIM/CID10/DORES/DO{uf}{year}.dbc"
             ),
-            format!(
-                "ftp://ftp2.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/DO{uf}{year}.dbc"
-            ),
+            format!("ftp://ftp2.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/DO{uf}{year}.dbc"),
         ]
     }
 

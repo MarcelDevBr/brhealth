@@ -75,13 +75,20 @@ async fn run_source_check(source: &dyn HealthDataSourceSPI, params: &DataQueryPa
     let meta = source.metadata();
     assert!(!meta.id.is_empty(), "ID da fonte não pode ser vazio");
     assert!(!meta.display_name.is_empty(), "Nome não pode ser vazio");
-    assert!(!meta.maintaining_agency.is_empty(), "Órgão não pode ser vazio");
+    assert!(
+        !meta.maintaining_agency.is_empty(),
+        "Órgão não pode ser vazio"
+    );
 
     let schema = source.target_schema();
     assert!(!schema.fields().is_empty(), "Esquema Arrow deve ter campos");
 
     let locator_res = source.resolve_locator(params);
-    assert!(locator_res.is_ok(), "Locator deve ser resolvido para {}", meta.id);
+    assert!(
+        locator_res.is_ok(),
+        "Locator deve ser resolvido para {}",
+        meta.id
+    );
     let locator = locator_res.unwrap();
     assert!(!locator.is_empty(), "Locator não pode ser vazio");
 

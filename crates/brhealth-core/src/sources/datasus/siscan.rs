@@ -43,7 +43,8 @@ impl SiscanDataSource {
 
         // 1. exam_id (CO_EXAME ou NU_PEDIDO)
         let id_col: ArrayRef = {
-            let mut id_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 12);
+            let mut id_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 12);
             for i in 0..num_rows {
                 let id = get_str_value(raw_batch, "CO_EXAME", i)
                     .or_else(|| get_str_value(raw_batch, "NU_PEDIDO", i))
@@ -59,7 +60,8 @@ impl SiscanDataSource {
 
         // 2. cancer_type (TP_EXAME: "MAMO" -> "BREAST", "CITO" -> "CERVICAL")
         let type_col: ArrayRef = {
-            let mut type_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 8);
+            let mut type_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 8);
             for i in 0..num_rows {
                 let raw_type = get_str_value(raw_batch, "TP_EXAME", i).unwrap_or("MAMO");
                 let normed = if raw_type.contains("CITO") || raw_type.contains("COLO") {
@@ -86,7 +88,8 @@ impl SiscanDataSource {
 
         // 4. patient_municipality (CO_MUNICIPIO_IBGE ou CODMUNRES)
         let mun_col: ArrayRef = {
-            let mut mun_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
+            let mut mun_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 7);
             for i in 0..num_rows {
                 let resolved = get_str_value(raw_batch, "CO_MUNICIPIO_IBGE", i)
                     .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
@@ -111,7 +114,8 @@ impl SiscanDataSource {
 
         // 7. diagnostic_result (DS_RESULTADO_DIAGNOSTICO ou DS_CONCLUSAO)
         let res_col: ArrayRef = {
-            let mut res_builder = arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
+            let mut res_builder =
+                arrow::array::StringBuilder::with_capacity(num_rows, num_rows * 20);
             for i in 0..num_rows {
                 let res = get_str_value(raw_batch, "DS_RESULTADO_DIAGNOSTICO", i)
                     .or_else(|| get_str_value(raw_batch, "DS_CONCLUSAO", i))

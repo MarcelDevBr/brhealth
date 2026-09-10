@@ -405,7 +405,11 @@ impl CanonicalSchemas {
             Field::new("location_name", DataType::Utf8, false),
             Field::new("country_iso3", DataType::Utf8, false),
             Field::new("h3_index_res8", DataType::UInt64, true),
-            Field::new("timestamp_utc", DataType::Timestamp(TimeUnit::Second, Some("UTC".into())), false),
+            Field::new(
+                "timestamp_utc",
+                DataType::Timestamp(TimeUnit::Second, Some("UTC".into())),
+                false,
+            ),
             Field::new("pollutant", DataType::Utf8, false), // "pm25", "pm10", "no2", "o3", "so2", "co"
             Field::new("value_micrograms_m3", DataType::Float32, false),
             Field::new("latitude", DataType::Float64, false),
@@ -481,4 +485,3 @@ pub mod default_values {
     /// Prefixo de compra pública farmacêutica ("BUY").
     pub const PREFIX_BUY: &str = "BUY";
 }
-

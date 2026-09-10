@@ -241,7 +241,9 @@ impl HealthDataSourceSPI for DeclarativeDataSource {
             Ok(reader) => {
                 let mut batches = Vec::new();
                 for batch_res in reader {
-                    batches.push(batch_res.map_err(|e| PortError::TransformationError(e.to_string()))?);
+                    batches.push(
+                        batch_res.map_err(|e| PortError::TransformationError(e.to_string()))?,
+                    );
                 }
                 Ok(batches)
             }

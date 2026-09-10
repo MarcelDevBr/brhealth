@@ -186,6 +186,7 @@ pub struct BRHealthClientHandle {
 /// Retorna ponteiro opaco para `BRHealthClientHandle` ou nulo em caso de falha de alocação de runtime.
 #[unsafe(no_mangle)]
 pub extern "C" fn brhealth_client_create() -> *mut BRHealthClientHandle {
+    use brhealth_core::SourceRegistry;
     use brhealth_core::decoders::dbc::DbcDecompressor;
     use brhealth_core::domain::application::BRHealthApplicationService;
     use brhealth_core::domain::source_spi::SourceExecutionContext;
@@ -193,7 +194,6 @@ pub extern "C" fn brhealth_client_create() -> *mut BRHealthClientHandle {
     use brhealth_core::infrastructure::state::MemorySyncState;
     use brhealth_core::infrastructure::transport::AsyncFtpTransport;
     use brhealth_core::sources::{create_pack_brasil, create_pack_global};
-    use brhealth_core::SourceRegistry;
     use std::sync::Arc;
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
@@ -262,9 +262,7 @@ pub unsafe extern "C" fn brhealth_fetch_mortality(
         Ok(s) => s,
         Err(_) => return BRHEALTH_ERR_INVALID_ARG,
     };
-    unsafe {
-        brhealth_fetch_source(handle, source_id.as_ptr(), uf, year, out_array, out_schema)
-    }
+    unsafe { brhealth_fetch_source(handle, source_id.as_ptr(), uf, year, out_array, out_schema) }
 }
 
 /// Consulta qualquer fonte registrada do BRHealth por identificador.
@@ -347,9 +345,7 @@ pub unsafe extern "C" fn brhealth_fetch_source(
                 pipeline_result.batches[0].clone()
             };
 
-            match unsafe {
-                export_record_batch_to_c(&batch, out_array, out_schema)
-            } {
+            match unsafe { export_record_batch_to_c(&batch, out_array, out_schema) } {
                 Ok(()) => BRHEALTH_SUCCESS,
                 Err(_) => BRHEALTH_ERR_TRANSFORM_FAILED,
             }

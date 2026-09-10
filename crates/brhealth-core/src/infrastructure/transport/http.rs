@@ -49,7 +49,9 @@ impl AsyncHttpTransport {
             .timeout(config.timeout)
             .user_agent(&config.user_agent)
             .build()
-            .map_err(|e| PortError::TransportError(format!("Falha ao construir cliente HTTP: {e}")))?;
+            .map_err(|e| {
+                PortError::TransportError(format!("Falha ao construir cliente HTTP: {e}"))
+            })?;
 
         Ok(Self { config, client })
     }
@@ -93,11 +95,14 @@ impl TransportPort for AsyncHttpTransport {
                         match response.bytes().await {
                             Ok(bytes) => return Ok(bytes.to_vec()),
                             Err(e) => {
-                                last_error = Some(format!("Falha ao ler stream de resposta HTTP: {e}"));
+                                last_error =
+                                    Some(format!("Falha ao ler stream de resposta HTTP: {e}"));
                             }
                         }
                     } else {
-                        last_error = Some(format!("Servidor HTTP retornou status {status} para '{uri}'"));
+                        last_error = Some(format!(
+                            "Servidor HTTP retornou status {status} para '{uri}'"
+                        ));
                     }
                 }
                 Err(e) => {
@@ -121,7 +126,9 @@ mod tests {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
             let transport = AsyncHttpTransport::new_default().unwrap();
-            let res = transport.fetch_bytes("ftp://ftp.datasus.gov.br/file.dbc").await;
+            let res = transport
+                .fetch_bytes("ftp://ftp.datasus.gov.br/file.dbc")
+                .await;
             assert!(res.is_err());
         });
     }
@@ -133,4 +140,3 @@ mod tests {
         assert!(config.user_agent.contains("BRHealth"));
     }
 }
-

@@ -71,7 +71,9 @@ pub fn spatial_join_on_index(
         // Retorna schema unificado vazio
         let mut fields: Vec<Arc<Field>> = left_batch.schema().fields().to_vec();
         for f in right_batch.schema().fields() {
-            if f.name() != index_col_name && !fields.iter().any(|existing| existing.name() == f.name()) {
+            if f.name() != index_col_name
+                && !fields.iter().any(|existing| existing.name() == f.name())
+            {
                 fields.push(f.clone());
             }
         }
@@ -104,7 +106,11 @@ pub fn spatial_join_on_index(
 
     // Projeta colunas complementares do lote direito (exceto a chave espacial já presente)
     for (i, f) in right_batch.schema().fields().iter().enumerate() {
-        if f.name() != index_col_name && !result_fields.iter().any(|existing| existing.name() == f.name()) {
+        if f.name() != index_col_name
+            && !result_fields
+                .iter()
+                .any(|existing| existing.name() == f.name())
+        {
             result_fields.push(f.clone());
             let right_col = right_batch.column(i);
             let taken = arrow::compute::take(right_col.as_ref(), &right_take_indices, None)
@@ -114,7 +120,8 @@ pub fn spatial_join_on_index(
     }
 
     let result_schema = Arc::new(Schema::new(result_fields));
-    RecordBatch::try_new(result_schema, result_columns).map_err(|e| PortError::TransformationError(e.to_string()))
+    RecordBatch::try_new(result_schema, result_columns)
+        .map_err(|e| PortError::TransformationError(e.to_string()))
 }
 
 #[cfg(test)]

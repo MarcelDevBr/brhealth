@@ -11,8 +11,8 @@ use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 
 use super::helpers::{
-    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col,
-    build_str_col, build_str_opt_col, build_u16_opt_col, build_u32_col,
+    build_date32_col, build_f64_col, build_harmonized_ibge_col, build_record_id_col, build_str_col,
+    build_str_opt_col, build_u16_opt_col, build_u32_col,
 };
 use crate::decoders::dbf::DbfDecoder;
 use crate::domain::ports::outbound::PortError;
@@ -22,9 +22,7 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 
-use crate::domain::schema::default_values::{
-    DEFAULT_CNES, DEFAULT_PROCEDURE_SIGTAP, PREFIX_AMB,
-};
+use crate::domain::schema::default_values::{DEFAULT_CNES, DEFAULT_PROCEDURE_SIGTAP, PREFIX_AMB};
 
 /// Adaptador SPI para o SIASUS (Produção Ambulatorial) do DATASUS.
 #[derive(Debug, Default, Clone)]
