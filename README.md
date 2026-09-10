@@ -9,8 +9,20 @@
 [![Rust: 2024 Edition](https://img.shields.io/badge/Rust-2024_Edition-orange.svg)](https://www.rust-lang.org/)
 [![Apache Arrow](https://img.shields.io/badge/Apache_Arrow-53.0-brightgreen.svg)](https://arrow.apache.org/)
 [![W3C PROV-O](https://img.shields.io/badge/FAIR-W3C_PROV--O-blueviolet.svg)](https://www.w3.org/TR/prov-o/)
+[![Clippy: Zero Warnings](https://img.shields.io/badge/Clippy-Strict_Zero_Warnings-success.svg)](https://github.com/rust-lang/rust-clippy)
 
 </div>
+
+---
+
+## 📌 Navegação Rápida na Documentação
+
+| Guia | Público-Alvo | Descrição |
+| :--- | :--- | :--- |
+| 📖 **[Guia de Instalação](docs/INSTALLATION.md)** | Administradores, Devs | Pré-requisitos, compilação de Rust, Python, C++20, Java 21+ e troubleshooting. |
+| 🚀 **[Manual de Utilização](docs/USAGE_GUIDE.md)** | Pesquisadores, Gestores | Manual completo da CLI, Python (Polars/PyTorch), Rust e fórmulas matemáticas. |
+| 🧩 **[Guia de Extensão e SPI](docs/EXTENDING_BRHEALTH.md)** | Engenheiros, Arquitetos | Como criar novos adaptadores `HealthDataSourceSPI`, Country Packs e decodificadores. |
+| 📐 **[Documento de Design de Software (SDD)](docs/architecture/sdd_brhealth.md)** | Arquitetos de Sistemas | Modelo C4, especificação matemática, layout de memória contígua e W3C PROV-O. |
 
 ---
 
@@ -18,7 +30,7 @@
 
 O **BRHealth** é um motor analítico colunar de alta performance desenvolvido em Rust para ingestão, harmonização, análise bioestatística e modelagem econômica de dados do Sistema Único de Saúde (SUS) e determinantes sociais brasileiros.
 
-Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DOD)**, memória contígua em **Apache Arrow** e interoperabilidade **Zero-Copy FFI** (Arrow C Data Interface), o BRHealth processa microdados brutos do DATASUS (como arquivos legados `.dbc` descompactados 100% nativamente) em centenas de megabytes por segundo, sem chamadas externas de shell e sem ponteiros intermediários inseguros.
+Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DOD)**, memória contígua em **Apache Arrow** e interoperabilidade **Zero-Copy FFI** (Arrow C Data Interface / DLPack), o BRHealth processa microdados brutos do DATASUS (como arquivos legados `.dbc` descompactados 100% nativamente) em centenas de megabytes por segundo, sem chamadas externas de shell e sem ponteiros intermediários inseguros.
 
 ---
 
@@ -27,17 +39,17 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 ```text
                +-------------------------------------------------------------+
                |                       INBOUND PORTS                         |
-               |       (CLI / REST / Python C-API / Scientific Pipelines)    |
+               |     (CLI / Python PyO3 / Arrow C-API / Java 21+ Panama)     |
                +------------------------------+------------------------------+
                                               |
                                               v
 +------------------------------------------------------------------------------------------+
 |                                     DOMAIN CORE                                          |
-|                               (Puro - Zero I/O, Zero Unwraps)                            |
+|                       (Puro - Zero I/O, Zero Unwraps, 64-bit Aligned)                    |
 |                                                                                          |
 |   +-----------------------+   +-----------------------+   +--------------------------+   |
 |   |   Canonical Schemas   |   |   Spatial Indexing    |   |     IBGE Harmonizer      |   |
-|   |     (Apache Arrow)    |   |       (Uber H3)       |   |   (Luhn Modulo 10 DV)    |   |
+|   |     (Apache Arrow)    |   |    (Uber H3 & S2)     |   |   (Luhn Modulo 10 DV)    |   |
 |   +-----------------------+   +-----------------------+   +--------------------------+   |
 |                                                                                          |
 |   +----------------------------------------------------------------------------------+   |
@@ -55,7 +67,7 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
                                               v
                +-------------------------------------------------------------+
                |                       OUTBOUND PORTS                        |
-               |   (TransportPort, DecompressorPort, CachePort, StoragePort) |
+               |          HealthDataSourceSPI / Transport / Decompressor     |
                +------------------------------+------------------------------+
                                               |
                                               v
@@ -69,7 +81,7 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 |                                                                                          |
 |   +----------------------------------------------------------------------------------+   |
 |   |                       Zero-Copy Arrow C Data Interface                           |   |
-|   |           (Ponteiros FFI diretos para Python / C++20 / Java 21+ FFM)             |   |
+|   |              (Ponteiros FFI diretos para Python / C++20 / Java 21+)              |   |
 |   +----------------------------------------------------------------------------------+   |
 +------------------------------------------------------------------------------------------+
 ```
@@ -91,38 +103,18 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Funções vetorizadas sobre colunas de coordenadas (`append_h3_column`, `append_s2_column`).
 - Análise de vizinhança em anel concêntrico (`grid_disk`) e *spatial joins* colunares contíguos em Arrow (`spatial_join_on_index`).
 
-### 4. Country Packs: Brasil (20 Fontes Nacionais) e Global (6 Fontes Supranacionais)
+### 4. Catálogo Unificado de 26 Fontes Oficiais de Dados
 - **Country Pack Brasil (`pack_brasil`)**:
-  - **DATASUS / MS**:
-    - **SIM** (Sistema de Informações sobre Mortalidade)
-    - **SINASC** (Sistema de Informações sobre Nascidos Vivos)
-    - **SIH** (Sistema de Informações Hospitalares - AIH Reduzida)
-    - **SINAN** (Sistema de Informação de Agravos de Notificação)
-    - **SIASUS** (Sistema de Informações Ambulatoriais - BPA/APAC)
-    - **CNES** (Cadastro Nacional de Estabelecimentos de Saúde e Leitos)
-    - **SI-PNI / RNDS** (Vigilância Imunológica e Vacinas)
-    - **SISVAN** (Vigilância Alimentar e Nutricional)
-    - **SISCAN / SISCOLO / SISMAMA** (Rastreamento de Câncer de Mama e Colo)
-    - **BPS / CMED / Anvisa** (Banco de Preços em Saúde e Fármacos)
-  - **IBGE & MDS**:
-    - **IBGE Censo** (Censo Demográfico e Setores Censitários)
-    - **IBGE PNAD** (PNAD Contínua - Rendimento e Condições de Vida)
-    - **IBGE POF** (Pesquisa de Orçamentos Familiares e Gastos em Saúde)
-    - **IBGE PeNSE** (Pesquisa Nacional de Saúde do Escolar)
-    - **IBGE MUNIC** (Perfil e Capacidade da Gestão Municipal em Saúde)
-    - **CadÚnico / MDS** (Vulnerabilidade Social e Transferência de Renda)
-  - **Clima, Ambiente e Saneamento**:
-    - **INMET** (Estações Meteorológicas de Superfície)
-    - **BDQueimadas / INPE** (Focos de Calor por Satélite e Dispersão de Fumaça)
-    - **PRODES / INPE** (Taxas de Desmatamento Anual e Risco de Zoonoses)
-    - **SISAGUA / SNIS** (Qualidade da Água Potável e Saneamento)
+  - **DATASUS / MS**: SIM (Mortalidade), SINASC (Nascidos Vivos), SIH (Internações), SINAN (Agravos), SIASUS (Ambulatorial), CNES (Leitos e Unidades), SI-PNI (Vacinas), SISVAN (Nutrição), SISCAN (Câncer), BPS (Preços de Medicamentos).
+  - **IBGE & MDS**: Censo Demográfico, PNAD Contínua, POF (Orçamentos Familiares), PeNSE (Saúde Escolar), MUNIC (Gestão Municipal), CadÚnico (Vulnerabilidade Social).
+  - **Clima, Ambiente e Saneamento**: INMET (Meteorologia), BDQueimadas / INPE (Focos de Calor), PRODES / INPE (Desmatamento), SISAGUA / SNIS (Qualidade da Água).
 - **Country Pack Global (`pack_global`)**:
-  - **WHO GHO** (Global Health Observatory - Indicadores Globais da OMS / ODS 3)
-  - **IHME GBD** (Global Burden of Disease - DALYs, YLLs, YLDs)
-  - **Copernicus ERA5** (Reanálise Climática e Meteorológica Global em Grade)
-  - **WorldPop** (Demografia e População Georreferenciada em Grade Contínua de 100m)
-  - **PAHO / OPAS PLISA** (Vigilância Pan-Americana Transfronteiriça de Arboviroses)
-  - **OpenAQ** (Monitoramento Global de Poluentes Atmosféricos e Qualidade do Ar)
+  - **WHO GHO** (Indicadores Globais da OMS / ODS 3)
+  - **IHME GBD** (Carga Global de Doenças - DALYs, YLLs, YLDs)
+  - **Copernicus ERA5** (Reanálise Climática Planetária em Grade)
+  - **WorldPop** (População em Grade Georreferenciada de 100m)
+  - **PAHO / OPAS PLISA** (Vigilância de Arboviroses das Américas)
+  - **OpenAQ** (Monitoramento de Qualidade do Ar e Poluentes)
 
 ### 5. Bioestatística, Epidemiologia e Mortalidade Prematura (APVP / YLL)
 - Cálculo formal dos **Anos Potenciais de Vida Perdidos** (APVP / *Years of Life Lost* - YLL):
@@ -137,31 +129,97 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 - Retorno sobre Investimento (ROI) em Saúde Coletiva na Atenção Primária à Saúde:
   $$\text{ROI}_{\text{APS}} = \frac{(\alpha \cdot \text{Custo Evitável}) - \text{Investimento}_{\text{APS}}}{\text{Investimento}_{\text{APS}}}$$
 
-### 7. Governança FAIR, Time-Travel e Persistência Híbrida
+### 7. Governança FAIR e Rastreabilidade Criptográfica
 - Linhagem científica rastreável com manifestos **W3C PROV-O** em JSON-LD e hashes SHA-256 calculados no voo.
 - Armazenamento particionado em **Apache Hive-Parquet** com suporte a consultas históricas reproduzíveis bit a bit (`as_of_snapshot`).
-- Persistência atômica em disco **Disk Sync State** (`DiskSyncState`) com locking concorrente para auditoria determinística de snapshots.
 
-### 8. Ecossistema Cross-Language e Interoperabilidade Zero-Copy
-- **`crates/brhealth-core`**: Núcleo analítico puro, 26 fontes oficiais, schemas Arrow, CSAP, APVP, H3/S2, FAIR e decodificadores nativos.
-- **`crates/brhealth-cli`**: Interface de linha de comando com subcomandos para cálculo de DV, CSAP, ROI, APVP, S2 e ingestão colunar completa.
-- **`crates/brhealth-ffi`**: Exportação plana C-ABI e Arrow C Data Interface para integração binária universal.
-- **`crates/brhealth-python`**: Bindings idiomáticos via PyO3 com acessores semânticos, suporte Arrow PyCapsule e **DLPack** para tensores PyTorch.
-- **`crates/brhealth-jni`**: Bindings de alta performance para Java 21+ Project Panama (Foreign Function & Memory API).
-- **`bindings/cpp/include/brhealth.hpp`**: Wrapper moderno C++20 com RAII sobre a C-ABI.
+---
 
-### 9. Harmonização Ontológica e Normalização Semântica
-- Mapeamento transversal histórico **CID-9 $\leftrightarrow$ CID-10** e transição **CID-10 $\leftrightarrow$ CID-11** (OMS).
-- Mapeador de conceitos **SNOMED-CT** para interoperabilidade FHIR R4.
-- Tabela de Procedimentos do SUS (**SIGTAP**) de 10 dígitos e identificação de eventos sentinela evitáveis (amputações, diálise).
-- Vocabulários Farmacêuticos Internacionais: Classificação **ATC** da OMS e mapeamento **RxNorm**.
-- Validação estrita de consistência biológica (incompatibilidades anatômicas de sexo e faixas etárias extremas).
+## ⚡ Guia de Início Rápido (Quickstart)
 
-### 10. Extensibilidade SPI e Fontes Declarativas
-- Loader dinâmico de manifestos declarativos **YAML/JSON** (`DeclarativeDataSource`), permitindo adicionar novas fontes sem recompilar o motor.
-- Decodificador vetorial nativo **Apache GeoArrow** (EPSG:4326).
-- Decodificador colunar para matrizes e grades climáticas **NetCDF / ERA5**.
-- Clientes assíncronos **Tokio FTP** (DATASUS) e **HTTP Streaming** com *stream hashing* SHA-256 no voo.
+### 1. Cientistas de Dados (Python / Polars / PyTorch)
+
+```python
+import brhealth
+from brhealth import Engine
+import torch
+
+# 1. Validação IBGE e CSAP
+dv = brhealth.calculate_ibge_dv("355030") # 8
+assert brhealth.is_csap("J45.0") == True   # Asma é evitável na APS
+
+# 2. Ingestão Colunar de AIH/SIH
+engine = Engine()
+sih_batch = engine.hospital_morbidity.fetch(jurisdiction="SP", year=2023, month=1)
+
+# 3. Conversão Zero-Copy para Polars DataFrame
+df = sih_batch.to_polars()
+print(df.head())
+
+# 4. Exportação Zero-Copy para Tensores PyTorch via DLPack
+tensor = torch.from_dlpack(sih_batch)
+
+# 5. Avaliação de Métricas de CSAP
+metricas = engine.evaluate_csap(sih_batch, reference_population=12_000_000)
+print(f"Custo Hospitalar Evitável: R$ {metricas['avoidable_cost']:.2f}")
+
+# 6. Exportar Manifesto FAIR W3C PROV-O
+sih_batch.export_fair_manifest("manifesto_extracao.jsonld")
+```
+
+---
+
+### 2. Gestores de Saúde e Vigilância Epidemiológica (CLI)
+
+```bash
+# Instalar a CLI globalmente
+cargo install --path crates/brhealth-cli
+
+# Validar município do IBGE
+brhealth dv 355030
+
+# Classificar internação sob a Portaria 221/2008
+brhealth csap J45.0
+
+# Avaliar ROI da Atenção Primária (ESF)
+brhealth roi --avoidable-cost 500000 --investment 100000 --attributable-fraction 0.50
+
+# Calcular APVP (Anos Potenciais de Vida Perdidos)
+brhealth apvp 35 42 18 55 62 --cutoff 70 --population 100000
+
+# Baixar, enriquecer e exportar Parquet do SIH
+brhealth fetch --source datasus_sih --uf RJ --year 2023 --month 3 --enrich-csap --out-parquet /tmp/sih_rj.parquet
+```
+
+---
+
+### 3. Engenheiros de Sistemas (Rust / `brhealth-core`)
+
+```rust
+use brhealth_core::domain::analytics::csap::{classify_cid10, compute_primary_care_roi, CsapGroup};
+use brhealth_core::domain::transforms::ibge::calculate_ibge_dv;
+use brhealth_core::domain::spatial::h3::coord_to_h3_index;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Validação de DV do IBGE
+    let dv = calculate_ibge_dv("355030")?;
+    println!("São Paulo: 355030{}", dv);
+
+    // Classificação de CSAP
+    let group = classify_cid10("J45.0");
+    assert_eq!(group, Some(CsapGroup::Asma));
+
+    // Indexação H3
+    let cell = coord_to_h3_index(-23.55052, -46.633308, 8)?;
+    println!("Célula H3: {:#x}", cell);
+
+    // Retorno sobre Investimento na APS
+    let roi = compute_primary_care_roi(500_000.0, 100_000.0, 0.40)?;
+    println!("ROI: {:.1}%", roi * 100.0);
+
+    Ok(())
+}
+```
 
 ---
 
@@ -170,7 +228,11 @@ Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DO
 ```text
 brhealth/
 ├── Cargo.toml                         # Workspace raiz (LTO fat, opt-level 3)
-├── docs/architecture/                 # SDD, Especificações e Casos de Uso
+├── docs/                              # Documentação oficial completa
+│   ├── INSTALLATION.md                # Guia de instalação multiplataforma
+│   ├── USAGE_GUIDE.md                 # Manual de utilização e fórmulas científicas
+│   ├── EXTENDING_BRHEALTH.md          # Guia de extensão de fontes e SPI
+│   └── architecture/                  # SDD e backlog arquitetural
 ├── bindings/
 │   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
 │   └── jvm/BRHealthEngine.java        # Interface Java 21 Panama FFM
@@ -184,113 +246,31 @@ brhealth/
 
 ---
 
-## Instalação e Execução
-
-### Pré-requisitos
-- Rust 1.85+ (Edição 2024).
-- Python 3.10+ (opcional para bindings Python).
-- JDK 21+ (opcional para bindings Java Panama).
-
-### Compilação e Testes
+## Compilação e Validação
 
 ```bash
 # Compilar todo o workspace em modo release
 cargo build --release --workspace
 
-# Executar suíte completa de testes (100 testes automatizados)
+# Executar suíte completa de testes (100+ testes automatizados)
 cargo test --workspace
+
+# Executar doc-tests executáveis
+cargo test --workspace --doc
 
 # Validar com Clippy estrito (Zero Warnings)
 cargo clippy --workspace --all-targets -- -D warnings
 
 # Executar micro-benchmarks científicos com Criterion
-cargo bench --workspace
-```
-
----
-
-## Exemplos de Uso
-
-### Python (Polars / PyArrow / PyTorch Zero-Copy)
-
-```python
-import brhealth
-
-# 1. Validação e cálculo canônico do IBGE
-dv = brhealth.calculate_ibge_dv("355030")
-code_7 = brhealth.harmonize_ibge_code("355030")
-print(f"Município: {code_7} (DV: {dv})") # 3550308 (DV: 8)
-
-# 2. Vigilância de CSAP (Portaria MS/SAS 221/2008)
-if brhealth.is_csap("J45.0"):
-    group_id = brhealth.classify_cid10("J45.0")
-    print(f"Internação evitável identificada: Grupo {group_id} (Asma)")
-
-# 3. Bioestatística: Anos Potenciais de Vida Perdidos (APVP / YLL)
-apvp = brhealth.compute_apvp([35, 42, 18, 55], cutoff_age=70)
-print(f"Total de APVP: {apvp} anos") # 130 anos
-
-# 4. Mapeamento Transversal Histórico CID-9 -> CID-10 e CID-10 -> CID-11
-cid10 = brhealth.map_icd9_to_icd10("493") # J45 (Asma)
-cid11 = brhealth.map_icd10_to_icd11("I10") # BA00 (Hipertensão essencial)
-
-# 5. Motor Analítico com 26 Fontes Oficiais e Acessores Semânticos
-engine = brhealth.Engine()
-print(f"Fontes ativas no catálogo: {engine.source_count()}") # 26
-
-# Ingestão com autocomplete idiomático:
-# sih_batch = engine.hospital_morbidity.fetch(jurisdiction="3509502", years=[2022, 2023, 2024])
-# polars_df = sih_batch.to_polars()
-```
-
-### Rust (Domínio Puro)
-
-```rust
-use brhealth_core::domain::analytics::csap::{classify_cid10, compute_primary_care_roi, CsapGroup};
-use brhealth_core::domain::transforms::ibge::calculate_ibge_dv;
-use brhealth_core::domain::spatial::coord_to_h3_index;
-
-fn main() {
-    // 1. Cálculo de Dígito Verificador IBGE
-    let dv = calculate_ibge_dv("355030").unwrap();
-    println!("São Paulo: 355030{}", dv); // 3550308
-
-    // 2. Indexação H3 de Coordenadas
-    let h3_cell = coord_to_h3_index(-23.55052, -46.633308, 8).unwrap();
-    println!("Praça da Sé H3 (Res 8): {:#x}", h3_cell);
-
-    // 3. Classificação de CSAP (Portaria 221/2008)
-    let group = classify_cid10("J45.0");
-    assert_eq!(group, Some(CsapGroup::Asma));
-
-    // 4. ROI da Atenção Primária
-    let roi = compute_primary_care_roi(500_000.0, 100_000.0, 0.40).unwrap();
-    println!("ROI da Atenção Primária: {:.1}%", roi * 100.0); // 100.0%
-}
-```
-
-### C++20 Moderno
-
-```cpp
-#include "brhealth.hpp"
-#include <iostream>
-
-int main() {
-    std::cout << "BRHealth Engine Version: " << brhealth::version() << "\n";
-    uint8_t dv = brhealth::calculate_ibge_dv("355030");
-    std::cout << "DV São Paulo: " << static_cast<int>(dv) << "\n";
-    auto csap = brhealth::classify_csap("J45");
-    if (csap) {
-        std::cout << "Grupo CSAP: " << static_cast<int>(*csap) << "\n";
-    }
-    return 0;
-}
+cargo bench -p brhealth-core
 ```
 
 ---
 
 ## Licenciamento e Direitos Autorais
 
+```text
 Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+```
 
 O projeto é licenciado sob a **GNU Affero General Public License v3 (AGPLv3)** com modelo de duplo licenciamento comercial exclusivo do criador.

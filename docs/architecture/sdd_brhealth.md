@@ -81,7 +81,7 @@ C4Context
 C4Container
     title Diagrama de Containers do Ecossistema BRHealth (C4 Level 2)
 
-    Container(core, "brhealth-core (Rust)", "Rust 2021", "Domínio puro, schemas canônicos Arrow, decodificadores nativos e SPI")
+    Container(core, "brhealth-core (Rust)", "Rust 2024", "Domínio puro, schemas canônicos Arrow, decodificadores nativos e SPI")
     Container(py_lib, "brhealth-python", "PyO3 / Maturin", "Bindings idiomáticos Python com suporte nativo a Polars e PyTorch")
     Container(ffi_lib, "brhealth-ffi", "C-ABI / C++20", "Exportação plana C-ABI e headers para C++ moderno")
     Container(jvm_lib, "brhealth-jni", "Java 21+ Panama FFM", "Bindings nativos para Kotlin e ecossistema JVM sem JNI lento")
@@ -158,13 +158,13 @@ Toda fonte de dados implementa o contrato desacoplado `HealthDataSourceSPI`:
 
 ```rust
 #[async_trait]
-pub trait HealthDataSourceSPI: Send + Sync + 'static {
+pub trait HealthDataSourceSPI: Send + Sync {
     fn metadata(&self) -> SourceMetadata;
     fn target_schema(&self) -> Arc<Schema>;
-    fn resolve_locator(&self, params: &DataQueryParams) -> Result<String, PortError>;
+    fn resolve_locator(&self, params: &DataQueryParams) -> Result<SourceLocator, PortError>;
     async fn fetch_and_decode(
         &self,
-        params: &DataQueryParams,
+        locator: &SourceLocator,
         context: &SourceExecutionContext,
     ) -> Result<Vec<RecordBatch>, PortError>;
 }
