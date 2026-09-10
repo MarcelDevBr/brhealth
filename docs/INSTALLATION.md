@@ -4,164 +4,77 @@ Licensed under the GNU Affero General Public License v3 (AGPLv3)
 or a commercial license agreement directly with the author.
 -->
 
-# Guia de Instalação e Compilação - BRHealth
+# Guia de Instalação e Configuração Modular - BRHealth
 
-Este documento fornece as instruções completas, passo a passo, para configurar o ambiente de desenvolvimento, compilar e instalar todos os componentes do **BRHealth** em múltiplos sistemas operacionais (Linux, macOS e Windows).
+O **BRHealth** foi projetado com uma arquitetura estritamente desacoplada. O núcleo do motor analítico (**Core & CLI**) não possui dependências externas além do compilador Rust.
+
+As dependências de linguagens externas (**Python**, **R**, **Java/Kotlin** e **C++**) são **completamente isoladas e opcionais**. Você deve instalar **apenas** o que for utilizar no seu fluxo de trabalho.
+
+---
+
+## 🎯 Escolha sua Trilha de Instalação
+
+O BRHealth tem como foco principal de análise as linguagens **Python** e **R**. Para sistemas integrados e serviços legados, oferece também suporte a **Java 21+/Kotlin** e **C++20**:
+
+```text
+                               +-----------------------------+
+                               |     BRHealth Core (Rust)    |
+                               |    (Apenas Rust 1.85+)      |
+                               +--------------+--------------+
+                                              |
+        +----------------------+--------------+--------------+----------------------+
+        |                      |                             |                      |
+        v                      v                             v                      v
++---------------+      +---------------+             +---------------+      +---------------+
+|    Trilha 1   |      |    Trilha 2   |             |    Trilha 3   |      |    Trilha 4   |
+|   🐍 Python   |      |      📊 R     |             |    ☕ Java    |      |    ⚡ C++20   |
+| (Data Science)|      | (Bioestatíst.)|             |   & Kotlin    |      |  (Sistemas)   |
++---------------+      +---------------+             +---------------+      +---------------+
+| Python 3.10+  |      | R 4.2+        |             | JDK 21+       |      | Clang 15+ ou  |
+| Maturin / Pip |      | Pacote arrow  |             | Project Panama|      | GCC 12+       |
++---------------+      +---------------+             +---------------+      +---------------+
+```
 
 ---
 
 ## Índice
 
-1. [Requisitos de Sistema e Ferramentas](#1-requisitos-de-sistema-e-ferramentas)
-2. [Instalação de Pré-requisitos por Sistema Operacional](#2-instalação-de-pré-requisitos-por-sistema-operacional)
-   - [Linux (Ubuntu / Debian / Fedora / Arch)](#linux-ubuntu--debian--fedora--arch)
-   - [macOS (Apple Silicon e Intel)](#macos-apple-silicon-e-intel)
-   - [Windows (WSL2 e Nativo com MSVC)](#windows-wsl2-e-nativo-com-msvc)
-3. [Clonagem do Repositório](#3-clonagem-do-repositório)
-4. [Compilação e Instalação do Motor Rust (brhealth-core e brhealth-cli)](#4-compilação-e-instalação-do-motor-rust)
-5. [Instalação dos Bindings Python (brhealth-python)](#5-instalação-dos-bindings-python)
-6. [Compilação da C-ABI e Bindings C++20 (brhealth-ffi)](#6-compilação-da-c-abi-e-bindings-c20)
-7. [Configuração dos Bindings Java 21+ Panama FFM (brhealth-jni)](#7-configuração-dos-bindings-java-21-panama-ffm)
-8. [Validação e Verificação da Instalação](#8-validação-e-verificação-da-instalação)
-9. [Solução de Problemas Comuns (Troubleshooting)](#9-solução-de-problemas-comuns-troubleshooting)
+1. [Núcleo Base: Instalação do Core e CLI (Rust Puro)](#1-núcleo-base-instalação-do-core-e-cli-rust-puro)
+2. [Trilha 1: Python (Ciência de Dados / Polars / PyTorch)](#2-trilha-1-python-ciência-de-dados--polars--pytorch)
+3. [Trilha 2: R (Bioestatística e Epidemiologia)](#3-trilha-2-r-bioestatística-e-epidemiologia)
+4. [Trilha 3: C++20 (Aplicações de Alta Performance)](#4-trilha-3-c20-aplicações-de-alta-performance)
+5. [Trilha 4: Java 21+ e Kotlin (Project Panama FFM)](#5-trilha-4-java-21-e-kotlin-project-panama-ffm)
+6. [Instalação de Pré-requisitos do Sistema por SO](#6-instalação-de-pré-requisitos-do-sistema-por-so)
+7. [Validação da Instalação](#7-validação-da-instalação)
+8. [Solução de Problemas Comuns (Troubleshooting)](#8-solução-de-problemas-comuns-troubleshooting)
 
 ---
 
-## 1. Requisitos de Sistema e Ferramentas
+## 1. Núcleo Base: Instalação do Core e CLI (Rust Puro)
 
-| Componente | Versão Mínima | Finalidade |
-| :--- | :--- | :--- |
-| **Rust Toolchain** | **1.85+** (Rust Edição 2024) | Compilação do núcleo `brhealth-core`, CLI e FFI |
-| **Cargo** | Incluído no Rust | Gerenciador de pacotes e compilação do workspace |
-| **Clang / LLVM** | **15.0+** | Necessário para bindings FFI e compilação C++20 |
-| **CMake** | **3.22+** | Utilizado para compilar exemplos e bibliotecas C++ |
-| **Python** | **3.10+** (Recomendado: 3.11 ou 3.12) | Uso dos bindings Python e ecossistema de dados |
-| **Maturin** | **1.4+** | Compilação e empacotamento dos bindings PyO3 em rodas nativas |
-| **JDK (Java)** | **21+** (OpenJDK ou Oracle) | Necessário apenas para o `brhealth-jni` (Project Panama FFM) |
-| **Git** | **2.30+** | Controle de versão e download do código-fonte |
+> [!NOTE]
+> Se você pretende utilizar o BRHealth apenas via **Linha de Comando (CLI)** ou como **biblioteca Rust**, você **NÃO precisa de Python, R, Java, CMake ou Clang**. Apenas o Rust é necessário.
 
-> [!IMPORTANT]
-> O BRHealth utiliza a **Edição 2024 do Rust** (`edition = "2024"`). Certifique-se de que sua versão do `rustc` seja **1.85.0 ou superior**. Atualize via `rustup update stable`.
+### Pré-requisitos:
+- **Rust Toolchain 1.85+** (Edição 2024).
+- **Git**.
 
----
-
-## 2. Instalação de Pré-requisitos por Sistema Operacional
-
-### Linux (Ubuntu / Debian / Fedora / Arch)
-
-#### Ubuntu / Debian (22.04 LTS ou 24.04 LTS):
+### Instalação:
 ```bash
-# Atualizar repositórios do sistema
-sudo apt update && sudo apt upgrade -y
-
-# Instalar ferramentas de compilação essenciais, Clang e Python
-sudo apt install -y build-essential curl git clang llvm libclang-dev cmake \
-    python3 python3-pip python3-venv python3-dev pkg-config
-
-# Instalar o Rust via rustup (caso ainda não possua)
+# 1. Instalar o Rust (caso ainda não possua)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 source "$HOME/.cargo/env"
 rustup update stable
 
-# (Opcional) Instalar OpenJDK 21 para Java Panama
-sudo apt install -y openjdk-21-jdk
-```
-
-#### Fedora (39+):
-```bash
-sudo dnf groupinstall -y "Development Tools"
-sudo dnf install -y clang clang-devel llvm llvm-devel cmake python3-devel java-21-openjdk-devel
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source "$HOME/.cargo/env"
-```
-
-#### Arch Linux:
-```bash
-sudo pacman -Syu --needed base-devel clang llvm cmake python python-pip rustup jdk21-openjdk
-rustup default stable
-```
-
----
-
-### macOS (Apple Silicon e Intel)
-
-No macOS, utilize o [Homebrew](https://brew.sh/):
-
-```bash
-# 1. Instalar Command Line Tools do Xcode
-xcode-select --install
-
-# 2. Instalar dependências via Homebrew
-brew install cmake llvm python@3.12 openjdk@21
-
-# 3. Instalar ou atualizar o Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source "$HOME/.cargo/env"
-rustup update stable
-
-# 4. Configurar variáveis para LLVM (caso necessário no shell ~/.zshrc)
-export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-```
-
----
-
-### Windows (WSL2 e Nativo com MSVC)
-
-#### Opção A: WSL2 (Altamente Recomendada)
-A experiência recomendada no Windows é utilizar o **WSL2 com Ubuntu 24.04 LTS**. Siga as mesmas instruções da seção [Linux (Ubuntu / Debian)](#linux-ubuntu--debian--fedora--arch).
-
-#### Opção B: Windows Nativo com MSVC
-1. Instale o **Visual Studio Community 2022** com a carga de trabalho *"Desenvolvimento para Desktop com C++"*.
-2. Instale o instalador do Rust a partir de [rustup.rs](https://rustup.rs/) (selecione a toolchain `x86_64-pc-windows-msvc`).
-3. Instale o Python 3.11+ via instalador oficial ou `winget install Python.Python.3.12`.
-4. Instale o LLVM nativo via `winget install LLVM.LLVM`.
-5. No terminal PowerShell (como Administrador), defina a variável `LIBCLANG_PATH`:
-   ```powershell
-   [System.Environment]::SetEnvironmentVariable("LIBCLANG_PATH", "C:\Program Files\LLVM\bin", [System.EnvironmentVariableTarget]::User)
-   ```
-
----
-
-## 3. Clonagem do Repositório
-
-```bash
+# 2. Clonar o repositório
 git clone https://github.com/MarcelDevBr/brhealth.git
 cd brhealth
-```
 
-Verifique o status do workspace Cargo:
-```bash
-cargo check --workspace
-```
-
----
-
-## 4. Compilação e Instalação do Motor Rust
-
-### Compilar Todo o Workspace em Modo Release
-
-O BRHealth utiliza otimizações pesadas de compilação (*Link-Time Optimization* `lto = "fat"`, `opt-level = 3` e remoção de símbolos de depuração para máxima performance):
-
-```bash
-cargo build --release --workspace
-```
-
-Os binários e bibliotecas compartilhadas geradas estarão localizados em:
-- CLI: `target/release/brhealth`
-- FFI C-ABI: `target/release/libbrhealth_ffi.so` (Linux), `.dylib` (macOS), `.dll` (Windows)
-- JNI/Panama: `target/release/libbrhealth_jni.so` (Linux), `.dylib` (macOS), `.dll` (Windows)
-
-### Instalar o CLI Globalmente no Sistema
-
-Para disponibilizar o utilitário `brhealth` diretamente no terminal (`$PATH`):
-
-```bash
+# 3. Compilar e instalar a CLI globalmente
 cargo install --path crates/brhealth-cli
 ```
 
-Teste a instalação do CLI:
+### Verificação do CLI:
 ```bash
 brhealth version
 brhealth sources
@@ -169,145 +82,252 @@ brhealth sources
 
 ---
 
-## 5. Instalação dos Bindings Python
+## 2. Trilha 1: Python (Ciência de Dados / Polars / PyTorch)
 
-Os bindings do BRHealth utilizam **PyO3** e são compatíveis com o ecossistema colunar Python (**Polars**, **PyArrow**, **Pandas**, **DuckDB** e **PyTorch** via DLPack).
+Recomendada para cientistas de dados, epidemiologistas computacionais e engenheiros de Machine Learning que utilizam notebooks Jupyter, Polars, Pandas e PyTorch.
 
-### Passo 1: Criar e Ativar Ambiente Virtual
+### Pré-requisitos Adicionais:
+- **Python 3.10+** (Recomendado: 3.11 ou 3.12).
+- **Maturin** (compilador de extensões nativas PyO3).
+
+### Passo a Passo de Instalação:
 
 ```bash
+# 1. A partir da raiz do repositório brhealth
+cd brhealth
+
+# 2. Criar e ativar um ambiente virtual isolado
 python3 -m venv .venv
 source .venv/bin/activate  # No Windows: .venv\Scripts\Activate.ps1
+
+# 3. Instalar o Maturin e as bibliotecas analíticas
 pip install --upgrade pip
-```
-
-### Passo 2: Instalar Maturin e Dependências de Análise
-
-```bash
 pip install maturin polars pyarrow torch
-```
 
-### Passo 3: Compilar e Instalar o Pacote em Modo Desenvolvimento
-
-Navegue até a pasta da crate Python ou instale na raiz via maturin:
-
-```bash
+# 4. Compilar e instalar o brhealth no ambiente virtual Python
 cd crates/brhealth-python
 maturin develop --release
 cd ../..
 ```
 
-### Passo 4: Verificar a Instalação no Python
-
+### Verificação:
 ```bash
-python3 -c "import brhealth; print('BRHealth Python Version:', brhealth.__version__); print('DV SP:', brhealth.calculate_ibge_dv('355030'))"
-```
-
-Saída esperada:
-```text
-BRHealth Python Version: 0.1.0
-DV SP: 8
+python3 -c "import brhealth; print('Versão BRHealth:', brhealth.__version__); print('DV SP:', brhealth.calculate_ibge_dv('355030'))"
 ```
 
 ---
 
-## 6. Compilação da C-ABI e Bindings C++20
+## 3. Trilha 2: R (Bioestatística e Epidemiologia)
 
-A crate `crates/brhealth-ffi` exporta uma C-ABI plana com a especificação **Apache Arrow C Data Interface** (`ArrowSchema` e `ArrowArray`).
+O **R** é a linguagem canônica da bioestatística e saúde pública no Brasil. A integração com o BRHealth opera através de interoperabilidade de memória contígua em **Apache Arrow** ou via **Reticulate**.
 
-O cabeçalho C++20 idiomático com gerenciamento seguro de memória RAII está localizado em `bindings/cpp/include/brhealth.hpp`.
+### Pré-requisitos Adicionais:
+- **R 4.2+**
+- Pacotes R: `arrow`, `reticulate` e `dplyr` (opcional: `tidyverse`).
 
-### Compilar a Biblioteca Dinâmica:
+### Método A: Integração R com Apache Arrow via Reticulate (Zero-Copy)
+
+Este método permite chamar os métodos do BRHealth diretamente no R e converter os resultados para tabelas Arrow nativas do R sem nenhuma cópia de dados em disco ou rede:
+
 ```bash
+# 1. No terminal, certifique-se de que o pacote Python foi compilado (Trilha 1)
+# 2. Abra o console do R e instale as dependências:
+```
+
+```r
+install.packages(c("reticulate", "arrow", "dplyr"))
+```
+
+Configuração no script R:
+```r
+library(reticulate)
+library(arrow)
+library(dplyr)
+
+# Apontar para o ambiente virtual onde o brhealth foi instalado
+use_virtualenv("./.venv", required = TRUE)
+
+brhealth <- import("brhealth")
+
+# Testar chamada de função
+print(brhealth$calculate_ibge_dv("355030")) # Retorna 8
+```
+
+### Método B: Pipeline Colunar CLI -> Arquivo Parquet -> R
+
+Para análises massivas de bases estaduais e nacionais, utilize a CLI para extrair microdados brutos em Parquet particionado e carregue instantaneamente em R:
+
+```bash
+# Executa extração colunar com harmonização e enriquecimento CSAP
+brhealth fetch --source datasus_sih --uf SP --year 2023 --month 5 --enrich-csap --out-parquet /tmp/sih_sp.parquet
+```
+
+No R:
+```r
+library(arrow)
+library(dplyr)
+
+# Leitura multithreaded de alta performance
+dados_sih <- arrow::read_parquet("/tmp/sih_sp.parquet")
+
+# Análise de internações evitáveis na Atenção Primária
+dados_csap <- dados_sih %>%
+  filter(is_csap == TRUE) %>%
+  group_by(municipio_residencia) %>%
+  summarise(
+    total_internacoes = n(),
+    custo_total = sum(valor_total_pago, na.rm = TRUE)
+  )
+```
+
+---
+
+## 4. Trilha 3: C++20 (Aplicações de Alta Performance)
+
+Recomendada para engenheiros de sistemas que precisam embutir o BRHealth em softwares legados ou pipelines de infraestrutura em C++.
+
+### Pré-requisitos Adicionais:
+- **Clang 15+** ou **GCC 12+** (com suporte total a C++20).
+- **CMake 3.22+**.
+
+### Passo a Passo:
+
+```bash
+# 1. Compilar a biblioteca C-ABI compartilhada
 cargo build --release -p brhealth-ffi
+
+# 2. O header C++20 com gerenciamento RAII está em:
+# bindings/cpp/include/brhealth.hpp
+
+# 3. A biblioteca dinâmica gerada está em:
+# target/release/libbrhealth_ffi.so (Linux) ou .dylib (macOS) / .dll (Windows)
 ```
 
-### Exemplo de Compilação de um Programa C++20:
-
-Crie um arquivo de teste `main.cpp`:
-```cpp
-#include "bindings/cpp/include/brhealth.hpp"
-#include <iostream>
-
-int main() {
-    std::cout << "BRHealth Version: " << brhealth::version() << std::endl;
-    uint8_t dv = brhealth::calculate_ibge_dv("355030");
-    std::cout << "DV São Paulo: " << static_cast<int>(dv) << std::endl;
-    return 0;
-}
-```
-
-Compile com GCC 12+ ou Clang 15+:
+Exemplo de compilação de binário C++20:
 ```bash
-g++ -std=c++20 main.cpp -I. -Ltarget/release -lbrhealth_ffi -Wl,-rpath,target/release -o test_cpp
-./test_cpp
+g++ -std=c++20 seu_programa.cpp \
+    -Ibindings/cpp/include \
+    -Ltarget/release \
+    -lbrhealth_ffi \
+    -Wl,-rpath,target/release \
+    -o seu_programa
 ```
 
 ---
 
-## 7. Configuração dos Bindings Java 21+ Panama FFM
+## 5. Trilha 4: Java 21+ e Kotlin (Project Panama FFM)
 
-O BRHealth oferece suporte a Java 21+ através da moderna **Foreign Function & Memory API (Project Panama)**, eliminando o JNI tradicional e garantindo interoperabilidade com zero cópia de memória.
+Recomendada para microsserviços empresariais em Java/Kotlin (Spring Boot, Quarkus, Micronaut). Utiliza a moderna **Foreign Function & Memory API (FFM)** do Java 21, eliminando o JNI tradicional e acessando ponteiros nativos sem custo de cópia.
 
-### Compilar a Biblioteca C-ABI/JNI:
+### Pré-requisitos Adicionais:
+- **JDK 21+** (OpenJDK, Temurin ou Oracle).
+
+### Passo a Passo:
+
 ```bash
+# 1. Compilar a biblioteca dinâmica para JVM
 cargo build --release -p brhealth-jni
+
+# 2. A classe de interface Java 21 está em:
+# bindings/jvm/BRHealthEngine.java
+
+# 3. Compilar e executar com flags de preview nativo do Java 21:
+javac --release 21 bindings/jvm/BRHealthEngine.java
 ```
 
-### Compilar e Executar com Java 21:
+Execução em Java:
 ```bash
-javac --enable-preview --release 21 bindings/jvm/BRHealthEngine.java
-```
-
-Para executar um teste em Java, passe a flag `--enable-native-access=ALL-UNNAMED`:
-```bash
-java --enable-preview --enable-native-access=ALL-UNNAMED -cp bindings/jvm MeuPrograma
+java --enable-native-access=ALL-UNNAMED -cp bindings/jvm SeuAppJava
 ```
 
 ---
 
-## 8. Validação e Verificação da Instalação
+## 6. Instalação de Pré-requisitos do Sistema por SO
 
-Após compilar o projeto, execute a suíte completa de testes para garantir que todos os 100+ testes unitários, testes de integração e verificações de robustez sejam aprovados:
+### Ubuntu / Debian (22.04 LTS ou 24.04 LTS)
+```bash
+# Apenas para o Core:
+sudo apt update && sudo apt install -y curl git build-essential
+
+# Opcional (se for usar Python):
+sudo apt install -y python3 python3-pip python3-venv python3-dev
+
+# Opcional (se for usar R):
+sudo apt install -y r-base r-base-dev
+
+# Opcional (se for usar Java 21):
+sudo apt install -y openjdk-21-jdk
+
+# Opcional (se for usar C++20):
+sudo apt install -y clang llvm libclang-dev cmake
+```
+
+### Fedora (39+)
+```bash
+# Core:
+sudo dnf groupinstall -y "Development Tools" && sudo dnf install -y git
+
+# Trilha Python: sudo dnf install -y python3-devel
+# Trilha R:      sudo dnf install -y R R-devel
+# Trilha Java:   sudo dnf install -y java-21-openjdk-devel
+# Trilha C++:    sudo dnf install -y clang clang-devel cmake
+```
+
+### macOS (Apple Silicon e Intel via Homebrew)
+```bash
+# Core:
+xcode-select --install
+
+# Trilha Python: brew install python@3.12
+# Trilha R:      brew install r
+# Trilha Java:   brew install openjdk@21
+# Trilha C++:    brew install llvm cmake
+```
+
+### Windows (WSL2 ou Nativo)
+- **Recomendado**: Instale o **WSL2 com Ubuntu 24.04 LTS** e siga a instalação do Ubuntu.
+- **Nativo**: Instale o Rust via `rustup.rs`, Visual Studio 2022 Build Tools (MSVC) e Python/R separadamente conforme sua necessidade.
+
+---
+
+## 7. Validação da Instalação
+
+Independentemente das trilhas que você configurou, execute a suíte de testes automatizados do workspace para garantir integridade matemática e de memória:
 
 ```bash
-# 1. Executar todos os testes automatizados do workspace
+# 1. Executar testes de unidade e integração
 cargo test --workspace
 
-# 2. Executar testes de documentação formal (Doc-tests)
+# 2. Executar testes de documentação técnica
 cargo test --workspace --doc
 
-# 3. Validar conformidade de código estrita (Zero Warnings no Clippy)
+# 3. Validação de conformidade estrita de código (Zero Warnings)
 cargo clippy --workspace --all-targets -- -D warnings
-
-# 4. (Opcional) Executar benchmarks científicos com Criterion
-cargo bench -p brhealth-core
 ```
 
 ---
 
-## 9. Solução de Problemas Comuns (Troubleshooting)
+## 8. Solução de Problemas Comuns (Troubleshooting)
 
-### Erro: `error: package require rustc 1.85.0 or newer`
-- **Causa**: Sua toolchain do Rust está desatualizada para a Edição 2024.
+### A. "error: package require rustc 1.85.0 or newer"
+- **Causa**: Sua versão do compilador Rust está abaixo da Edição 2024.
 - **Solução**:
   ```bash
   rustup update stable
   rustc --version
   ```
 
-### Erro: `libclang.so: cannot open shared object file` durante `cargo build`
-- **Causa**: O compilador Clang / LLVM não foi encontrado no sistema ou não está no `$PATH`.
-- **Solução (Linux)**:
-  ```bash
-  sudo apt install -y libclang-dev clang
-  export LIBCLANG_PATH=/usr/lib/llvm-18/lib  # Ajuste conforme a versão instalada
+### B. "Maturin failed to find Python development headers"
+- **Causa**: O pacote de desenvolvimento do Python não está instalado no sistema.
+- **Solução (Linux)**: `sudo apt install -y python3-dev` (Debian/Ubuntu) ou `sudo dnf install -y python3-devel` (Fedora).
+
+### C. "package 'arrow' is not available for this version of R"
+- **Causa**: Repositório CRAN padrão sem binários atualizados do Apache Arrow.
+- **Solução**: No console do R, utilize o instalador com suporte a Arrow C++:
+  ```r
+  install.packages("arrow", repos = c("https://apache.r-universe.dev", "https://cloud.r-project.org"))
   ```
 
-### Erro: `cargo clippy` reporta avisos em branches de teste
-- **Causa**: O BRHealth adota tolerância zero a alertas de compilação.
-- **Solução**: Execute `cargo clippy --fix --workspace` ou verifique os detalhes apontados pelo linter. Todo código deve compilar sob `cargo clippy --workspace --all-targets -- -D warnings`.
-
-### Erro: Falha de conexão FTP ao executar `brhealth fetch`
-- **Causa**: Os servidores de FTP do DATASUS (`ftp.datasus.gov.br`) frequentemente bloqueiam conexões ativas ou estão sob manutenção.
-- **Solução**: O BRHealth utiliza conexão passiva assíncrona com retentativas automáticas e backoff exponencial. Caso o servidor esteja fora do ar, aguarde alguns minutos ou utilize dados em cache local.
+### D. "UnsatisfiedLinkError no Java ao carregar libbrhealth_jni"
+- **Causa**: O caminho da biblioteca compartilhada (`.so`/`.dylib`/`.dll`) não foi encontrado.
+- **Solução**: Passe o caminho absoluto ao instanciar `BRHealthEngine(libPath)` ou adicione o diretório `target/release` à variável de ambiente `LD_LIBRARY_PATH` (Linux) ou `DYLD_LIBRARY_PATH` (macOS).

@@ -19,8 +19,8 @@
 
 | Guia | Público-Alvo | Descrição |
 | :--- | :--- | :--- |
-| 📖 **[Guia de Instalação](docs/INSTALLATION.md)** | Administradores, Devs | Pré-requisitos, compilação de Rust, Python, C++20, Java 21+ e troubleshooting. |
-| 🚀 **[Manual de Utilização](docs/USAGE_GUIDE.md)** | Pesquisadores, Gestores | Manual completo da CLI, Python (Polars/PyTorch), Rust e fórmulas matemáticas. |
+| 📖 **[Guia de Instalação Modular](docs/INSTALLATION.md)** | Pesquisadores, Devs | Instalação desacoplada: Core (Rust puro), Python (Polars/PyTorch), R (Tidyverse/Arrow), C++20 e Java 21+. |
+| 🚀 **[Manual de Utilização](docs/USAGE_GUIDE.md)** | Bioestatísticos, Gestores | Manual prático completo: CLI, Python, R (Arrow Zero-Copy), Rust e formulações científicas em LaTeX. |
 | 🧩 **[Guia de Extensão e SPI](docs/EXTENDING_BRHEALTH.md)** | Engenheiros, Arquitetos | Como criar novos adaptadores `HealthDataSourceSPI`, Country Packs e decodificadores. |
 | 📐 **[Documento de Design de Software (SDD)](docs/architecture/sdd_brhealth.md)** | Arquitetos de Sistemas | Modelo C4, especificação matemática, layout de memória contígua e W3C PROV-O. |
 
@@ -30,7 +30,7 @@
 
 O **BRHealth** é um motor analítico colunar de alta performance desenvolvido em Rust para ingestão, harmonização, análise bioestatística e modelagem econômica de dados do Sistema Único de Saúde (SUS) e determinantes sociais brasileiros.
 
-Construído sob os princípios de **Hexagonal Data-Oriented Design (Hexagonal DOD)**, memória contígua em **Apache Arrow** e interoperabilidade **Zero-Copy FFI** (Arrow C Data Interface / DLPack), o BRHealth processa microdados brutos do DATASUS (como arquivos legados `.dbc` descompactados 100% nativamente) em centenas de megabytes por segundo, sem chamadas externas de shell e sem ponteiros intermediários inseguros.
+O projeto é **modular por design**: o núcleo colunar em Rust opera de forma puramente independente, oferecendo interfaces de primeira classe para **Python** e **R** (para epidemiologia e ciência de dados), além de bindings nativos para **C++20** e **Java 21+/Kotlin (Project Panama FFM)** para microsserviços e sistemas hospitalares.
 
 ---
 
@@ -169,7 +169,40 @@ sih_batch.export_fair_manifest("manifesto_extracao.jsonld")
 
 ---
 
-### 2. Gestores de Saúde e Vigilância Epidemiológica (CLI)
+### 2. Bioestatísticos e Epidemiologistas (R / Tidyverse / Arrow)
+
+```r
+library(reticulate)
+library(arrow)
+library(dplyr)
+
+# 1. Conectar ao BRHealth no ambiente virtual
+use_virtualenv("./.venv", required = TRUE)
+brhealth <- import("brhealth")
+
+# 2. Validações e CSAP
+dv <- brhealth$calculate_ibge_dv("355030") # 8 (São Paulo)
+assert_that(brhealth$is_csap("J45.0") == TRUE) # Asma
+
+# 3. Ingestão e Arrow C Data Interface (Zero-Copy)
+engine <- brhealth$Engine()
+sih_batch <- engine$hospital_morbidity$fetch(jurisdiction = "SP", year = 2023L, month = 1L)
+
+# Converte ponteiros Apache Arrow para tabela nativa no R sem cópia
+ptrs <- sih_batch$to_arrow_pointers()
+tabela_arrow <- arrow::ImportRecordBatch(ptrs[[1]], ptrs[[2]])
+
+# 4. Análise com Dplyr
+resumo <- as.data.frame(tabela_arrow) %>%
+  filter(is_csap == TRUE) %>%
+  count(grupo_csap, sort = TRUE)
+
+print(head(resumo))
+```
+
+---
+
+### 3. Gestores de Saúde e Vigilância Epidemiológica (CLI)
 
 ```bash
 # Instalar a CLI globalmente

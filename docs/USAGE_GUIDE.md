@@ -10,9 +10,10 @@ O **BRHealth** é um motor analítico colunar de alta performance para dados do 
 
 1. [Interface de Linha de Comando (CLI)](#1-interface-de-linha-de-comando-cli)
 2. [Guia para Ciência de Dados em Python (Polars / PyArrow / PyTorch)](#2-guia-para-ciência-de-dados-em-python)
-3. [Desenvolvimento em Rust (Biblioteca `brhealth-core`)](#3-desenvolvimento-em-rust-biblioteca-brhealth-core)
-4. [Interoperabilidade C++20 e Java 21+ Project Panama](#4-interoperabilidade-c20-e-java-21-project-panama)
-5. [Fundamentação Científica e Formulações Matemáticas](#5-fundamentação-científica-e-formulações-matemáticas)
+3. [Guia para Bioestatística e Epidemiologia em R](#3-guia-para-bioestatística-e-epidemiologia-em-r)
+4. [Desenvolvimento em Rust (Biblioteca `brhealth-core`)](#4-desenvolvimento-em-rust-biblioteca-brhealth-core)
+5. [Interoperabilidade C++20 e Java 21+ Project Panama](#5-interoperabilidade-c20-e-java-21-project-panama)
+6. [Fundamentação Científica e Formulações Matemáticas](#6-fundamentação-científica-e-formulações-matemáticas)
 
 ---
 
@@ -221,7 +222,104 @@ climate_batch = engine.global_climate.fetch_reanalysis(jurisdiction="BRA", year=
 
 ---
 
-## 3. Desenvolvimento em Rust (Biblioteca `brhealth-core`)
+## 3. Guia para Bioestatística e Epidemiologia em R
+
+O **R** é a linguagem padrão ouro na comunidade acadêmica e de vigilância epidemiológica do SUS. O BRHealth permite que bioestatísticos acessem suas rotinas de alta performance diretamente em scripts R e relatórios RMarkdown/Quarto através de dois métodos principais: **Arrow Zero-Copy via Reticulate** e **Pipelines Colunares Parquet**.
+
+### 3.1 Método 1: Chamada Direta e Arrow Zero-Copy (`reticulate` + `arrow`)
+
+Através do pacote `reticulate` e da interface Apache Arrow, o R consome as estruturas tabulares geradas pelo BRHealth em memória contígua sem duplicação de buffers:
+
+```r
+library(reticulate)
+library(arrow)
+library(dplyr)
+library(ggplot2)
+
+# 1. Conectar ao ambiente virtual do BRHealth
+use_virtualenv("./.venv", required = TRUE)
+brhealth <- import("brhealth")
+
+# 2. Validações Territoriais e Ontológicas
+dv_sp <- brhealth$calculate_ibge_dv("355030") # 8
+municipio_canônico <- brhealth$harmonize_ibge_code("355030") # "3550308"
+cat("Município:", municipio_canônico, "com DV:", dv_sp, "\n")
+
+# 3. Classificação de Internações Sensíveis à Atenção Primária (CSAP)
+cids_teste <- c("J45.0", "I10", "E10.1", "S06.0")
+for (cid in cids_teste) {
+  eh_csap <- brhealth$is_csap(cid)
+  grupo <- brhealth$classify_cid10(cid)
+  cat(sprintf("CID: %s | CSAP: %s | Grupo: %s\n", cid, eh_csap, ifelse(is.null(grupo), "N/A", grupo)))
+}
+
+# 4. Ingestão Colunar de AIH/SIH do DATASUS com o Engine
+engine <- brhealth$Engine()
+sih_batch <- engine$hospital_morbidity$fetch(
+  jurisdiction = "SP",
+  year = 2023L,
+  month = 1L,
+  harmonize_ibge = TRUE,
+  enrich_csap = TRUE
+)
+
+# 5. Conversão Zero-Copy via Arrow C Data Interface
+# Obtém os ponteiros nativos de memória contígua alinhada a 64 bytes
+ptrs <- sih_batch$to_arrow_pointers()
+tabela_arrow_r <- arrow::ImportRecordBatch(ptrs[[1]], ptrs[[2]])
+
+# 6. Análise de Dados com Dplyr / Tidyverse
+df_sih <- as.data.frame(tabela_arrow_r)
+
+resumo_csap <- df_sih %>%
+  filter(is_csap == TRUE) %>%
+  group_by(grupo_csap) %>%
+  summarise(
+    total_internacoes = n(),
+    custo_total = sum(valor_total_pago, na.rm = TRUE),
+    media_permanencia = mean(dias_permanencia, na.rm = TRUE)
+  ) %>%
+  arrange(desc(total_internacoes))
+
+print(head(resumo_csap))
+
+# 7. Cálculo Epidemiológico de Mortalidade Prematura (APVP / YLL)
+idades_obito <- c(25L, 34L, 49L, 18L, 61L, 45L)
+apvp_total <- brhealth$compute_apvp(idades_obito, cutoff_age = 70L)
+taxa_apvp <- brhealth$compute_apvp_rate(apvp_total, population = 100000L)
+cat(sprintf("Total de APVP: %d anos | Taxa por 100k hab.: %.2f\n", apvp_total, taxa_apvp))
+```
+
+---
+
+### 3.2 Método 2: Pipeline Colunar via CLI e Apache Parquet em R
+
+Para análises longitudinais de coortes com múltiplos gigabytes (ex: SIM nacional ou SIH histórico de 10 anos), o fluxo recomendado é gerar partições Parquet via CLI e ler multithreaded no R:
+
+```bash
+# Executa extração colunar no terminal
+brhealth fetch --source datasus_sim --uf MG --year 2022 --out-parquet /tmp/sim_mg_2022.parquet
+```
+
+No seu script R ou RMarkdown:
+```r
+library(arrow)
+library(dplyr)
+
+# Leitura multithreaded instantânea com Apache Arrow Dataset
+sim_mg <- arrow::read_parquet("/tmp/sim_mg_2022.parquet")
+
+# Análise de óbitos por causa básica
+obitos_causas <- sim_mg %>%
+  count(causa_basica_cid10, sort = TRUE) %>%
+  head(10)
+
+print(obitos_causas)
+```
+
+---
+
+## 4. Desenvolvimento em Rust (Biblioteca `brhealth-core`)
 
 Adicione a dependência ao seu `Cargo.toml`:
 
@@ -232,7 +330,7 @@ arrow = "53.0"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
-### 3.1 Exemplo Completo de Análise Epidemiológica
+### 4.1 Exemplo Completo de Análise Epidemiológica
 
 ```rust
 use std::sync::Arc;
@@ -286,9 +384,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ---
 
-## 4. Interoperabilidade C++20 e Java 21+ Project Panama
+## 5. Interoperabilidade C++20 e Java 21+ Project Panama
 
-### 4.1 C++20 Moderno com RAII (`bindings/cpp/include/brhealth.hpp`)
+### 5.1 C++20 Moderno com RAII (`bindings/cpp/include/brhealth.hpp`)
 
 O wrapper C++20 oferece conformidade total com o padrão RAII (*Resource Acquisition Is Initialization*), liberando ponteiros do Apache Arrow automaticamente.
 
@@ -324,7 +422,7 @@ int main() {
 
 ---
 
-### 4.2 Java 21+ Project Panama FFM (`bindings/jvm/BRHealthEngine.java`)
+### 5.2 Java 21+ Project Panama FFM (`bindings/jvm/BRHealthEngine.java`)
 
 A nova API de Memória e Funções Estrangeiras do Java 21 (*Foreign Function & Memory API*) elimina o overhead de JNI, permitindo passagens diretas de memória nativa:
 
@@ -358,11 +456,11 @@ public class Main {
 
 ---
 
-## 5. Fundamentação Científica e Formulações Matemáticas
+## 6. Fundamentação Científica e Formulações Matemáticas
 
 Todas as transformações, taxas e modelos econômicos do BRHealth são estritamente documentados com as seguintes definições analíticas formais:
 
-### 5.1 Anos Potenciais de Vida Perdidos (APVP / YLL)
+### 6.1 Anos Potenciais de Vida Perdidos (APVP / YLL)
 
 Os Anos Potenciais de Vida Perdidos mensuram o impacto social e epidemiológico das mortes prematuras:
 
@@ -379,7 +477,7 @@ $$\text{Taxa APVP} = \left( \frac{\text{APVP}}{\text{População de Referência}
 
 ---
 
-### 5.2 Taxa Bruta de CSAP (Portaria MS/SAS nº 221/2008)
+### 6.2 Taxa Bruta de CSAP (Portaria MS/SAS nº 221/2008)
 
 A Taxa de Internações por Condições Sensíveis à Atenção Primária por 10.000 habitantes é dada por:
 
@@ -389,7 +487,7 @@ Onde $\sum_{i \in \text{CSAP}} N_i$ representa o número total de internações 
 
 ---
 
-### 5.3 Retorno sobre Investimento em Saúde Coletiva na APS ($\text{ROI}_{\text{APS}}$)
+### 6.3 Retorno sobre Investimento em Saúde Coletiva na APS ($\text{ROI}_{\text{APS}}$)
 
 Avalia a eficiência orçamentária dos investimentos na Estratégia Saúde da Família (ESF) frente aos custos hospitalares diretos evitáveis:
 
@@ -402,7 +500,7 @@ Onde:
 
 ---
 
-### 5.4 Dígito Verificador do IBGE (Algoritmo Luhn Módulo 10)
+### 6.4 Dígito Verificador do IBGE (Algoritmo Luhn Módulo 10)
 
 Para um código municipal de 6 dígitos $C = d_1 d_2 d_3 d_4 d_5 d_6$, os pesos alternados são $w_i = (1, 2, 1, 2, 1, 2)$:
 
