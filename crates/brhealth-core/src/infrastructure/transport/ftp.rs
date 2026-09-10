@@ -269,13 +269,15 @@ impl TransportPort for AsyncFtpTransport {
                     last_error = Some(e.to_string());
                 }
                 Err(_) => {
-                    last_error = Some(format!("Timeout de conexão com {addr}"));
+                    last_error = Some(format!(
+                        "Tempo limite (timeout) excedido ao conectar ao servidor FTP '{addr}'. O servidor pode estar sobrecarregado ou inacessível."
+                    ));
                 }
             }
         }
 
         Err(PortError::TransportError(last_error.unwrap_or_else(|| {
-            format!("Falha de conexão FTP com '{uri}'")
+            format!("Falha de conexão FTP após múltiplas tentativas com '{uri}'")
         })))
     }
 }

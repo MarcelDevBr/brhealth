@@ -122,13 +122,19 @@ impl BRHealthApplicationService {
             Err(primary_err) => {
                 // Tentar mirrors
                 let mut mirror_result = None;
-                for mirror_uri in &mirror_uris {
+                for (idx, mirror_uri) in mirror_uris.iter().enumerate() {
                     eprintln!(
-                        "[BRHealth] Tentando mirror para '{}': {}",
-                        source_id, mirror_uri
+                        "ℹ [BRHealth] Tentando espelho de contingência #{}/{} para '{}': {}",
+                        idx + 1,
+                        mirror_uris.len(),
+                        source_id,
+                        mirror_uri
                     );
                     let mirror_bytes = self.context.transport.fetch_bytes(mirror_uri).await;
                     if let Ok(bytes) = mirror_bytes {
+                        eprintln!(
+                            "✓ [BRHealth] Espelho conectado com sucesso. Descomprimindo e decodificando payload..."
+                        );
                         // Decodificar via decompressor + decoder
                         let decompressed = self.context.decompressor.decompress(&bytes)?;
                         let dbf_decoder = crate::decoders::dbf::DbfDecoder::new();
@@ -161,7 +167,7 @@ impl BRHealthApplicationService {
                     match store.read_as_of(source_id, uf, params.year as i32, Utc::now())? {
                         Some(cached_batch) => {
                             eprintln!(
-                                "[BRHealth] Servindo dados stale do cache para '{}'",
+                                "⚠ [BRHealth] Rede indisponível. Servindo snapshot local em cache para '{}'.",
                                 source_id
                             );
                             (
@@ -176,14 +182,14 @@ impl BRHealthApplicationService {
                         }
                         None => {
                             return Err(PortError::DegradedSource(format!(
-                                "Fonte '{}' indisponível e sem cache local: {}",
+                                "A fonte oficial '{}' está temporariamente inacessível e não há snapshot no cache local.\nDetalhes técnicos: {}\nSugestão: Verifique sua conexão à internet ou aguarde o restabelecimento do serviço do DATASUS/órgão emissor.",
                                 source_id, primary_err
                             )));
                         }
                     }
                 } else {
                     return Err(PortError::DegradedSource(format!(
-                        "Fonte '{}' indisponível (sem mirrors ou cache configurado): {}",
+                        "A fonte oficial '{}' está temporariamente inacessível nos servidores remotos.\nDetalhes técnicos: {}\nSugestão: O serviço governamental pode estar instável. Tente novamente em alguns instantes.",
                         source_id, primary_err
                     )));
                 }

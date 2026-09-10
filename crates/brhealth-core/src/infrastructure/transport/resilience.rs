@@ -173,7 +173,7 @@ impl<T: TransportPort> ResilientTransport<T> {
             }
             Err(e) => {
                 tracing_or_eprintln(
-                    &format!("Falha na fonte primária '{}': {}", primary_uri, e),
+                    &format!("Fonte primária temporariamente inacessível ('{}'): {}", primary_uri, e),
                 );
             }
         }
@@ -188,8 +188,10 @@ impl<T: TransportPort> ResilientTransport<T> {
 
             match self.primary.fetch_bytes(mirror_uri).await {
                 Ok(bytes) => {
-                    tracing_or_eprintln(
-                        &format!("Sucesso via mirror #{}: '{}'", i + 1, mirror_uri),
+                    eprintln!(
+                        "✓ [BRHealth] Contingência ativada com sucesso via espelho #{} ('{}')",
+                        i + 1,
+                        mirror_uri
                     );
                     return FetchOutcome::Fresh {
                         bytes,
@@ -198,7 +200,7 @@ impl<T: TransportPort> ResilientTransport<T> {
                 }
                 Err(e) => {
                     tracing_or_eprintln(
-                        &format!("Falha no mirror #{} '{}': {}", i + 1, mirror_uri, e),
+                        &format!("Falha no espelho #{} ('{}'): {}", i + 1, mirror_uri, e),
                     );
                 }
             }
@@ -207,7 +209,7 @@ impl<T: TransportPort> ResilientTransport<T> {
         // 3. Todas as tentativas falharam
         FetchOutcome::Unavailable {
             last_error: format!(
-                "Todas as {} URI(s) falharam para '{}'",
+                "Todas as {} tentativa(s) de conexão falharam para '{}'",
                 1 + max_attempts,
                 primary_uri
             ),
@@ -224,9 +226,9 @@ impl<T: TransportPort> TransportPort for ResilientTransport<T> {
     }
 }
 
-/// Log básico sem dependência de framework de tracing.
+/// Log básico de avisos do BRHealth.
 fn tracing_or_eprintln(msg: &str) {
-    eprintln!("[BRHealth WARN] {}", msg);
+    eprintln!("⚠ [BRHealth Aviso] {}", msg);
 }
 
 #[cfg(test)]
