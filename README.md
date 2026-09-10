@@ -139,6 +139,26 @@ O projeto é **modular por design**: o núcleo colunar em Rust opera de forma pu
 
 ### 1. Cientistas de Dados (Python / Polars / PyTorch)
 
+#### Instalação do Pacote
+
+```bash
+# Instalação via PyPI
+pip install brhealth
+
+# Ou instalação direta do repositório Git
+pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+```
+
+> [!TIP]
+> **No Google Colab ou Jupyter Notebook**, execute:
+> ```bash
+> !pip install brhealth
+> # ou diretamente do repositório:
+> !pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+> ```
+
+#### Exemplo Prático
+
 ```python
 import brhealth
 from brhealth import Engine

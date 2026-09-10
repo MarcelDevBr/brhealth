@@ -137,7 +137,29 @@ brhealth fetch --source datasus_sih --uf RR --year 2023 --month 5 --enrich-csap 
 
 A biblioteca `brhealth` oferece integração nativa com **Polars**, **PyArrow**, **Pandas** e **PyTorch**, operando sob a arquitetura **Zero-Copy** através do protocolo **Arrow PyCapsule** e **DLPack**.
 
-### 2.1 Importação e Uso Rápido
+### 2.1 Instalação (Terminal, Jupyter e Google Colab)
+
+O pacote oficial `brhealth` pode ser instalado diretamente via PyPI ou a partir do repositório Git:
+
+```bash
+# Instalação via PyPI
+pip install brhealth
+
+# Ou instalação direta do repositório Git
+pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+```
+
+> [!TIP]
+> **No Google Colab ou Jupyter Notebook**, execute:
+> ```python
+> !pip install brhealth
+> # ou diretamente do repositório Git:
+> !pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+> ```
+
+---
+
+### 2.2 Importação e Uso Rápido
 
 ```python
 import brhealth
@@ -162,7 +184,7 @@ if brhealth.is_amputation_procedure("0407040011"):
 
 ---
 
-### 2.2 Consultas e Extrações com o `Engine()`
+### 2.3 Consultas e Extrações com o `Engine()`
 
 O motor `Engine()` centraliza o acesso às 26 fontes de dados de saúde e determinantes sociais com acessores semânticos:
 
@@ -210,7 +232,7 @@ sih_batch.export_fair_manifest("manifesto_extracao.jsonld")
 
 ---
 
-### 2.3 Acessores Semânticos Adicionais
+### 2.4 Acessores Semânticos Adicionais
 
 ```python
 # A. Estatísticas Vitais (SIM ou SINASC)

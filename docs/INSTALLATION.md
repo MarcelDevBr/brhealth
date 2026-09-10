@@ -86,11 +86,46 @@ brhealth sources
 
 Recomendada para cientistas de dados, epidemiologistas computacionais e engenheiros de Machine Learning que utilizam notebooks Jupyter, Polars, Pandas e PyTorch.
 
-### Pré-requisitos Adicionais:
+### Método A: Instalação via PyPI (Recomendado)
+
+Para instalar a versão oficial estável via PyPI:
+
+```bash
+pip install brhealth
+```
+
+No **Google Colab** ou em ambientes de **Jupyter Notebook**:
+```bash
+!pip install brhealth
+```
+
+---
+
+### Método B: Instalação Direta via Git (Google Colab / Versão de Desenvolvimento)
+
+Para instalar diretamente a versão mais recente em desenvolvimento a partir do repositório GitHub (sem necessidade de clonar manualmente):
+
+```bash
+pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+```
+
+No **Google Colab** ou em ambientes de **Jupyter Notebook**:
+```bash
+!pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+```
+
+---
+
+### Método C: Compilação Local com Maturin (Desenvolvimento e Contribuição)
+
+Recomendado para contribuidores que desejam modificar o código em Rust ou na extensão PyO3.
+
+#### Pré-requisitos Adicionais:
 - **Python 3.10+** (Recomendado: 3.11 ou 3.12).
+- **Rust Toolchain 1.85+** (Edição 2024).
 - **Maturin** (compilador de extensões nativas PyO3).
 
-### Passo a Passo de Instalação:
+#### Passo a Passo de Instalação:
 
 ```bash
 # 1. A partir da raiz do repositório brhealth
@@ -110,7 +145,7 @@ maturin develop --release
 cd ../..
 ```
 
-### Verificação:
+### Verificação da Instalação:
 ```bash
 python3 -c "import brhealth; print('Versão BRHealth:', brhealth.__version__); print('DV SP:', brhealth.calculate_ibge_dv('355030'))"
 ```
