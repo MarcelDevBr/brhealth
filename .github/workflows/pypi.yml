@@ -41,8 +41,8 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
 
-          # macOS Intel (x86_64)
-          - os: macos-13
+          # macOS Intel (x86_64) (Cross-compiled from Apple Silicon)
+          - os: macos-latest
             target: x86_64-apple-darwin
 
           # Windows x86_64
