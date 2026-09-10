@@ -88,10 +88,24 @@ impl<'a> BitReader<'a> {
         Ok(result)
     }
 
-    /// Lê 1 bit do fluxo binário.
-    #[inline]
+    /// Lê 1 bit do fluxo binário de forma ultra-rápida sem loops.
+    #[inline(always)]
     pub fn read_bit(&mut self) -> Result<u8, PortError> {
-        self.read_bits(1).map(|b| b as u8)
+        if self.bit_cnt == 0 {
+            if self.pos >= self.data.len() {
+                return Err(PortError::DecompressionError(
+                    "Fim prematuro do fluxo binário".into(),
+                ));
+            }
+            self.bit_buf = self.data[self.pos] as u64;
+            self.bit_cnt = 8;
+            self.pos += 1;
+        }
+
+        let bit = (self.bit_buf & 1) as u8;
+        self.bit_buf >>= 1;
+        self.bit_cnt -= 1;
+        Ok(bit)
     }
 
     /// Lê 1 byte literal (8 bits).

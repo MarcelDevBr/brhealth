@@ -105,13 +105,17 @@ pub fn calculate_ibge_dv(code_6_digits: &str) -> Result<u8, PortError> {
 /// // Erro caso o DV existente seja inconsistente com a fórmula oficial
 /// assert!(harmonize_ibge_code("3550309").is_err());
 /// ```
-pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
+/// Harmoniza um código municipal (de 6 ou 7 dígitos) em um buffer de pilha `[u8; 7]` com zero alocações na heap.
+///
+/// Ideal para processamento em lote e pipelines colunares de alta performance.
+pub fn harmonize_ibge_code_to_buf(raw_code: &str) -> Result<[u8; 7], PortError> {
     let trimmed = raw_code.trim();
-    match trimmed.len() {
+    let bytes = trimmed.as_bytes();
+    match bytes.len() {
         7 => {
             let base_6 = &trimmed[0..6];
             let expected_dv = calculate_ibge_dv(base_6)?;
-            let b7 = trimmed.as_bytes()[6];
+            let b7 = bytes[6];
             if !b7.is_ascii_digit() {
                 return Err(PortError::ValidationError(
                     "7º dígito do código IBGE não é numérico".into(),
@@ -125,17 +129,30 @@ pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
                     trimmed, expected_dv, current_dv
                 )));
             }
-            Ok(trimmed.to_string())
+            let mut out = [0u8; 7];
+            out.copy_from_slice(bytes);
+            Ok(out)
         }
         6 => {
             let dv = calculate_ibge_dv(trimmed)?;
-            Ok(format!("{}{}", trimmed, dv))
+            let mut out = [0u8; 7];
+            out[0..6].copy_from_slice(bytes);
+            out[6] = b'0' + dv;
+            Ok(out)
         }
         other => Err(PortError::ValidationError(format!(
             "Código IBGE possui tamanho inválido ({}), esperado 6 ou 7 dígitos",
             other
         ))),
     }
+}
+
+pub fn harmonize_ibge_code(raw_code: &str) -> Result<String, PortError> {
+    let buf = harmonize_ibge_code_to_buf(raw_code)?;
+    // Os 7 bytes são garantidos como dígitos ASCII válidos (0..=9)
+    Ok(std::str::from_utf8(&buf)
+        .map_err(|e| PortError::ValidationError(e.to_string()))?
+        .to_string())
 }
 
 /// Registro de transição territorial histórica de municípios brasileiros (1970–2026).

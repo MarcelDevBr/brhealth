@@ -144,30 +144,31 @@ impl BlastDecompressor {
                     )));
                 }
 
+                output.reserve(length);
+                let mask = MAX_WINDOW_SIZE - 1;
                 for _ in 0..length {
-                    let from_pos = ((next_pos as isize - dist as isize)
-                        .rem_euclid(MAX_WINDOW_SIZE as isize))
-                        as usize;
+                    let from_pos = next_pos.wrapping_sub(dist) & mask;
                     let byte = window[from_pos];
-                    window[next_pos % MAX_WINDOW_SIZE] = byte;
+                    window[next_pos & mask] = byte;
                     output.push(byte);
                     next_pos += 1;
-                    if next_pos >= MAX_WINDOW_SIZE {
-                        first_window = false;
-                    }
+                }
+                if first_window && next_pos >= MAX_WINDOW_SIZE {
+                    first_window = false;
                 }
             } else {
                 // Byte literal
                 let byte = if lit_flag == 1 {
                     self.litcode.decode(&mut reader)? as u8
                 } else {
-                    reader.read_bits(8)? as u8
+                    reader.read_byte()?
                 };
 
-                window[next_pos % MAX_WINDOW_SIZE] = byte;
+                let mask = MAX_WINDOW_SIZE - 1;
+                window[next_pos & mask] = byte;
                 output.push(byte);
                 next_pos += 1;
-                if next_pos >= MAX_WINDOW_SIZE {
+                if first_window && next_pos >= MAX_WINDOW_SIZE {
                     first_window = false;
                 }
             }

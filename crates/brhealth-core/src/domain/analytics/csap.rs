@@ -12,8 +12,9 @@
 use std::sync::Arc;
 
 use arrow::array::{
-    Array, BooleanBuilder, Float64Array, RecordBatch, StringArray, StringBuilder, UInt8Array,
-    UInt8Builder,
+    Array, ArrayRef, BooleanBuilder, Float32Array, Float64Array, Int32Array, Int64Array,
+    RecordBatch, StringArray, StringBuilder, UInt16Array, UInt32Array, UInt64Array,
+    UInt8Array, UInt8Builder,
 };
 use arrow::datatypes::{DataType, Field, Schema};
 
@@ -338,31 +339,157 @@ pub struct CsapMetrics {
     pub group_costs: [f64; 19],
 }
 
+/// Localiza a coluna de diagnóstico principal em um `RecordBatch` verificando aliases canônicos e do DATASUS.
+fn resolve_diagnosis_column(batch: &RecordBatch) -> Result<&StringArray, PortError> {
+    const DIAG_CANDIDATES: &[&str] = &[
+        "primary_diagnosis",
+        "main_diagnosis_icd10",
+        "diag_princ",
+        "DIAG_PRINC",
+    ];
+
+    for &name in DIAG_CANDIDATES {
+        if let Ok(idx) = batch.schema().index_of(name)
+            && let Some(arr) = batch.column(idx).as_any().downcast_ref::<StringArray>()
+        {
+            return Ok(arr);
+        }
+    }
+
+    Err(PortError::SchemaMismatch(
+        "Nenhuma coluna de diagnóstico principal encontrada (esperado 'primary_diagnosis', 'main_diagnosis_icd10' ou 'DIAG_PRINC')".into(),
+    ))
+}
+
+enum CostExtractor<'a> {
+    F64(&'a Float64Array),
+    F32(&'a Float32Array),
+    I64(&'a Int64Array),
+    U64(&'a UInt64Array),
+    Str(&'a StringArray),
+    None,
+}
+
+impl<'a> CostExtractor<'a> {
+    fn resolve(batch: &'a RecordBatch) -> Self {
+        const COST_CANDIDATES: &[&str] = &[
+            "total_cost",
+            "total_paid_amount",
+            "val_tot",
+            "VAL_TOT",
+        ];
+
+        for &name in COST_CANDIDATES {
+            if let Ok(idx) = batch.schema().index_of(name) {
+                let col = batch.column(idx);
+                if let Some(arr) = col.as_any().downcast_ref::<Float64Array>() {
+                    return Self::F64(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<Float32Array>() {
+                    return Self::F32(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<Int64Array>() {
+                    return Self::I64(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<UInt64Array>() {
+                    return Self::U64(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<StringArray>() {
+                    return Self::Str(arr);
+                }
+            }
+        }
+        Self::None
+    }
+
+    #[inline]
+    fn get(&self, row: usize) -> f64 {
+        match self {
+            Self::F64(arr) => if arr.is_valid(row) { arr.value(row) } else { 0.0 },
+            Self::F32(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
+            Self::I64(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
+            Self::U64(arr) => if arr.is_valid(row) { arr.value(row) as f64 } else { 0.0 },
+            Self::Str(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row).trim().parse::<f64>().unwrap_or(0.0)
+                } else {
+                    0.0
+                }
+            }
+            Self::None => 0.0,
+        }
+    }
+}
+
+enum DaysExtractor<'a> {
+    U16(&'a UInt16Array),
+    U8(&'a UInt8Array),
+    U32(&'a UInt32Array),
+    I64(&'a Int64Array),
+    I32(&'a Int32Array),
+    Str(&'a StringArray),
+    None,
+}
+
+impl<'a> DaysExtractor<'a> {
+    fn resolve(batch: &'a RecordBatch) -> Self {
+        const DAYS_CANDIDATES: &[&str] = &[
+            "length_of_stay",
+            "length_of_stay_days",
+            "dias_perm",
+            "DIAS_PERM",
+        ];
+
+        for &name in DAYS_CANDIDATES {
+            if let Ok(idx) = batch.schema().index_of(name) {
+                let col = batch.column(idx);
+                if let Some(arr) = col.as_any().downcast_ref::<UInt16Array>() {
+                    return Self::U16(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<UInt8Array>() {
+                    return Self::U8(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<UInt32Array>() {
+                    return Self::U32(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<Int64Array>() {
+                    return Self::I64(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<Int32Array>() {
+                    return Self::I32(arr);
+                } else if let Some(arr) = col.as_any().downcast_ref::<StringArray>() {
+                    return Self::Str(arr);
+                }
+            }
+        }
+        Self::None
+    }
+
+    #[inline]
+    fn get(&self, row: usize) -> u64 {
+        match self {
+            Self::U16(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
+            Self::U8(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
+            Self::U32(arr) => if arr.is_valid(row) { arr.value(row) as u64 } else { 0 },
+            Self::I64(arr) => if arr.is_valid(row) { arr.value(row).max(0) as u64 } else { 0 },
+            Self::I32(arr) => if arr.is_valid(row) { arr.value(row).max(0) as u64 } else { 0 },
+            Self::Str(arr) => {
+                if arr.is_valid(row) {
+                    arr.value(row).trim().parse::<u64>().unwrap_or(0)
+                } else {
+                    0
+                }
+            }
+            Self::None => 0,
+        }
+    }
+}
+
 /// Enriquece um `RecordBatch` canônico do SIH (`canonical_hospital_morbidity_schema`)
-/// adicionando colunas colunares derivadas:
+/// adicionando ou atualizando as colunas colunares derivadas:
 /// - `is_csap` (Boolean): indica se a internação pertence à lista de CSAP.
 /// - `csap_group_id` (UInt8, nullable): identificador de 1 a 19 do grupo de CSAP.
 /// - `csap_group_name` (Utf8, nullable): descrição em texto do grupo.
 ///
+/// Suporta aliases de coluna de diagnóstico principal como `primary_diagnosis`, `main_diagnosis_icd10` e `DIAG_PRINC`.
+///
 /// # Erros
 ///
-/// Retorna `PortError::SchemaMismatch` caso a coluna `primary_diagnosis` não esteja presente.
+/// Retorna `PortError::SchemaMismatch` caso nenhuma coluna de diagnóstico compatível seja encontrada.
 pub fn enrich_sih_batch_with_csap(batch: &RecordBatch) -> Result<RecordBatch, PortError> {
-    let schema = batch.schema();
-    let diag_idx = schema.index_of("primary_diagnosis").map_err(|_| {
-        PortError::SchemaMismatch(
-            "Coluna obrigatória 'primary_diagnosis' não encontrada no RecordBatch".into(),
-        )
-    })?;
-
-    let diag_col = batch
-        .column(diag_idx)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .ok_or_else(|| {
-            PortError::SchemaMismatch("Coluna 'primary_diagnosis' não é StringArray".into())
-        })?;
-
+    let diag_col = resolve_diagnosis_column(batch)?;
     let num_rows = batch.num_rows();
     let mut is_csap_builder = BooleanBuilder::with_capacity(num_rows);
     let mut group_id_builder = UInt8Builder::with_capacity(num_rows);
@@ -387,28 +514,66 @@ pub fn enrich_sih_batch_with_csap(batch: &RecordBatch) -> Result<RecordBatch, Po
         }
     }
 
-    // Criar novo Schema estendido
-    let mut new_fields: Vec<Arc<Field>> = schema.fields().to_vec();
-    new_fields.push(Arc::new(Field::new("is_csap", DataType::Boolean, false)));
-    new_fields.push(Arc::new(Field::new("csap_group_id", DataType::UInt8, true)));
-    new_fields.push(Arc::new(Field::new(
-        "csap_group_name",
-        DataType::Utf8,
-        true,
-    )));
+    let is_csap_arr: ArrayRef = Arc::new(is_csap_builder.finish());
+    let group_id_arr: ArrayRef = Arc::new(group_id_builder.finish());
+    let group_name_arr: ArrayRef = Arc::new(group_name_builder.finish());
+
+    let schema = batch.schema();
+    let mut new_fields: Vec<Arc<Field>> = Vec::new();
+    let mut new_columns: Vec<ArrayRef> = Vec::new();
+
+    let mut has_is_csap = false;
+    let mut has_group_id = false;
+    let mut has_group_name = false;
+
+    for (idx, field) in schema.fields().iter().enumerate() {
+        match field.name().as_str() {
+            "is_csap" => {
+                new_fields.push(Arc::new(Field::new("is_csap", DataType::Boolean, false)));
+                new_columns.push(Arc::clone(&is_csap_arr));
+                has_is_csap = true;
+            }
+            "csap_group_id" => {
+                new_fields.push(Arc::new(Field::new("csap_group_id", DataType::UInt8, true)));
+                new_columns.push(Arc::clone(&group_id_arr));
+                has_group_id = true;
+            }
+            "csap_group_name" => {
+                new_fields.push(Arc::new(Field::new("csap_group_name", DataType::Utf8, true)));
+                new_columns.push(Arc::clone(&group_name_arr));
+                has_group_name = true;
+            }
+            _ => {
+                new_fields.push(Arc::clone(field));
+                new_columns.push(Arc::clone(batch.column(idx)));
+            }
+        }
+    }
+
+    if !has_is_csap {
+        new_fields.push(Arc::new(Field::new("is_csap", DataType::Boolean, false)));
+        new_columns.push(is_csap_arr);
+    }
+    if !has_group_id {
+        new_fields.push(Arc::new(Field::new("csap_group_id", DataType::UInt8, true)));
+        new_columns.push(group_id_arr);
+    }
+    if !has_group_name {
+        new_fields.push(Arc::new(Field::new("csap_group_name", DataType::Utf8, true)));
+        new_columns.push(group_name_arr);
+    }
+
     let new_schema = Arc::new(Schema::new(new_fields));
-
-    // Montar novos arrays
-    let mut new_columns = batch.columns().to_vec();
-    new_columns.push(Arc::new(is_csap_builder.finish()));
-    new_columns.push(Arc::new(group_id_builder.finish()));
-    new_columns.push(Arc::new(group_name_builder.finish()));
-
     RecordBatch::try_new(new_schema, new_columns)
         .map_err(|e| PortError::TransformationError(e.to_string()))
 }
 
 /// Calcula o sumário analítico e bioestatístico de CSAP a partir de um lote de internações.
+///
+/// Suporta esquemas canônicos e DATASUS:
+/// - Diagnóstico: `primary_diagnosis`, `main_diagnosis_icd10`, `diag_princ`, `DIAG_PRINC`.
+/// - Custo: `total_cost`, `total_paid_amount`, `val_tot`, `VAL_TOT` (Float64/Float32/Int64/UInt64).
+/// - Permanência: `length_of_stay`, `length_of_stay_days`, `dias_perm`, `DIAS_PERM` (UInt16/UInt8/UInt32/Int64).
 ///
 /// # Formulação Matemática
 ///
@@ -439,30 +604,9 @@ pub fn compute_csap_metrics(
         });
     }
 
-    let schema = batch.schema();
-    let diag_idx = schema.index_of("primary_diagnosis").map_err(|_| {
-        PortError::SchemaMismatch(
-            "Coluna obrigatória 'primary_diagnosis' não encontrada no RecordBatch".into(),
-        )
-    })?;
-    let diag_col = batch
-        .column(diag_idx)
-        .as_any()
-        .downcast_ref::<StringArray>()
-        .ok_or_else(|| {
-            PortError::SchemaMismatch("Coluna 'primary_diagnosis' não é StringArray".into())
-        })?;
-
-    // Opcionais: total_cost e length_of_stay
-    let cost_col = schema
-        .index_of("total_cost")
-        .ok()
-        .and_then(|idx| batch.column(idx).as_any().downcast_ref::<Float64Array>());
-
-    let days_col = schema
-        .index_of("length_of_stay")
-        .ok()
-        .and_then(|idx| batch.column(idx).as_any().downcast_ref::<UInt8Array>());
+    let diag_col = resolve_diagnosis_column(batch)?;
+    let cost_ext = CostExtractor::resolve(batch);
+    let days_ext = DaysExtractor::resolve(batch);
 
     let mut csap_count = 0u64;
     let mut total_cost = 0.0f64;
@@ -473,12 +617,8 @@ pub fn compute_csap_metrics(
     let mut group_costs = [0.0f64; 19];
 
     for i in 0..(num_rows as usize) {
-        let cost = cost_col
-            .and_then(|c| c.is_valid(i).then(|| c.value(i)))
-            .unwrap_or(0.0);
-        let days = days_col
-            .and_then(|d| d.is_valid(i).then(|| d.value(i) as u64))
-            .unwrap_or(0);
+        let cost = cost_ext.get(i);
+        let days = days_ext.get(i);
 
         total_cost += cost;
         total_days += days;
@@ -694,6 +834,55 @@ mod tests {
         // Grupo 7 (Asma): índice 6
         assert_eq!(metrics.group_counts[6], 1);
         assert!((metrics.group_costs[6] - 500.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_csap_with_canonical_sih_schema() {
+        use arrow::array::BooleanArray;
+
+        // Montar lote com schema canônico de morbidade hospitalar (SIH):
+        // main_diagnosis_icd10, total_paid_amount (Float64), length_of_stay_days (UInt16), is_csap (Boolean)
+        let cids = Arc::new(StringArray::from(vec![
+            Some("J450"), // CSAP (Asma) - R$ 1200, 4 dias
+            Some("S060"), // Não-CSAP (Trauma) - R$ 2500, 8 dias
+            Some("I10"),  // CSAP (Hipertensão) - R$ 800, 2 dias
+        ]));
+        let costs = Arc::new(Float64Array::from(vec![Some(1200.0), Some(2500.0), Some(800.0)]));
+        let days = Arc::new(UInt16Array::from(vec![Some(4), Some(8), Some(2)]));
+        let initial_is_csap = Arc::new(BooleanArray::from(vec![false, false, false]));
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("main_diagnosis_icd10", DataType::Utf8, false),
+            Field::new("total_paid_amount", DataType::Float64, false),
+            Field::new("length_of_stay_days", DataType::UInt16, false),
+            Field::new("is_csap", DataType::Boolean, false),
+        ]));
+
+        let batch = RecordBatch::try_new(schema, vec![cids, costs, days, initial_is_csap]).unwrap();
+
+        // Enriquecer e verificar substituição idempotente de is_csap
+        let enriched = enrich_sih_batch_with_csap(&batch).unwrap();
+        // Não deve duplicar is_csap: 4 originais + 2 novos (csap_group_id, csap_group_name) = 6
+        assert_eq!(enriched.num_columns(), 6);
+
+        let is_csap_col = enriched
+            .column_by_name("is_csap")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<BooleanArray>()
+            .unwrap();
+        assert!(is_csap_col.value(0)); // J450 é CSAP
+        assert!(!is_csap_col.value(1)); // S060 não é CSAP
+        assert!(is_csap_col.value(2)); // I10 é CSAP
+
+        // Computar métricas utilizando os nomes canônicos e tipos nativos
+        let metrics = compute_csap_metrics(&batch, Some(50_000)).unwrap();
+        assert_eq!(metrics.total_admissions, 3);
+        assert_eq!(metrics.csap_admissions, 2);
+        assert!((metrics.total_cost - 4500.0).abs() < 1e-6);
+        assert!((metrics.avoidable_cost - 2000.0).abs() < 1e-6);
+        assert_eq!(metrics.total_days, 14);
+        assert_eq!(metrics.avoidable_days, 6);
     }
 
     #[test]
