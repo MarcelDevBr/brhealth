@@ -158,8 +158,8 @@ print(brhealth$calculate_ibge_dv("355030")) # Retorna 8
 Para análises massivas de bases estaduais e nacionais, utilize a CLI para extrair microdados brutos em Parquet particionado e carregue instantaneamente em R:
 
 ```bash
-# Executa extração colunar com harmonização e enriquecimento CSAP
-brhealth fetch --source datasus_sih --uf SP --year 2023 --month 5 --enrich-csap --out-parquet /tmp/sih_sp.parquet
+# Executa extração colunar com harmonização e persistência no cache da HOME (~/.brhealth)
+brhealth fetch --source datasus_sih --uf SP --year 2023 --month 5 --enrich-csap --out-parquet ~/.brhealth/data/sih_sp.parquet
 ```
 
 No R:
@@ -168,7 +168,7 @@ library(arrow)
 library(dplyr)
 
 # Leitura multithreaded de alta performance
-dados_sih <- arrow::read_parquet("/tmp/sih_sp.parquet")
+dados_sih <- arrow::read_parquet("~/.brhealth/data/sih_sp.parquet")
 
 # Análise de internações evitáveis na Atenção Primária
 dados_csap <- dados_sih %>%

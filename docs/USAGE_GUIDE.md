@@ -121,11 +121,15 @@ População de referência:    100000 habitantes
 Taxa de APVP padronizada:   138.00 por 100.000 hab.
 ```
 
-#### F. Pipeline Colunar Completo com Exportação Parquet
+#### F. Pipeline Colunar Completo com Exportação Parquet e Cache
 ```bash
-# Consulta ao SIH de Roraima (RR), competência 2023, enriquecendo CSAP e gerando Parquet
-brhealth fetch --source datasus_sih --uf RR --year 2023 --month 5 --enrich-csap --out-parquet /tmp/sih_rr_2023_05.parquet
+# Consulta ao SIH de Roraima (RR), competência 2023, enriquecendo CSAP e gravando na pasta do usuário
+brhealth fetch --source datasus_sih --uf RR --year 2023 --month 5 --enrich-csap --persist-cache --out-parquet ~/.brhealth/data/sih_rr_2023_05.parquet
 ```
+
+> [!IMPORTANT]
+> **Persistência do Cache Analítico na Pasta HOME**:  
+> O BRHealth salva seus snapshots particionados por padrão em `~/.brhealth/cache` (Linux/macOS) ou `%USERPROFILE%\.brhealth\cache` (Windows), e **nunca em diretórios temporários como `/tmp`**. Isso assegura que reinicializações da máquina ou rotinas de limpeza automática do sistema operacional não excluam seus microdados baixados.
 
 ---
 
@@ -298,7 +302,7 @@ Para análises longitudinais de coortes com múltiplos gigabytes (ex: SIM nacion
 
 ```bash
 # Executa extração colunar no terminal
-brhealth fetch --source datasus_sim --uf MG --year 2022 --out-parquet /tmp/sim_mg_2022.parquet
+brhealth fetch --source datasus_sim --uf MG --year 2022 --out-parquet ~/.brhealth/data/sim_mg_2022.parquet
 ```
 
 No seu script R ou RMarkdown:
@@ -307,7 +311,7 @@ library(arrow)
 library(dplyr)
 
 # Leitura multithreaded instantânea com Apache Arrow Dataset
-sim_mg <- arrow::read_parquet("/tmp/sim_mg_2022.parquet")
+sim_mg <- arrow::read_parquet("~/.brhealth/data/sim_mg_2022.parquet")
 
 # Análise de óbitos por causa básica
 obitos_causas <- sim_mg %>%

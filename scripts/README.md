@@ -34,9 +34,9 @@ python3 scripts/run_all_tests.py
 
 ---
 
-## 2. Limpeza de Caches e Temporários
+## 2. Limpeza de Caches Analíticos
 
-Remove com segurança e de forma idempotente os caches analíticos temporários, particionamentos transitórios Hive-Parquet e artefatos temporários de Python. Detecta automaticamente os caminhos de temp específicos do OS (`%LOCALAPPDATA%\Temp` no Windows, `/var/folders` no macOS e `/tmp` no Linux).
+Remove com segurança e de forma idempotente os caches analíticos persistentes na pasta do usuário (`~/.brhealth/cache` no Linux/macOS ou `%USERPROFILE%\.brhealth\cache` no Windows), particionamentos Hive-Parquet e eventuais artefatos temporários legados. Os caches do BRHealth são intencionalmente alocados no diretório do usuário para **garantir persistência entre reinicializações da máquina**.
 
 ```bash
 # 1. Modo Universal via Python (Linux, macOS, Windows)

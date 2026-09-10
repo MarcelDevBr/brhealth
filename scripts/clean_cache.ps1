@@ -20,8 +20,22 @@ Write-Host "================================================================" -F
 Write-Host "     BRHealth - Limpeza de Caches e Temporários (Windows/PS)    " -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
 
-# 1. Caches temporários do sistema
-Write-Host "`n[1/4] Removendo caches temporários do sistema..." -ForegroundColor Yellow
+# 1. Caches persistentes na pasta HOME do usuário (~/.brhealth)
+Write-Host "`n[1/4] Removendo caches analíticos na pasta do usuário ($HOME\.brhealth)..." -ForegroundColor Yellow
+$HomeDir = $HOME
+$HomeTargets = @(
+    (Join-Path $HomeDir ".brhealth\cache"),
+    (Join-Path $HomeDir ".brhealth")
+)
+
+foreach ($Target in $HomeTargets) {
+    if (Test-Path $Target) {
+        Remove-Item -Recurse -Force $Target -ErrorAction SilentlyContinue
+        Write-Host "✓ Removido: $Target" -ForegroundColor Green
+    }
+}
+
+# Limpeza de eventuais resquícios legados no diretório temporário do sistema
 $TempDir = [System.IO.Path]::GetTempPath()
 $TempTargets = @(
     (Join-Path $TempDir "brhealth_cache"),
@@ -34,11 +48,6 @@ foreach ($Target in $TempTargets) {
         Remove-Item -Recurse -Force $Target -ErrorAction SilentlyContinue
         Write-Host "✓ Removido: $Target" -ForegroundColor Green
     }
-}
-
-Get-ChildItem -Path $TempDir -Filter "brhealth*" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
-    Remove-Item -Recurse -Force $_.FullName -ErrorAction SilentlyContinue
-    Write-Host "✓ Removido: $($_.FullName)" -ForegroundColor Green
 }
 
 # 2. Caches locais do repositório

@@ -31,6 +31,7 @@ pub use domain::spatial::{
 pub use domain::transforms::ibge::{
     calculate_ibge_dv, harmonize_ibge_code, reconcile_historical_ibge_code,
 };
+pub use infrastructure::cache::{default_cache_dir, default_data_dir};
 pub use infrastructure::transport::{
     DataFreshness, FetchOutcome, HealthReport, ResilientTransport, ResiliencePolicy,
     SourceHealthChecker, SourceHealthEntry, SourceStatus,

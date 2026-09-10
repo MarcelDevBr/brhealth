@@ -60,15 +60,14 @@ echo -e "${BOLD}${CYAN}=========================================================
 echo -e "${BOLD}${CYAN}            BRHealth - Limpeza de Caches e Temporários           ${RESET}"
 echo -e "${BOLD}${CYAN}================================================================${RESET}"
 
-# 1. Caches temporários do sistema (/tmp/brhealth*)
-echo -e "\n${BOLD}${YELLOW}[1/4] Removendo caches temporários do sistema operacional...${RESET}"
-TMP_TARGETS=(
-    "/tmp/brhealth_cache"
-    "/tmp/brhealth_ffi_cache"
-    "/tmp/brhealth"
+# 1. Caches persistentes na HOME do usuário (~/.brhealth/cache)
+echo -e "\n${BOLD}${YELLOW}[1/4] Removendo caches analíticos na HOME do usuário (${HOME}/.brhealth)...${RESET}"
+HOME_TARGETS=(
+    "${HOME}/.brhealth/cache"
+    "${HOME}/.brhealth"
 )
 
-for target in "${TMP_TARGETS[@]}"; do
+for target in "${HOME_TARGETS[@]}"; do
     if [ -d "${target}" ] || [ -f "${target}" ]; then
         SIZE=$(du -sh "${target}" 2>/dev/null | cut -f1 || echo "0B")
         rm -rf "${target}"
@@ -76,9 +75,8 @@ for target in "${TMP_TARGETS[@]}"; do
     fi
 done
 
-# Remoção de padrões curinga em /tmp com segurança
+# Limpeza de eventuais resquícios legados em /tmp
 find /tmp -maxdepth 1 -name "brhealth*" -exec rm -rf {} + 2>/dev/null || true
-echo -e "${GREEN}✓ Caches em /tmp limpos com sucesso.${RESET}"
 
 # 2. Caches locais do repositório (Hive-Parquet e downloads locais)
 echo -e "\n${BOLD}${YELLOW}[2/4] Removendo caches analíticos locais...${RESET}"

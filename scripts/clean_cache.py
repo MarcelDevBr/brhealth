@@ -94,19 +94,25 @@ def main() -> int:
 
     total_freed = 0
 
-    # 1. Caches temporários do sistema operacional
-    print(f"{BOLD}{YELLOW}[1/4] Removendo caches temporários do sistema operacional...{RESET}")
+    # 1. Caches persistentes na pasta HOME do usuário (~/.brhealth)
+    print(f"{BOLD}{YELLOW}[1/4] Removendo caches analíticos na HOME do usuário (~/.brhealth)...{RESET}")
+    home_dir = pathlib.Path.home()
+    home_candidates = [
+        home_dir / ".brhealth" / "cache",
+        home_dir / ".brhealth",
+    ]
+    for cand in home_candidates:
+        total_freed += remove_path(cand)
+
+    # Limpeza de eventuais resquícios legados em diretórios temporários do SO
     sys_temp = pathlib.Path(tempfile.gettempdir())
     temp_candidates = [
         sys_temp / "brhealth_cache",
         sys_temp / "brhealth_ffi_cache",
         sys_temp / "brhealth",
     ]
-
     for cand in temp_candidates:
         total_freed += remove_path(cand)
-
-    # Buscar padrões brhealth* dentro da pasta temp do sistema
     try:
         for p in sys_temp.glob("brhealth*"):
             if p not in temp_candidates and p.exists():

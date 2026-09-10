@@ -114,6 +114,14 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         enrich_csap: bool,
 
+        /// Diretório base de cache persistente particionado Hive-Parquet (padrão: ~/.brhealth/cache).
+        #[arg(long)]
+        cache_dir: Option<PathBuf>,
+
+        /// Habilita persistência determinística no cache local Hive-Parquet na pasta HOME.
+        #[arg(long, default_value_t = false)]
+        persist_cache: bool,
+
         /// Caminho para exportação do resultado colunar em formato Apache Parquet.
         #[arg(short, long)]
         out_parquet: Option<PathBuf>,
@@ -285,6 +293,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             harmonize_ibge,
             h3_resolution,
             enrich_csap,
+            cache_dir,
+            persist_cache,
             out_parquet,
         } => {
             println!("╔═══════════════════════════════════════════════════════════════════════════╗");
@@ -306,6 +316,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             if enrich_csap {
                 println!("▸ Enriquecimento CSAP:   ✓ Ativado (Portaria MS/SAS nº 221/2008)");
+            }
+            let resolved_cache_path = cache_dir.unwrap_or_else(brhealth_core::default_cache_dir);
+            if persist_cache {
+                println!("▸ Cache Persistente:     ✓ Ativado ({})", resolved_cache_path.display());
+            } else {
+                println!("▸ Cache Base (Leitura):  {}", resolved_cache_path.display());
             }
             println!("\n[1/3] Conectando à fonte governamental e transferindo payload...");
 
@@ -348,8 +364,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 h3_coord_columns: None,
                 enrich_csap,
                 reference_population: None,
-                persist_to_cache: false,
-                cache_base_path: None,
+                persist_to_cache: persist_cache,
+                cache_base_path: Some(resolved_cache_path),
             };
 
             let result = match app_service
@@ -494,15 +510,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::CleanCache { cargo } => {
             println!("=== BRHealth - Limpeza Multiplataforma de Caches ===");
-            let temp_dir = std::env::temp_dir();
+            let home_cache = brhealth_core::default_cache_dir();
+            println!("Diretório persistente na HOME: {}", home_cache.display());
             let targets = [
-                temp_dir.join("brhealth_cache"),
-                temp_dir.join("brhealth_ffi_cache"),
-                temp_dir.join("brhealth"),
+                home_cache,
                 PathBuf::from(".brhealth_cache"),
                 PathBuf::from("data/cache"),
                 PathBuf::from("target/hive_cache"),
                 PathBuf::from("cache"),
+                // Resquícios legados em pastas temporárias
+                std::env::temp_dir().join("brhealth_cache"),
+                std::env::temp_dir().join("brhealth_ffi_cache"),
+                std::env::temp_dir().join("brhealth"),
             ];
 
             let mut removed = 0;

@@ -7,7 +7,68 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
 
+use std::path::PathBuf;
+
 use crate::domain::ports::outbound::{LocalCachePort, PortError};
+
+/// Retorna o diretório persistente padrão de cache do BRHealth localizado na pasta HOME do usuário.
+///
+/// Prioridade de resolução:
+/// 1. Variável de ambiente `BRHEALTH_CACHE_DIR` (se definida e não vazia).
+/// 2. `$HOME/.brhealth/cache` (Linux, macOS).
+/// 3. `%USERPROFILE%\.brhealth\cache` (Windows).
+/// 4. Fallback `.brhealth_cache` relativo se nenhuma variável for detectada.
+///
+/// Isso garante que os dados em cache resistam a reinicializações da máquina,
+/// impedindo a perda involuntária de dados que ocorre com pastas voláteis como `/tmp`.
+#[must_use]
+pub fn default_cache_dir() -> PathBuf {
+    if let Ok(custom) = std::env::var("BRHEALTH_CACHE_DIR")
+        && !custom.trim().is_empty()
+    {
+        return PathBuf::from(custom.trim());
+    }
+
+    if let Ok(home) = std::env::var("HOME")
+        && !home.trim().is_empty()
+    {
+        return PathBuf::from(home.trim()).join(".brhealth").join("cache");
+    }
+
+    if let Ok(userprofile) = std::env::var("USERPROFILE")
+        && !userprofile.trim().is_empty()
+    {
+        return PathBuf::from(userprofile.trim()).join(".brhealth").join("cache");
+    }
+
+    PathBuf::from(".brhealth_cache")
+}
+
+/// Retorna o diretório persistente padrão para dados exportados do BRHealth localizado na pasta HOME.
+///
+/// Exemplo: `$HOME/.brhealth/data`.
+#[must_use]
+pub fn default_data_dir() -> PathBuf {
+    if let Ok(custom) = std::env::var("BRHEALTH_DATA_DIR")
+        && !custom.trim().is_empty()
+    {
+        return PathBuf::from(custom.trim());
+    }
+
+    if let Ok(home) = std::env::var("HOME")
+        && !home.trim().is_empty()
+    {
+        return PathBuf::from(home.trim()).join(".brhealth").join("data");
+    }
+
+    if let Ok(userprofile) = std::env::var("USERPROFILE")
+        && !userprofile.trim().is_empty()
+    {
+        return PathBuf::from(userprofile.trim()).join(".brhealth").join("data");
+    }
+
+    PathBuf::from(".brhealth_data")
+}
 
 /// Cache local mantido em memória RAM para testes e pipelines efêmeros.
 #[derive(Debug, Default)]
@@ -50,5 +111,37 @@ impl LocalCachePort for MemoryCache {
 
         store.insert(key.to_string(), data.to_vec());
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_cache_dir_resolves_to_home_or_fallback() {
+        let cache_path = default_cache_dir();
+        // Não pode conter /tmp em sistemas Unix padrão quando HOME estiver definida
+        if std::env::var("HOME").is_ok() {
+            assert!(
+                cache_path.to_string_lossy().contains(".brhealth"),
+                "O caminho do cache deve estar associado à pasta .brhealth na HOME"
+            );
+            assert!(
+                !cache_path.starts_with("/tmp"),
+                "O caminho do cache não deve estar na pasta volátil /tmp"
+            );
+        }
+    }
+
+    #[test]
+    fn test_default_data_dir_resolves_to_home() {
+        let data_path = default_data_dir();
+        if std::env::var("HOME").is_ok() {
+            assert!(
+                data_path.to_string_lossy().contains(".brhealth"),
+                "O caminho de dados deve estar associado à pasta .brhealth na HOME"
+            );
+        }
     }
 }
