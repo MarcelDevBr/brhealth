@@ -223,3 +223,35 @@ async fn test_end_to_end_fetch_mocked_for_all_sources() {
         assert!(res.is_ok() || res.is_err());
     }
 }
+
+#[test]
+fn test_source_registry_standard_traits_and_application_service_factory() {
+    use brhealth_core::domain::application::BRHealthApplicationService;
+
+    // 1. Construtor standard()
+    let registry = SourceRegistry::standard();
+    assert_eq!(registry.len(), 26);
+    assert!(!registry.is_empty());
+    assert!(registry.contains("datasus.sim"));
+    assert!(registry.contains("global.who_gho"));
+    assert!(!registry.contains("fonte_inexistente"));
+
+    let all_meta = registry.list_all();
+    assert_eq!(all_meta.len(), 26);
+
+    // 2. FromIterator e Extend
+    let pack_br = create_pack_brasil();
+    let reg_from_iter: SourceRegistry = pack_br.into_iter().collect();
+    assert_eq!(reg_from_iter.len(), 20);
+
+    let mut reg_extend = SourceRegistry::new();
+    reg_extend.extend(create_pack_global());
+    assert_eq!(reg_extend.len(), 6);
+
+    // 3. BRHealthApplicationService::standard_in_memory()
+    let service_res = BRHealthApplicationService::standard_in_memory();
+    assert!(service_res.is_ok());
+    let service = service_res.unwrap();
+    assert_eq!(service.registry().len(), 26);
+}
+

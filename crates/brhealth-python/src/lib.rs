@@ -30,11 +30,11 @@ use brhealth_core::domain::analytics::mortality::{
     compute_apvp as core_compute_apvp, compute_apvp_rate as core_compute_apvp_rate,
 };
 use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
-use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope, SourceExecutionContext};
+use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
 use brhealth_core::domain::spatial::h3::coord_to_h3_index;
 use brhealth_core::domain::spatial::s2::{
-    coord_to_s2_cell as core_coord_to_s2_cell, s2_cell_to_coord as core_s2_cell_to_coord,
-    DEFAULT_S2_MUNICIPAL_LEVEL,
+    DEFAULT_S2_MUNICIPAL_LEVEL, coord_to_s2_cell as core_coord_to_s2_cell,
+    s2_cell_to_coord as core_s2_cell_to_coord,
 };
 use brhealth_core::domain::transforms::ibge::{
     calculate_ibge_dv as core_calculate_ibge_dv, harmonize_ibge_code as core_harmonize_ibge_code,
@@ -46,11 +46,7 @@ use brhealth_core::domain::transforms::sigtap::{
     is_dialysis_procedure as core_is_dialysis_procedure,
     parse_sigtap_code as core_parse_sigtap_code,
 };
-use brhealth_core::infrastructure::cache::MemoryCache;
-use brhealth_core::infrastructure::state::MemorySyncState;
-use brhealth_core::infrastructure::transport::{AsyncFtpTransport, AsyncHttpTransport};
-use brhealth_core::sources::{create_pack_brasil, create_pack_global};
-use brhealth_core::{FairManifest, SourceRegistry};
+use brhealth_core::FairManifest;
 
 /// Wrapper colunar para RecordBatch com exportação Arrow Zero-Copy (PyCapsule / C Data Interface / DLPack).
 #[pyclass]
@@ -564,36 +560,10 @@ impl Engine {
         let rt = tokio::runtime::Runtime::new()
             .map_err(|e| PyValueError::new_err(format!("Falha ao iniciar runtime Tokio: {e}")))?;
 
-        let mut reg = SourceRegistry::new();
-        reg.register_pack(create_pack_brasil());
-        reg.register_pack(create_pack_global());
-        let registry = Arc::new(reg);
-
-        let ftp_transport = Arc::new(AsyncFtpTransport::new_datasus());
-        let _http_transport =
-            match AsyncHttpTransport::new_default() {
-                Ok(t) => Arc::new(t),
-                Err(_) => Arc::new(AsyncHttpTransport::new_default().map_err(|e| {
-                    PyValueError::new_err(format!("Falha ao inicializar HTTP: {e}"))
-                })?),
-            };
-
-        let decompressor = match brhealth_core::decoders::dbc::DbcDecompressor::new() {
-            Ok(d) => Arc::new(d),
-            Err(e) => return Err(PyValueError::new_err(e.to_string())),
-        };
-
-        let sync_state = Arc::new(MemorySyncState::new());
-        let context = Arc::new(SourceExecutionContext {
-            transport: ftp_transport,
-            decompressor,
-            cache: Arc::new(MemoryCache::new()),
-            state: sync_state.clone(),
-        });
-
-        let app_service = Arc::new(BRHealthApplicationService::new(
-            registry, context, sync_state,
-        ));
+        let app_service = Arc::new(
+            BRHealthApplicationService::standard_in_memory()
+                .map_err(|e| PyValueError::new_err(e.to_string()))?,
+        );
 
         Ok(Self {
             app_service,
@@ -627,24 +597,17 @@ impl Engine {
 
     /// Retorna a lista de identificadores das fontes registradas.
     pub fn list_sources(&self) -> Vec<String> {
-        let br_pack = create_pack_brasil();
-        let global_pack = create_pack_global();
-
-        let mut ids = Vec::with_capacity(br_pack.len() + global_pack.len());
-        for s in br_pack {
-            ids.push(s.metadata().id.to_string());
-        }
-        for s in global_pack {
-            ids.push(s.metadata().id.to_string());
-        }
-        ids
+        self.app_service
+            .registry()
+            .list_all()
+            .into_iter()
+            .map(|meta| meta.id.to_string())
+            .collect()
     }
 
     /// Retorna o número total de fontes registradas.
     pub fn source_count(&self) -> usize {
-        let br = create_pack_brasil().len();
-        let global = create_pack_global().len();
-        br + global
+        self.app_service.registry().len()
     }
 
     /// Executa ingestão e harmonização de uma fonte de dados de saúde.

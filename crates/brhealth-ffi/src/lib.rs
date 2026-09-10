@@ -186,14 +186,7 @@ pub struct BRHealthClientHandle {
 /// Retorna ponteiro opaco para `BRHealthClientHandle` ou nulo em caso de falha de alocação de runtime.
 #[unsafe(no_mangle)]
 pub extern "C" fn brhealth_client_create() -> *mut BRHealthClientHandle {
-    use brhealth_core::SourceRegistry;
-    use brhealth_core::decoders::dbc::DbcDecompressor;
     use brhealth_core::domain::application::BRHealthApplicationService;
-    use brhealth_core::domain::source_spi::SourceExecutionContext;
-    use brhealth_core::infrastructure::cache::MemoryCache;
-    use brhealth_core::infrastructure::state::MemorySyncState;
-    use brhealth_core::infrastructure::transport::AsyncFtpTransport;
-    use brhealth_core::sources::{create_pack_brasil, create_pack_global};
     use std::sync::Arc;
 
     let rt = match tokio::runtime::Builder::new_multi_thread()
@@ -204,28 +197,10 @@ pub extern "C" fn brhealth_client_create() -> *mut BRHealthClientHandle {
         Err(_) => return std::ptr::null_mut(),
     };
 
-    let mut registry = SourceRegistry::new();
-    registry.register_pack(create_pack_brasil());
-    registry.register_pack(create_pack_global());
-    let registry = Arc::new(registry);
-
-    let ftp_transport = Arc::new(AsyncFtpTransport::new_datasus());
-    let decompressor = match DbcDecompressor::new() {
-        Ok(d) => Arc::new(d),
+    let app_service = match BRHealthApplicationService::standard_in_memory() {
+        Ok(s) => Arc::new(s),
         Err(_) => return std::ptr::null_mut(),
     };
-    let sync_state = Arc::new(MemorySyncState::new());
-
-    let context = Arc::new(SourceExecutionContext {
-        transport: ftp_transport,
-        decompressor,
-        cache: Arc::new(MemoryCache::new()),
-        state: sync_state.clone(),
-    });
-
-    let app_service = Arc::new(BRHealthApplicationService::new(
-        registry, context, sync_state,
-    ));
 
     let handle = Box::new(BRHealthClientHandle { app_service, rt });
     Box::into_raw(handle)

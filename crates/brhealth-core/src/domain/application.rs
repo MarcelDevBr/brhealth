@@ -88,6 +88,25 @@ impl BRHealthApplicationService {
         }
     }
 
+    /// Constrói uma instância padrão pronta para produção com pacotes oficiais (Brasil e Global),
+    /// transporte DATASUS FTP resiliente, descompressor nativo DBC, cache em memória e controle de estado.
+    pub fn standard_in_memory() -> Result<Self, PortError> {
+        let registry = Arc::new(SourceRegistry::standard());
+        let transport = Arc::new(crate::infrastructure::transport::AsyncFtpTransport::new_datasus());
+        let decompressor = Arc::new(crate::decoders::dbc::DbcDecompressor::new()?);
+        let sync_state: Arc<dyn SyncStatePort> = Arc::new(crate::infrastructure::state::MemorySyncState::new());
+        let cache = Arc::new(crate::infrastructure::cache::MemoryCache::new());
+
+        let context = Arc::new(SourceExecutionContext {
+            transport,
+            decompressor,
+            cache,
+            state: sync_state.clone(),
+        });
+
+        Ok(Self::new(registry, context, sync_state))
+    }
+
     /// Retorna a referência ao registro de fontes.
     #[must_use]
     pub fn registry(&self) -> &Arc<SourceRegistry> {

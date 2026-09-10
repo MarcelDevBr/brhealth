@@ -14,22 +14,17 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 
-use brhealth_core::SourceRegistry;
-use brhealth_core::decoders::dbc::DbcDecompressor;
 use brhealth_core::domain::analytics::csap::{
     classify_cid10, compute_csap_metrics, compute_primary_care_roi,
 };
 use brhealth_core::domain::analytics::mortality::{compute_apvp, compute_apvp_rate};
 use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
-use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope, SourceExecutionContext};
+use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
 use brhealth_core::domain::spatial::s2::{
     DEFAULT_S2_MUNICIPAL_LEVEL, coord_to_s2_cell, s2_cell_to_coord,
 };
 use brhealth_core::domain::transforms::ibge::{calculate_ibge_dv, harmonize_ibge_code};
 use brhealth_core::domain::transforms::ontology::MedicalOntologyHarmonizer;
-use brhealth_core::infrastructure::cache::MemoryCache;
-use brhealth_core::infrastructure::state::MemorySyncState;
-use brhealth_core::infrastructure::transport::AsyncFtpTransport;
 use brhealth_core::sources::{create_pack_brasil, create_pack_global};
 
 #[derive(Parser)]
@@ -406,27 +401,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             println!("\n[1/3] Conectando à fonte governamental e transferindo payload...");
 
-            let mut registry = SourceRegistry::new();
-            registry.register_pack(create_pack_brasil());
-            registry.register_pack(create_pack_global());
-            let registry = Arc::new(registry);
-
-            let ftp_transport = Arc::new(AsyncFtpTransport::new_datasus());
-            let decompressor = Arc::new(DbcDecompressor::new()?);
-            let sync_state = Arc::new(MemorySyncState::new());
-
-            let context = Arc::new(SourceExecutionContext {
-                transport: ftp_transport,
-                decompressor,
-                cache: Arc::new(MemoryCache::new()),
-                state: sync_state.clone(),
-            });
-
-            let app_service = Arc::new(BRHealthApplicationService::new(
-                registry.clone(),
-                context,
-                sync_state,
-            ));
+            let app_service = Arc::new(BRHealthApplicationService::standard_in_memory()?);
 
             let params = DataQueryParams {
                 scope: GeographicScope::National {
