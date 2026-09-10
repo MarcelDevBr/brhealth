@@ -30,27 +30,25 @@ jobs:
           # Linux x86_64 (glibc / manylinux)
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            sdist: true
+            manylinux: auto
 
           # Linux ARM64 (aarch64)
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            sdist: false
+            manylinux: 2_28
+            docker-options: -e CFLAGS_aarch64_unknown_linux_gnu="-D__ARM_ARCH=8" -e CFLAGS="-D__ARM_ARCH=8"
 
           # macOS Apple Silicon (ARM64)
           - os: macos-latest
             target: aarch64-apple-darwin
-            sdist: false
 
           # macOS Intel (x86_64)
           - os: macos-13
             target: x86_64-apple-darwin
-            sdist: false
 
           # Windows x86_64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            sdist: false
 
     steps:
       - name: Checkout Code
@@ -66,7 +64,8 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --manifest-path crates/brhealth-python/Cargo.toml --out dist
-          sdist: ${{ matrix.sdist }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          docker-options: ${{ matrix.docker-options || '' }}
 
       - name: Upload Wheel Artifacts
         uses: actions/upload-artifact@v4
@@ -74,9 +73,33 @@ jobs:
           name: wheels-${{ matrix.target }}
           path: dist/*
 
+  sdist:
+    name: Build Source Distribution (sdist)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Build sdist via Maturin
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --manifest-path crates/brhealth-python/Cargo.toml --out dist
+
+      - name: Upload sdist Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist/*
+
   publish:
     name: Publish Wheels to GitHub Releases & PyPI
-    needs: build-wheels
+    needs: [build-wheels, sdist]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
