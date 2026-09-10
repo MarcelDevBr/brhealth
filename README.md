@@ -204,10 +204,37 @@ print(head(resumo))
 
 ### 3. Gestores de Saúde e Vigilância Epidemiológica (CLI)
 
-```bash
-# Instalar a CLI globalmente
-cargo install --path crates/brhealth-cli
+#### Instalação Rápida (Binários Pré-compilados)
 
+O BRHealth disponibiliza binários nativos de alta performance para **Linux** (x86_64 glibc/musl e ARM64), **macOS** (Apple Silicon e Intel) e **Windows** (x86_64).
+
+**Via Script One-Liner:**
+```bash
+# Linux e macOS (extrai o binário correto e instala em ~/.local/bin ou ~/.cargo/bin)
+curl -fsSL https://raw.githubusercontent.com/MarcelDevBr/brhealth/main/scripts/install.sh | bash
+```
+
+**No Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/MarcelDevBr/brhealth/main/scripts/install.ps1 | iex
+```
+
+**Via `cargo-binstall` (download binário sem compilar):**
+```bash
+cargo binstall brhealth-cli
+```
+
+**Download Direto:**
+Você também pode baixar os arquivos compactados (`.tar.gz` ou `.zip`) e seus manifestos de hash SHA-256 diretamente na página de [GitHub Releases](https://github.com/MarcelDevBr/brhealth/releases).
+
+**Compilação a partir dos fontes (Rust):**
+```bash
+cargo install --path crates/brhealth-cli
+```
+
+#### Uso da CLI
+
+```bash
 # Validar município do IBGE
 brhealth dv 355030
 
