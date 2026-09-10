@@ -27,6 +27,8 @@ use crate::domain::source_spi::{
 #[derive(Debug, Default, Clone)]
 pub struct SihDataSource;
 
+use crate::domain::schema::default_values::PREFIX_AIH;
+
 impl SihDataSource {
     /// Cria uma nova instância de `SihDataSource`.
     #[must_use]
@@ -40,15 +42,15 @@ impl SihDataSource {
         let target_schema = CanonicalSchemas::canonical_hospital_morbidity_schema();
 
         // 1. record_id (N_AIH)
-        let record_id_col = build_record_id_col(raw_batch, "N_AIH", "AIH", num_rows);
+        let record_id_col = build_record_id_col(raw_batch, "N_AIH", PREFIX_AIH, num_rows);
 
         // 2. municipality_residence (MUNIC_RES)
         let municipality_residence_col =
-            build_harmonized_ibge_col(raw_batch, "MUNIC_RES", "0000000", num_rows);
+            build_harmonized_ibge_col(raw_batch, "MUNIC_RES", num_rows);
 
         // 3. municipality_hospital (MUNIC_MOV)
         let municipality_hospital_col =
-            build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", "0000000", num_rows);
+            build_harmonized_ibge_col(raw_batch, "MUNIC_MOV", num_rows);
 
         // 4. admission_date (DT_INTER)
         let admission_date_col = build_date32_col(raw_batch, "DT_INTER", 0, num_rows);

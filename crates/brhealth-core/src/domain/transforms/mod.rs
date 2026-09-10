@@ -7,6 +7,7 @@ pub mod ontology;
 pub mod pharmacy;
 pub mod sigtap;
 
+pub use ontology::{BiologicalSex, Icd10Chapter, Icd10Code, MedicalOntologyHarmonizer};
 pub use pharmacy::{PharmacyHarmonizer, StandardDrugConcept};
 pub use sigtap::{
     SigtapCode, is_amputation_procedure, is_dialysis_procedure, parse_sigtap_code,

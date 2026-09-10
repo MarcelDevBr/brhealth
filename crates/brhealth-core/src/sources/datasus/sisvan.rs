@@ -28,6 +28,8 @@ use crate::domain::transforms::ibge::harmonize_ibge_code;
 #[derive(Debug, Default, Clone)]
 pub struct SisvanDataSource;
 
+use crate::domain::schema::default_values::{DEFAULT_IBGE_MUNICIPALITY, PREFIX_NUTRI};
+
 impl SisvanDataSource {
     /// Cria uma nova instância de `SisvanDataSource`.
     #[must_use]
@@ -40,7 +42,7 @@ impl SisvanDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_nutritional_surveillance_schema();
 
-        let id_col = build_record_id_col(raw_batch, "ID_ACOMP", "NUTRI", num_rows);
+        let id_col = build_record_id_col(raw_batch, "ID_ACOMP", PREFIX_NUTRI, num_rows);
         let dt_col = build_date32_col(raw_batch, "DT_ACOMP", 0, num_rows);
 
         // patient_municipality (CO_MUNICIPIO_IBGE)
@@ -50,7 +52,7 @@ impl SisvanDataSource {
                 let resolved = get_str_value(raw_batch, "CO_MUNICIPIO_IBGE", i)
                     .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
                     .and_then(|m| harmonize_ibge_code(m).ok())
-                    .unwrap_or_else(|| "0000000".to_string());
+                    .unwrap_or_else(|| DEFAULT_IBGE_MUNICIPALITY.to_string());
                 mun_builder.append_value(resolved);
             }
             Arc::new(mun_builder.finish())

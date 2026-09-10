@@ -22,6 +22,10 @@ use crate::domain::source_spi::{
     SourceMetadata,
 };
 
+use crate::domain::schema::default_values::{
+    DEFAULT_CNES, DEFAULT_PROCEDURE_SIGTAP, PREFIX_AMB,
+};
+
 /// Adaptador SPI para o SIASUS (Produção Ambulatorial) do DATASUS.
 #[derive(Debug, Default, Clone)]
 pub struct SiasusDataSource;
@@ -38,11 +42,11 @@ impl SiasusDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_ambulatory_schema();
 
-        let record_id_col = build_record_id_col(raw_batch, "PA_DOC_ID", "AMB", num_rows);
-        let patient_mun_col = build_harmonized_ibge_col(raw_batch, "PA_MUNPCN", "0000000", num_rows);
-        let cnes_col = build_str_col(raw_batch, "PA_CODUNI", "0000000", num_rows);
-        let fac_mun_col = build_harmonized_ibge_col(raw_batch, "PA_UFMUN", "0000000", num_rows);
-        let proc_col = build_str_col(raw_batch, "PA_PROC_ID", "0000000000", num_rows);
+        let record_id_col = build_record_id_col(raw_batch, "PA_DOC_ID", PREFIX_AMB, num_rows);
+        let patient_mun_col = build_harmonized_ibge_col(raw_batch, "PA_MUNPCN", num_rows);
+        let cnes_col = build_str_col(raw_batch, "PA_CODUNI", DEFAULT_CNES, num_rows);
+        let fac_mun_col = build_harmonized_ibge_col(raw_batch, "PA_UFMUN", num_rows);
+        let proc_col = build_str_col(raw_batch, "PA_PROC_ID", DEFAULT_PROCEDURE_SIGTAP, num_rows);
         let date_col = build_date32_col(raw_batch, "PA_CMP", 0, num_rows);
         let cid_col = build_str_opt_col(raw_batch, "PA_CIDPRI", 5, num_rows);
         let qty_col = build_u32_col(raw_batch, "PA_QTDPRO", 1, num_rows);

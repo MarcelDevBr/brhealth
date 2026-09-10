@@ -108,6 +108,7 @@ use arrow::array::{
     UInt16Builder, UInt32Builder, UInt8Builder,
 };
 use arrow::datatypes::DataType;
+use crate::domain::schema::default_values::DEFAULT_IBGE_MUNICIPALITY;
 use crate::domain::transforms::ibge::harmonize_ibge_code;
 
 /// Constrói um array de nulos de alta performance $O(1)$ para um tipo de dado.
@@ -145,14 +146,13 @@ pub fn build_record_id_col(
 pub fn build_harmonized_ibge_col(
     batch: &RecordBatch,
     col_name: &str,
-    default_mun: &str,
     num_rows: usize,
 ) -> ArrayRef {
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
     for i in 0..num_rows {
         let resolved = get_str_value(batch, col_name, i)
             .and_then(|m| harmonize_ibge_code(m).ok())
-            .unwrap_or_else(|| default_mun.to_string());
+            .unwrap_or_else(|| DEFAULT_IBGE_MUNICIPALITY.to_string());
         builder.append_value(resolved);
     }
     Arc::new(builder.finish())

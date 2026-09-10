@@ -27,6 +27,8 @@ use crate::domain::source_spi::{
 #[derive(Debug, Default, Clone)]
 pub struct BpsDataSource;
 
+use crate::domain::schema::default_values::PREFIX_BUY;
+
 impl BpsDataSource {
     /// Cria uma nova instância de `BpsDataSource`.
     #[must_use]
@@ -47,7 +49,7 @@ impl BpsDataSource {
                     .or_else(|| get_str_value(raw_batch, "ID_ITEM", i))
                     .unwrap_or("");
                 if id.is_empty() {
-                    id_builder.append_value(format!("BUY_{i}"));
+                    id_builder.append_value(format!("{PREFIX_BUY}_{i}"));
                 } else {
                     id_builder.append_value(id);
                 }
@@ -67,7 +69,7 @@ impl BpsDataSource {
             Arc::new(dt_builder.finish())
         };
 
-        let mun_col = build_harmonized_ibge_col(raw_batch, "CO_IBGE_COMPRADOR", "0000000", num_rows);
+        let mun_col = build_harmonized_ibge_col(raw_batch, "CO_IBGE_COMPRADOR", num_rows);
 
         // 4. active_ingredient (DS_PRINCIPIO_ATIVO ou NOME_MEDICAMENTO)
         let drug_col: ArrayRef = {

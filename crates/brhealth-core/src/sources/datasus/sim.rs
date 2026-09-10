@@ -27,6 +27,8 @@ use crate::domain::source_spi::{
 #[derive(Debug, Default, Clone)]
 pub struct SimDataSource;
 
+use crate::domain::schema::default_values::PREFIX_SIM;
+
 impl SimDataSource {
     /// Cria uma nova instância de `SimDataSource`.
     #[must_use]
@@ -40,14 +42,13 @@ impl SimDataSource {
         let target_schema = CanonicalSchemas::canonical_mortality_schema();
 
         // 1. record_id (NUMERODO ou índice sequencial)
-        let record_id_col = build_record_id_col(raw_batch, "NUMERODO", "SIM", num_rows);
+        let record_id_col = build_record_id_col(raw_batch, "NUMERODO", PREFIX_SIM, num_rows);
 
         // 2. country_iso3 ("BRA")
         let country_col = build_constant_str_col("BRA", num_rows);
 
         // 3. jurisdiction_code (CODMUNRES harmonizado para 7 dígitos)
-        let jurisdiction_col =
-            build_harmonized_ibge_col(raw_batch, "CODMUNRES", "0000000", num_rows);
+        let jurisdiction_col = build_harmonized_ibge_col(raw_batch, "CODMUNRES", num_rows);
 
         // 4. h3_index_res8 (Nulo por padrão até join com centróides ou endereços)
         let h3_col = build_null_col(&DataType::UInt64, num_rows);

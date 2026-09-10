@@ -25,7 +25,264 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
+use crate::domain::analytics::csap::{classify_cid10, CsapGroup};
 use crate::domain::ports::outbound::PortError;
+
+/// Os 22 Capítulos canônicos da CID-10 definidos pela Organização Mundial da Saúde (OMS).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[repr(u8)]
+pub enum Icd10Chapter {
+    /// I. Algumas doenças infecciosas e parasitárias (A00-B99)
+    InfectiousAndParasitic = 1,
+    /// II. Neoplasias [tumores] (C00-D48)
+    Neoplasms = 2,
+    /// III. Doenças do sangue e dos órgãos hematopoéticos e alguns transtornos imunitários (D50-D89)
+    BloodAndImmune = 3,
+    /// IV. Doenças endócrinas, nutricionais e metabólicas (E00-E90)
+    EndocrineNutritionalMetabolic = 4,
+    /// V. Transtornos mentais e comportamentais (F00-F99)
+    MentalAndBehavioural = 5,
+    /// VI. Doenças do sistema nervoso (G00-G99)
+    NervousSystem = 6,
+    /// VII. Doenças do olho e anexos (H00-H59)
+    EyeAndAdnexa = 7,
+    /// VIII. Doenças do ouvido e da apófise mastoide (H60-H95)
+    EarAndMastoid = 8,
+    /// IX. Doenças do aparelho circulatório (I00-I99)
+    CirculatorySystem = 9,
+    /// X. Doenças do aparelho respiratório (J00-J99)
+    RespiratorySystem = 10,
+    /// XI. Doenças do aparelho digestivo (K00-K93)
+    DigestiveSystem = 11,
+    /// XII. Doenças da pele e do tecido subcutâneo (L00-L99)
+    SkinAndSubcutaneous = 12,
+    /// XIII. Doenças do sistema osteomuscular e do tecido conjuntivo (M00-M99)
+    MusculoskeletalAndConnective = 13,
+    /// XIV. Doenças do aparelho geniturinário (N00-N99)
+    GenitourinarySystem = 14,
+    /// XV. Gravidez, parto e puerpério (O00-O99)
+    PregnancyChildbirthPuerperium = 15,
+    /// XVI. Algumas afecções originadas no período perinatal (P00-P96)
+    PerinatalPeriod = 16,
+    /// XVII. Malformações congênitas, deformidades e anomalias cromossômicas (Q00-Q99)
+    CongenitalMalformations = 17,
+    /// XVIII. Sintomas, sinais e achados anormais de exames clínicos e de laboratório (R00-R99)
+    SymptomsAndAbnormalFindings = 18,
+    /// XIX. Lesões, envenenamento e algumas outras consequências de causas externas (S00-T98)
+    InjuryPoisoningExternalCauses = 19,
+    /// XX. Causas externas de morbidade e de mortalidade (V01-Y98)
+    ExternalCausesMorbidityMortality = 20,
+    /// XXI. Fatores que influenciam o estado de saúde e o contato com os serviços de saúde (Z00-Z99)
+    HealthStatusFactors = 21,
+    /// XXII. Códigos para propósitos especiais (U00-U85)
+    SpecialPurposes = 22,
+}
+
+impl Icd10Chapter {
+    /// Determina o Capítulo da CID-10 a partir de um código alfanumérico com $O(1)$ e zero-alocação.
+    pub fn from_code(code: &str) -> Option<Self> {
+        let trimmed = code.trim();
+        let b = trimmed.as_bytes();
+        if b.len() < 3 {
+            return None;
+        }
+
+        let letter = b[0].to_ascii_uppercase();
+        let d1 = (b[1] as char).to_digit(10)? as u8;
+        let d2 = (b[2] as char).to_digit(10)? as u8;
+        let num = d1 * 10 + d2;
+
+        match letter {
+            b'A' | b'B' => Some(Self::InfectiousAndParasitic),
+            b'C' => Some(Self::Neoplasms),
+            b'D' => {
+                if num <= 48 {
+                    Some(Self::Neoplasms)
+                } else {
+                    Some(Self::BloodAndImmune)
+                }
+            }
+            b'E' => Some(Self::EndocrineNutritionalMetabolic),
+            b'F' => Some(Self::MentalAndBehavioural),
+            b'G' => Some(Self::NervousSystem),
+            b'H' => {
+                if num <= 59 {
+                    Some(Self::EyeAndAdnexa)
+                } else {
+                    Some(Self::EarAndMastoid)
+                }
+            }
+            b'I' => Some(Self::CirculatorySystem),
+            b'J' => Some(Self::RespiratorySystem),
+            b'K' => Some(Self::DigestiveSystem),
+            b'L' => Some(Self::SkinAndSubcutaneous),
+            b'M' => Some(Self::MusculoskeletalAndConnective),
+            b'N' => Some(Self::GenitourinarySystem),
+            b'O' => Some(Self::PregnancyChildbirthPuerperium),
+            b'P' => Some(Self::PerinatalPeriod),
+            b'Q' => Some(Self::CongenitalMalformations),
+            b'R' => Some(Self::SymptomsAndAbnormalFindings),
+            b'S' | b'T' => Some(Self::InjuryPoisoningExternalCauses),
+            b'V' | b'W' | b'X' | b'Y' => Some(Self::ExternalCausesMorbidityMortality),
+            b'Z' => Some(Self::HealthStatusFactors),
+            b'U' => Some(Self::SpecialPurposes),
+            _ => None,
+        }
+    }
+
+    /// Retorna o numeral romano oficial do capítulo (ex: "IX").
+    pub fn roman_numeral(&self) -> &'static str {
+        match self {
+            Self::InfectiousAndParasitic => "I",
+            Self::Neoplasms => "II",
+            Self::BloodAndImmune => "III",
+            Self::EndocrineNutritionalMetabolic => "IV",
+            Self::MentalAndBehavioural => "V",
+            Self::NervousSystem => "VI",
+            Self::EyeAndAdnexa => "VII",
+            Self::EarAndMastoid => "VIII",
+            Self::CirculatorySystem => "IX",
+            Self::RespiratorySystem => "X",
+            Self::DigestiveSystem => "XI",
+            Self::SkinAndSubcutaneous => "XII",
+            Self::MusculoskeletalAndConnective => "XIII",
+            Self::GenitourinarySystem => "XIV",
+            Self::PregnancyChildbirthPuerperium => "XV",
+            Self::PerinatalPeriod => "XVI",
+            Self::CongenitalMalformations => "XVII",
+            Self::SymptomsAndAbnormalFindings => "XVIII",
+            Self::InjuryPoisoningExternalCauses => "XIX",
+            Self::ExternalCausesMorbidityMortality => "XX",
+            Self::HealthStatusFactors => "XXI",
+            Self::SpecialPurposes => "XXII",
+        }
+    }
+
+    /// Retorna o título em português do capítulo segundo o DATASUS / OMS.
+    pub fn title_pt(&self) -> &'static str {
+        match self {
+            Self::InfectiousAndParasitic => "Algumas doenças infecciosas e parasitárias",
+            Self::Neoplasms => "Neoplasias (tumores)",
+            Self::BloodAndImmune => "Doenças do sangue e dos órgãos hematopoéticos",
+            Self::EndocrineNutritionalMetabolic => "Doenças endócrinas, nutricionais e metabólicas",
+            Self::MentalAndBehavioural => "Transtornos mentais e comportamentais",
+            Self::NervousSystem => "Doenças do sistema nervoso",
+            Self::EyeAndAdnexa => "Doenças do olho e anexos",
+            Self::EarAndMastoid => "Doenças do ouvido e da apófise mastóide",
+            Self::CirculatorySystem => "Doenças do aparelho circulatório",
+            Self::RespiratorySystem => "Doenças do aparelho respiratório",
+            Self::DigestiveSystem => "Doenças do aparelho digestivo",
+            Self::SkinAndSubcutaneous => "Doenças da pele e do tecido subcutâneo",
+            Self::MusculoskeletalAndConnective => "Doenças do sistema osteomuscular e tecido conjuntivo",
+            Self::GenitourinarySystem => "Doenças do aparelho geniturinário",
+            Self::PregnancyChildbirthPuerperium => "Gravidez, parto e puerpério",
+            Self::PerinatalPeriod => "Algumas afecções originadas no período perinatal",
+            Self::CongenitalMalformations => "Malformações congênitas, deformidades e anomalias cromossômicas",
+            Self::SymptomsAndAbnormalFindings => "Sintomas, sinais e achados anormais de exames clínicos e laboratoriais",
+            Self::InjuryPoisoningExternalCauses => "Lesões, envenenamento e consequências de causas externas",
+            Self::ExternalCausesMorbidityMortality => "Causas externas de morbidade e mortalidade",
+            Self::HealthStatusFactors => "Fatores que influenciam o estado de saúde e o contato com serviços de saúde",
+            Self::SpecialPurposes => "Códigos para propósitos especiais",
+        }
+    }
+}
+
+/// Estrutura de zero-alocação para validação e navegação de códigos CID-10.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Icd10Code<'a> {
+    raw: &'a str,
+    chapter: Icd10Chapter,
+}
+
+impl<'a> Icd10Code<'a> {
+    /// Analisa e valida uma referência de string para código CID-10 sem alocação no heap.
+    pub fn parse(raw: &'a str) -> Option<Self> {
+        let chapter = Icd10Chapter::from_code(raw)?;
+        Some(Self { raw, chapter })
+    }
+
+    /// Retorna o código bruto fornecido.
+    #[inline]
+    pub fn as_str(&self) -> &'a str {
+        self.raw
+    }
+
+    /// Retorna o capítulo canônico da OMS correspondente.
+    #[inline]
+    pub fn chapter(&self) -> Icd10Chapter {
+        self.chapter
+    }
+
+    /// Retorna a categoria de 3 caracteres (ex: "I10").
+    #[inline]
+    pub fn category(&self) -> &'a str {
+        let trimmed = self.raw.trim();
+        if trimmed.len() >= 3 {
+            &trimmed[0..3]
+        } else {
+            trimmed
+        }
+    }
+
+    /// Classifica o código segundo os grupos CSAP (Condições Sensíveis à Atenção Primária).
+    #[inline]
+    pub fn csap_group(&self) -> Option<CsapGroup> {
+        classify_cid10(self.raw)
+    }
+
+    /// Valida a consistência fisiológica/biológica deste código contra sexo e idade.
+    pub fn validate_biological_consistency(
+        &self,
+        sex: BiologicalSex,
+        age_years: u16,
+    ) -> Result<(), PortError> {
+        let cat = self.category();
+
+        // 1. Causas estritamente femininas (Capítulo XV ou Neoplasias/Doenças ginecológicas)
+        if (self.chapter == Icd10Chapter::PregnancyChildbirthPuerperium
+            || matches!(
+                cat,
+                "C51" | "C52" | "C53" | "C54" | "C55" | "C56" | "C57" | "C58" | "N70" | "N71"
+            ))
+            && sex == BiologicalSex::Male
+        {
+            return Err(PortError::ValidationError(format!(
+                "Inconsistência biológica: CID '{}' atribuído a indivíduo do sexo masculino",
+                self.raw
+            )));
+        }
+
+        // 2. Causas estritamente masculinas
+        if matches!(
+            cat,
+            "C60" | "C61" | "C62" | "C63" | "N40" | "N41" | "N42" | "N43" | "N44" | "N45"
+        ) && sex == BiologicalSex::Female
+        {
+            return Err(PortError::ValidationError(format!(
+                "Inconsistência biológica: CID '{}' atribuído a indivíduo do sexo feminino",
+                self.raw
+            )));
+        }
+
+        // 3. Causas perinatais em indivíduos > 1 ano
+        if self.chapter == Icd10Chapter::PerinatalPeriod && age_years > 1 {
+            return Err(PortError::ValidationError(format!(
+                "Inconsistência biológica: Causa perinatal CID '{}' atribuída a indivíduo de {age_years} anos",
+                self.raw
+            )));
+        }
+
+        // 4. Causas tipicamente senis em crianças < 15 anos
+        if matches!(cat, "G30" | "F00" | "F01" | "F03") && age_years < 15 {
+            return Err(PortError::ValidationError(format!(
+                "Inconsistência biológica: Causa neurodegenerativa senil CID '{}' atribuída a criança de {age_years} anos",
+                self.raw
+            )));
+        }
+
+        Ok(())
+    }
+}
 
 /// Sexo biológico para verificação de consistência.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -290,59 +547,11 @@ impl MedicalOntologyHarmonizer {
         sex: BiologicalSex,
         age_years: u16,
     ) -> Result<(), PortError> {
-        let cleaned = icd10.trim().to_uppercase();
-        if cleaned.is_empty() {
-            return Ok(());
-        }
-
-        let prefix_letter = cleaned.chars().next().unwrap_or(' ');
-        let prefix3 = if cleaned.len() >= 3 {
-            &cleaned[0..3]
+        if let Some(parsed) = Icd10Code::parse(icd10) {
+            parsed.validate_biological_consistency(sex, age_years)
         } else {
-            &cleaned
-        };
-
-        // 1. Causas estritamente femininas
-        // O00-O99 (Gravidez, parto e puerpério), C51-C58 (Neoplasias genitais femininas)
-        if (prefix_letter == 'O'
-            || matches!(
-                prefix3,
-                "C51" | "C52" | "C53" | "C54" | "C55" | "C56" | "C57" | "C58" | "N70" | "N71"
-            ))
-            && sex == BiologicalSex::Male
-        {
-            return Err(PortError::ValidationError(format!(
-                "Inconsistência biológica: CID '{cleaned}' atribuído a indivíduo do sexo masculino"
-            )));
+            Ok(())
         }
-
-        // 2. Causas estritamente masculinas
-        // C60-C63 (Neoplasias genitais masculinas: pênis, próstata, testículo), N40-N51 (Doenças órgãos genitais masc)
-        if matches!(
-            prefix3,
-            "C60" | "C61" | "C62" | "C63" | "N40" | "N41" | "N42" | "N43" | "N44" | "N45"
-        ) && sex == BiologicalSex::Female
-        {
-            return Err(PortError::ValidationError(format!(
-                "Inconsistência biológica: CID '{cleaned}' atribuído a indivíduo do sexo feminino"
-            )));
-        }
-
-        // 3. Causas perinatais em indivíduos com mais de 1 ano
-        if prefix_letter == 'P' && age_years > 1 {
-            return Err(PortError::ValidationError(format!(
-                "Inconsistência biológica: Causa perinatal CID '{cleaned}' atribuída a indivíduo de {age_years} anos"
-            )));
-        }
-
-        // 4. Causas tipicamente senis (Alzheimer e demência degenerativa) em crianças < 15 anos
-        if matches!(prefix3, "G30" | "F00" | "F01" | "F03") && age_years < 15 {
-            return Err(PortError::ValidationError(format!(
-                "Inconsistência biológica: Causa neurodegenerativa senil CID '{cleaned}' atribuída a criança de {age_years} anos"
-            )));
-        }
-
-        Ok(())
     }
 }
 
@@ -429,5 +638,56 @@ mod tests {
         let res_senile =
             harmonizer.validate_biological_consistency("G30.9", BiologicalSex::Female, 80);
         assert!(res_senile.is_ok());
+    }
+
+    #[test]
+    fn test_icd10_chapter_classification() {
+        assert_eq!(
+            Icd10Chapter::from_code("A09"),
+            Some(Icd10Chapter::InfectiousAndParasitic)
+        );
+        assert_eq!(Icd10Chapter::from_code("C50.9"), Some(Icd10Chapter::Neoplasms));
+        assert_eq!(Icd10Chapter::from_code("D50"), Some(Icd10Chapter::BloodAndImmune));
+        assert_eq!(
+            Icd10Chapter::from_code("E11"),
+            Some(Icd10Chapter::EndocrineNutritionalMetabolic)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("I10"),
+            Some(Icd10Chapter::CirculatorySystem)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("J45"),
+            Some(Icd10Chapter::RespiratorySystem)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("O80"),
+            Some(Icd10Chapter::PregnancyChildbirthPuerperium)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("P07"),
+            Some(Icd10Chapter::PerinatalPeriod)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("V89"),
+            Some(Icd10Chapter::ExternalCausesMorbidityMortality)
+        );
+        assert_eq!(
+            Icd10Chapter::from_code("U07.1"),
+            Some(Icd10Chapter::SpecialPurposes)
+        );
+        assert_eq!(Icd10Chapter::from_code("123"), None);
+
+        let ch = Icd10Chapter::CirculatorySystem;
+        assert_eq!(ch.roman_numeral(), "IX");
+        assert_eq!(ch.title_pt(), "Doenças do aparelho circulatório");
+    }
+
+    #[test]
+    fn test_icd10_code_struct() {
+        let code = Icd10Code::parse("J45.0").unwrap();
+        assert_eq!(code.chapter(), Icd10Chapter::RespiratorySystem);
+        assert_eq!(code.category(), "J45");
+        assert_eq!(code.csap_group(), Some(CsapGroup::Asma));
     }
 }

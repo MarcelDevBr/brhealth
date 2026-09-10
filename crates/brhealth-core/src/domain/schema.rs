@@ -413,3 +413,72 @@ impl CanonicalSchemas {
         ]))
     }
 }
+
+/// Nomes canônicos padronizados das colunas nas tabelas analíticas Arrow.
+pub mod canonical_columns {
+    pub const RECORD_ID: &str = "record_id";
+    pub const COUNTRY_ISO3: &str = "country_iso3";
+    pub const JURISDICTION_CODE: &str = "jurisdiction_code";
+    pub const H3_INDEX_RES8: &str = "h3_index_res8";
+    pub const EVENT_DATE: &str = "event_date";
+    pub const UNDERLYING_CAUSE_ICD10: &str = "underlying_cause_icd10";
+    pub const UNDERLYING_CAUSE_ICD11: &str = "underlying_cause_icd11";
+    pub const AGE_YEARS: &str = "age_years";
+    pub const SEX: &str = "sex";
+    pub const RACE_ETHNICITY: &str = "race_ethnicity";
+    pub const MATERNAL_DEATH: &str = "maternal_death";
+
+    pub const MUNICIPALITY_RESIDENCE: &str = "municipality_residence";
+    pub const MUNICIPALITY_HOSPITAL: &str = "municipality_hospital";
+    pub const ADMISSION_DATE: &str = "admission_date";
+    pub const DISCHARGE_DATE: &str = "discharge_date";
+    pub const LENGTH_OF_STAY_DAYS: &str = "length_of_stay_days";
+    pub const MAIN_DIAGNOSIS_ICD10: &str = "main_diagnosis_icd10";
+    pub const SECONDARY_DIAGNOSIS_ICD10: &str = "secondary_diagnosis_icd10";
+    pub const PROCEDURE_SIGTAP: &str = "procedure_sigtap";
+    pub const TOTAL_PAID_AMOUNT: &str = "total_paid_amount";
+    pub const ICU_DAYS: &str = "icu_days";
+    pub const DEATH_OUTCOME: &str = "death_outcome";
+    pub const IS_CSAP: &str = "is_csap";
+
+    pub const PATIENT_MUNICIPALITY: &str = "patient_municipality";
+    pub const FACILITY_CNES: &str = "facility_cnes";
+    pub const FACILITY_MUNICIPALITY: &str = "facility_municipality";
+    pub const SERVICE_DATE: &str = "service_date";
+    pub const QUANTITY_PRODUCED: &str = "quantity_produced";
+    pub const PATIENT_SEX: &str = "patient_sex";
+    pub const PATIENT_AGE_YEARS: &str = "patient_age_years";
+}
+
+/// Valores sentinela e padrões canônicos para dados faltantes ou harmonizados.
+pub mod default_values {
+    /// Código IBGE nulo ou desconhecido padronizado para 7 dígitos ("0000000").
+    pub const DEFAULT_IBGE_MUNICIPALITY: &str = "0000000";
+    /// Procedimento SIGTAP não informado ("0000000000").
+    pub const DEFAULT_PROCEDURE_SIGTAP: &str = "0000000000";
+    /// Código de CNES não informado ("0000000").
+    pub const DEFAULT_CNES: &str = "0000000";
+    /// Competência padrão no formato YYYYMM ("202401").
+    pub const DEFAULT_COMPETENCE: &str = "202401";
+    /// Sexo biológico indeterminado ou não informado ("U").
+    pub const DEFAULT_SEX_UNKNOWN: &str = "U";
+    /// Prefixo de identificador de óbito ("SIM").
+    pub const PREFIX_SIM: &str = "SIM";
+    /// Prefixo de identificador de nascimento ("SINASC").
+    pub const PREFIX_SINASC: &str = "SINASC";
+    /// Prefixo de internação hospitalar ("AIH").
+    pub const PREFIX_AIH: &str = "AIH";
+    /// Prefixo de agravo de notificação ("SINAN").
+    pub const PREFIX_SINAN: &str = "SINAN";
+    /// Prefixo de atendimento ambulatorial ("AMB").
+    pub const PREFIX_AMB: &str = "AMB";
+    /// Prefixo de vacinação ("VAC").
+    pub const PREFIX_VAC: &str = "VAC";
+    /// Prefixo de rastreamento de câncer ("EXAM").
+    pub const PREFIX_EXAM: &str = "EXAM";
+    /// Prefixo de vigilância nutricional ("NUTRI").
+    pub const PREFIX_NUTRI: &str = "NUTRI";
+    /// Prefixo de compra pública farmacêutica ("BUY").
+    pub const PREFIX_BUY: &str = "BUY";
+}
+

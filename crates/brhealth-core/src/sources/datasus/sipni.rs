@@ -28,6 +28,8 @@ use crate::domain::transforms::ibge::harmonize_ibge_code;
 #[derive(Debug, Default, Clone)]
 pub struct SipniDataSource;
 
+use crate::domain::schema::default_values::{DEFAULT_CNES, DEFAULT_IBGE_MUNICIPALITY, PREFIX_VAC};
+
 impl SipniDataSource {
     /// Cria uma nova instância de `SipniDataSource`.
     #[must_use]
@@ -40,7 +42,7 @@ impl SipniDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_immunization_schema();
 
-        let id_col = build_record_id_col(raw_batch, "ID_DOSE", "VAC", num_rows);
+        let id_col = build_record_id_col(raw_batch, "ID_DOSE", PREFIX_VAC, num_rows);
 
         // vaccine_code (COD_VACINA ou IMUNO)
         let code_col: ArrayRef = {
@@ -97,13 +99,13 @@ impl SipniDataSource {
                 let resolved = get_str_value(raw_batch, "MUN_RESID", i)
                     .or_else(|| get_str_value(raw_batch, "CODMUNRES", i))
                     .and_then(|m| harmonize_ibge_code(m).ok())
-                    .unwrap_or_else(|| "0000000".to_string());
+                    .unwrap_or_else(|| DEFAULT_IBGE_MUNICIPALITY.to_string());
                 mun_builder.append_value(resolved);
             }
             Arc::new(mun_builder.finish())
         };
 
-        let cnes_col = build_str_col(raw_batch, "CNES_ESTAB", "0000000", num_rows);
+        let cnes_col = build_str_col(raw_batch, "CNES_ESTAB", DEFAULT_CNES, num_rows);
         let lot_col = build_str_opt_col(raw_batch, "LOTE", 8, num_rows);
         let age_col = build_u8_opt_col(raw_batch, "IDADE", num_rows);
         let sex_col = build_sex_col(raw_batch, "SEXO", num_rows);

@@ -26,6 +26,8 @@ use crate::domain::source_spi::{
 #[derive(Debug, Default, Clone)]
 pub struct SinanDataSource;
 
+use crate::domain::schema::default_values::PREFIX_SINAN;
+
 impl SinanDataSource {
     /// Cria uma nova instância de `SinanDataSource`.
     #[must_use]
@@ -40,7 +42,7 @@ impl SinanDataSource {
 
         // 1. notification_id (NU_NOTIFIC)
         let notification_id_col =
-            build_record_id_col(raw_batch, "NU_NOTIFIC", "NOTIF", num_rows);
+            build_record_id_col(raw_batch, "NU_NOTIFIC", PREFIX_SINAN, num_rows);
 
         // 2. disease_code (ID_AGRAVO)
         let disease_col = build_str_col(raw_batch, "ID_AGRAVO", "A90", num_rows);
@@ -52,12 +54,10 @@ impl SinanDataSource {
         let onset_col = build_date32_opt_col(raw_batch, "DT_SIN_PRI", num_rows);
 
         // 5. patient_municipality (ID_MN_RESI)
-        let patient_mun_col =
-            build_harmonized_ibge_col(raw_batch, "ID_MN_RESI", "0000000", num_rows);
+        let patient_mun_col = build_harmonized_ibge_col(raw_batch, "ID_MN_RESI", num_rows);
 
         // 6. notification_municipality (ID_MUNICIP)
-        let notif_mun_col =
-            build_harmonized_ibge_col(raw_batch, "ID_MUNICIP", "0000000", num_rows);
+        let notif_mun_col = build_harmonized_ibge_col(raw_batch, "ID_MUNICIP", num_rows);
 
         // 7. h3_index_res8
         let h3_col = build_null_col(&DataType::UInt64, num_rows);

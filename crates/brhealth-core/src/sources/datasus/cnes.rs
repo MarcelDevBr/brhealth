@@ -27,6 +27,8 @@ use crate::domain::source_spi::{
 #[derive(Debug, Default, Clone)]
 pub struct CnesDataSource;
 
+use crate::domain::schema::default_values::DEFAULT_CNES;
+
 impl CnesDataSource {
     /// Cria uma nova instância de `CnesDataSource`.
     #[must_use]
@@ -39,7 +41,7 @@ impl CnesDataSource {
         let num_rows = raw_batch.num_rows();
         let target_schema = CanonicalSchemas::canonical_health_facility_schema();
 
-        let cnes_id_col = build_str_col(raw_batch, "CNES", "0000000", num_rows);
+        let cnes_id_col = build_str_col(raw_batch, "CNES", DEFAULT_CNES, num_rows);
 
         // facility_name (NOMEFANT ou RAZAOSOC)
         let name_col: ArrayRef = {
@@ -53,7 +55,7 @@ impl CnesDataSource {
             Arc::new(name_builder.finish())
         };
 
-        let mun_col = build_harmonized_ibge_col(raw_batch, "CODUFMUN", "0000000", num_rows);
+        let mun_col = build_harmonized_ibge_col(raw_batch, "CODUFMUN", num_rows);
         let h3_col = build_null_col(&DataType::UInt64, num_rows);
         let mgmt_col = build_str_col(raw_batch, "TPGESTAO", "M", num_rows);
         let type_col = build_str_col(raw_batch, "TP_UNID", "00", num_rows);
