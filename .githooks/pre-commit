@@ -1,0 +1,19 @@
+#!/bin/sh
+# Git pre-commit hook para o BRHealth
+# Bloqueia commits se o código não estiver formatado ou se o clippy falhar.
+
+echo "🔍 [pre-commit] Verificando formatação de código com cargo fmt..."
+if ! cargo fmt --all --check; then
+    echo "❌ Erro: O código Rust não está formatado de acordo com o padrão do projeto!"
+    echo "💡 Dica: Execute 'cargo fmt --all' para formatar automaticamente antes de commitar."
+    exit 1
+fi
+
+echo "🔍 [pre-commit] Verificando linter estrito (cargo clippy)..."
+if ! cargo clippy --workspace --all-targets -- -D warnings; then
+    echo "❌ Erro: O cargo clippy encontrou avisos/erros no código!"
+    exit 1
+fi
+
+echo "✅ [pre-commit] Tudo certo! Procedendo com o commit."
+exit 0

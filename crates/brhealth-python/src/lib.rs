@@ -33,8 +33,8 @@ use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExe
 use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
 use brhealth_core::domain::spatial::h3::coord_to_h3_index;
 use brhealth_core::domain::spatial::s2::{
-    DEFAULT_S2_MUNICIPAL_LEVEL, coord_to_s2_cell as core_coord_to_s2_cell,
-    s2_cell_to_coord as core_s2_cell_to_coord,
+    coord_to_s2_cell as core_coord_to_s2_cell, s2_cell_to_coord as core_s2_cell_to_coord,
+    DEFAULT_S2_MUNICIPAL_LEVEL,
 };
 use brhealth_core::domain::transforms::ibge::{
     calculate_ibge_dv as core_calculate_ibge_dv, harmonize_ibge_code as core_harmonize_ibge_code,

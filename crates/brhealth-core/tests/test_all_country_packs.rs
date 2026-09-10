@@ -254,4 +254,3 @@ fn test_source_registry_standard_traits_and_application_service_factory() {
     let service = service_res.unwrap();
     assert_eq!(service.registry().len(), 26);
 }
-

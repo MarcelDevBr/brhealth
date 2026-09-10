@@ -151,7 +151,9 @@ pub fn build_record_id_col(
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 12);
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        if let Some(col) = str_col && col.is_valid(i) {
+        if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             let id = col.value(i).trim();
             if !id.is_empty() {
                 builder.append_value(id);
@@ -168,7 +170,9 @@ pub fn build_harmonized_ibge_col(batch: &RecordBatch, col_name: &str, num_rows: 
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 7);
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        if let Some(col) = str_col && col.is_valid(i) {
+        if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             let m = col.value(i).trim();
             if let Ok(buf) = harmonize_ibge_code_to_buf(m)
                 && let Ok(s) = std::str::from_utf8(&buf)
@@ -187,7 +191,9 @@ pub fn build_sex_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> Ar
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 2);
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        let s = if let Some(col) = str_col && col.is_valid(i) {
+        let s = if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             match col.value(i).trim() {
                 "1" | "M" => "M",
                 "2" | "F" => "F",
@@ -206,7 +212,9 @@ pub fn build_race_col(batch: &RecordBatch, col_name: &str, num_rows: usize) -> A
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * 8);
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        if let Some(col) = str_col && col.is_valid(i) {
+        if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             match col.value(i).trim() {
                 "1" => builder.append_value("Branca"),
                 "2" => builder.append_value("Preta"),
@@ -232,7 +240,9 @@ pub fn build_date32_col(
     let mut builder = Date32Builder::with_capacity(num_rows);
     let date_col = get_typed_col::<Date32Array>(batch, col_name);
     for i in 0..num_rows {
-        let val = if let Some(col) = date_col && col.is_valid(i) {
+        let val = if let Some(col) = date_col
+            && col.is_valid(i)
+        {
             col.value(i)
         } else {
             default_val
@@ -247,7 +257,9 @@ pub fn build_date32_opt_col(batch: &RecordBatch, col_name: &str, num_rows: usize
     let mut builder = Date32Builder::with_capacity(num_rows);
     let date_col = get_typed_col::<Date32Array>(batch, col_name);
     for i in 0..num_rows {
-        if let Some(col) = date_col && col.is_valid(i) {
+        if let Some(col) = date_col
+            && col.is_valid(i)
+        {
             builder.append_value(col.value(i));
         } else {
             builder.append_null();
@@ -266,7 +278,9 @@ pub fn build_str_col(
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * default_val.len().max(6));
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        let s = if let Some(col) = str_col && col.is_valid(i) {
+        let s = if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             col.value(i).trim()
         } else {
             default_val
@@ -286,7 +300,9 @@ pub fn build_str_opt_col(
     let mut builder = StringBuilder::with_capacity(num_rows, num_rows * avg_len);
     let str_col = get_typed_col::<StringArray>(batch, col_name);
     for i in 0..num_rows {
-        if let Some(col) = str_col && col.is_valid(i) {
+        if let Some(col) = str_col
+            && col.is_valid(i)
+        {
             let s = col.value(i).trim();
             if s.is_empty() {
                 builder.append_null();
