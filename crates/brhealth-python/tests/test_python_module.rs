@@ -192,8 +192,16 @@ fn test_python_record_batch_wrapper_utilities() {
         let wrapper = brhealth::RecordBatchWrapper::new(batch, None);
         assert_eq!(wrapper.num_rows(), 3);
         assert_eq!(wrapper.num_columns(), 2);
+        assert_eq!(wrapper.shape(), (3, 2));
         assert_eq!(wrapper.__len__(), 3);
         assert_eq!(wrapper.columns(), vec!["id", "age"]);
+
+        let head = wrapper.head(Some(2));
+        assert_eq!(head.num_rows(), 2);
+        assert_eq!(head.num_columns(), 2);
+
+        let tail = wrapper.tail(Some(1));
+        assert_eq!(tail.num_rows(), 1);
 
         let repr = wrapper.__repr__();
         assert!(repr.contains("3 rows x 2 columns"));
@@ -228,8 +236,9 @@ fn test_python_engine_new_accessors_and_top_level_fetch() {
         assert!(engine_obj.getattr(py, "environmental").is_ok());
         assert!(engine_obj.getattr(py, "social").is_ok());
 
-        // Top-level fetch: fonte desconhecida deve retornar PyValueError sem pânico
+        // Top-level fetch: fonte desconhecida deve retornar erro tipado sem pânico
         let res_err = brhealth::fetch(
+            py,
             "fonte.desconhecida",
             Some("35".to_string()),
             2024,
@@ -248,8 +257,8 @@ fn test_python_decoders_file_errors() {
     pyo3::prepare_freethreaded_python();
     Python::with_gil(|py| {
         // Arquivo inexistente deve retornar erro tipado sem pânico
-        assert!(brhealth::read_dbc("/caminho/inexistente.dbc").is_err());
-        assert!(brhealth::read_dbf("/caminho/inexistente.dbf").is_err());
+        assert!(brhealth::read_dbc(py, "/caminho/inexistente.dbc").is_err());
+        assert!(brhealth::read_dbf(py, "/caminho/inexistente.dbf").is_err());
         assert!(brhealth::decompress_dbc(py, "/caminho/inexistente.dbc", None).is_err());
     });
 }

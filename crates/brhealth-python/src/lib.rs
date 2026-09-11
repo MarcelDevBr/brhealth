@@ -89,6 +89,7 @@ use brhealth_core::FairManifest;
 
 /// Wrapper colunar para RecordBatch com exportação Arrow Zero-Copy (PyCapsule / C Data Interface / DLPack).
 #[pyclass]
+#[derive(Clone)]
 pub struct RecordBatchWrapper {
     batch: RecordBatch,
     manifest: Option<FairManifest>,
@@ -113,6 +114,12 @@ impl RecordBatchWrapper {
     #[getter]
     pub fn num_columns(&self) -> usize {
         self.batch.num_columns()
+    }
+
+    /// Dimensões do lote colunar (linhas, colunas).
+    #[getter]
+    pub fn shape(&self) -> (usize, usize) {
+        (self.batch.num_rows(), self.batch.num_columns())
     }
 
     /// Nomes de todos os campos/colunas do lote.
@@ -160,6 +167,25 @@ impl RecordBatchWrapper {
             self.batch.num_columns(),
             self.column_names()
         )
+    }
+
+    /// Retorna um novo RecordBatchWrapper contendo as primeiras `n` linhas (padrão 5) com Zero-Copy.
+    #[pyo3(signature = (n=None))]
+    pub fn head(&self, n: Option<usize>) -> Self {
+        let limit = n.unwrap_or(5).min(self.batch.num_rows());
+        let sliced = self.batch.slice(0, limit);
+        RecordBatchWrapper::new(sliced, self.manifest.clone())
+    }
+
+    /// Retorna um novo RecordBatchWrapper contendo as últimas `n` linhas (padrão 5) com Zero-Copy.
+    #[pyo3(signature = (n=None))]
+    pub fn tail(&self, n: Option<usize>) -> Self {
+        let n = n.unwrap_or(5);
+        let total = self.batch.num_rows();
+        let offset = total.saturating_sub(n);
+        let limit = total - offset;
+        let sliced = self.batch.slice(offset, limit);
+        RecordBatchWrapper::new(sliced, self.manifest.clone())
     }
 
     /// Renderização rica em HTML para exibição interativa e elegante no Jupyter Notebook e Google Colab.
@@ -308,6 +334,51 @@ impl RecordBatchWrapper {
         ))
     }
 
+    /// Converte o RecordBatch para um dicionário Python {coluna: lista_valores}.
+    pub fn to_dict<'py>(slf: PyRef<'py, Self>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let slf_py: Py<Self> = slf.into();
+        if let Ok(pa) = py.import_bound("pyarrow") {
+            let batch = pa.call_method1("record_batch", (slf_py.clone_ref(py),))?;
+            if let Ok(dict) = batch.call_method0("to_pydict") {
+                return Ok(dict);
+            }
+        }
+        if let Ok(pl) = py.import_bound("polars") {
+            let df = pl.call_method1("from_arrow", (slf_py.clone_ref(py),))?;
+            if let Ok(dict) = df.call_method0("to_dict") {
+                return Ok(dict);
+            }
+        }
+        Err(PyValueError::new_err(
+            "to_dict() requer 'pyarrow' ou 'polars' instalado no ambiente Python",
+        ))
+    }
+
+    /// Alias para `to_dict()`, compatível com o método padrão do PyArrow RecordBatch.
+    pub fn to_pydict<'py>(slf: PyRef<'py, Self>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        Self::to_dict(slf, py)
+    }
+
+    /// Suporte ao operador colchetes (`batch["coluna"]` ou `batch[0]`): delega para PyArrow ou Polars com Zero-Copy.
+    pub fn __getitem__<'py>(
+        slf: PyRef<'py, Self>,
+        py: Python<'py>,
+        key: Bound<'py, PyAny>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let slf_py: Py<Self> = slf.into();
+        if let Ok(pa) = py.import_bound("pyarrow") {
+            let batch = pa.call_method1("record_batch", (slf_py.clone_ref(py),))?;
+            return batch.call_method1("__getitem__", (key,));
+        }
+        if let Ok(pl) = py.import_bound("polars") {
+            let df = pl.call_method1("from_arrow", (slf_py.clone_ref(py),))?;
+            return df.call_method1("__getitem__", (key,));
+        }
+        Err(PyValueError::new_err(
+            "Indexação via __getitem__ requer 'pyarrow' ou 'polars' instalado no ambiente Python",
+        ))
+    }
+
     /// Exporta o manifesto FAIR W3C PROV-O em formato JSON-LD para o caminho de arquivo fornecido.
     pub fn export_fair_manifest(&self, path: &str) -> PyResult<()> {
         if let Some(ref manifest) = self.manifest {
@@ -330,38 +401,52 @@ impl RecordBatchWrapper {
 // ---------------------------------------------------------------------------
 
 /// Descomprime um arquivo .dbc do DATASUS e decodifica diretamente para um RecordBatch Arrow Zero-Copy.
+///
+/// Libera o GIL do Python durante o I/O e a descompressão Blast para máxima responsividade.
 #[pyfunction]
-pub fn read_dbc(path: &str) -> PyResult<RecordBatchWrapper> {
-    let input = std::fs::read(path)
-        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{path}': {e}")))?;
-    let decompressor = DbcDecompressor::new().map_err(|e| {
-        PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}"))
-    })?;
-    let dbf_bytes = decompressor
-        .decompress_dbc(&input)
-        .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
-    let decoder = DbfDecoder::new();
-    let batch = decoder
-        .decode_to_record_batch(&dbf_bytes)
-        .map_err(|e| PyValueError::new_err(format!("Falha na decodificação DBF: {e}")))?;
+pub fn read_dbc(py: Python<'_>, path: &str) -> PyResult<RecordBatchWrapper> {
+    let path_str = path.to_string();
+    let batch = py
+        .allow_threads(|| -> Result<RecordBatch, String> {
+            let input = std::fs::read(&path_str)
+                .map_err(|e| format!("Erro ao ler arquivo '{path_str}': {e}"))?;
+            let decompressor = DbcDecompressor::new()
+                .map_err(|e| format!("Falha ao inicializar descompressor DBC: {e}"))?;
+            let dbf_bytes = decompressor
+                .decompress_dbc(&input)
+                .map_err(|e| format!("Falha na descompressão Blast do DBC: {e}"))?;
+            let decoder = DbfDecoder::new();
+            decoder
+                .decode_to_record_batch(&dbf_bytes)
+                .map_err(|e| format!("Falha na decodificação DBF: {e}"))
+        })
+        .map_err(BRHealthError::new_err)?;
     Ok(RecordBatchWrapper::new(batch, None))
 }
 
 /// Decodifica um arquivo .dbf diretamente para um RecordBatch Arrow Zero-Copy.
+///
+/// Libera o GIL do Python durante o I/O e a decodificação DBF.
 #[pyfunction]
-pub fn read_dbf(path: &str) -> PyResult<RecordBatchWrapper> {
-    let input = std::fs::read(path)
-        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{path}': {e}")))?;
-    let decoder = DbfDecoder::new();
-    let batch = decoder
-        .decode_to_record_batch(&input)
-        .map_err(|e| PyValueError::new_err(format!("Falha na decodificação DBF: {e}")))?;
+pub fn read_dbf(py: Python<'_>, path: &str) -> PyResult<RecordBatchWrapper> {
+    let path_str = path.to_string();
+    let batch = py
+        .allow_threads(|| -> Result<RecordBatch, String> {
+            let input = std::fs::read(&path_str)
+                .map_err(|e| format!("Erro ao ler arquivo '{path_str}': {e}"))?;
+            let decoder = DbfDecoder::new();
+            decoder
+                .decode_to_record_batch(&input)
+                .map_err(|e| format!("Falha na decodificação DBF: {e}"))
+        })
+        .map_err(BRHealthError::new_err)?;
     Ok(RecordBatchWrapper::new(batch, None))
 }
 
 /// Descomprime um arquivo .dbc do DATASUS retornando os bytes brutos do arquivo .dbf correspondente.
 ///
 /// Caso `output_path` seja fornecido, grava os bytes descomprimidos no caminho de arquivo especificado.
+/// Libera o GIL do Python durante o processamento.
 #[pyfunction]
 #[pyo3(signature = (input_path, output_path=None))]
 pub fn decompress_dbc<'py>(
@@ -369,20 +454,26 @@ pub fn decompress_dbc<'py>(
     input_path: &str,
     output_path: Option<String>,
 ) -> PyResult<Bound<'py, PyBytes>> {
-    let input = std::fs::read(input_path)
-        .map_err(|e| PyValueError::new_err(format!("Erro ao ler arquivo '{input_path}': {e}")))?;
-    let decompressor = DbcDecompressor::new().map_err(|e| {
-        PyValueError::new_err(format!("Falha ao inicializar descompressor DBC: {e}"))
-    })?;
-    let dbf_bytes = decompressor
-        .decompress_dbc(&input)
-        .map_err(|e| PyValueError::new_err(format!("Falha na descompressão Blast do DBC: {e}")))?;
+    let input_path_str = input_path.to_string();
+    let out_path_clone = output_path.clone();
 
-    if let Some(ref out_path) = output_path {
-        std::fs::write(out_path, &dbf_bytes).map_err(|e| {
-            PyValueError::new_err(format!("Erro ao gravar DBF em '{out_path}': {e}"))
-        })?;
-    }
+    let dbf_bytes = py
+        .allow_threads(|| -> Result<Vec<u8>, String> {
+            let input = std::fs::read(&input_path_str)
+                .map_err(|e| format!("Erro ao ler arquivo '{input_path_str}': {e}"))?;
+            let decompressor = DbcDecompressor::new()
+                .map_err(|e| format!("Falha ao inicializar descompressor DBC: {e}"))?;
+            let dbf_bytes = decompressor
+                .decompress_dbc(&input)
+                .map_err(|e| format!("Falha na descompressão Blast do DBC: {e}"))?;
+
+            if let Some(ref out_path) = out_path_clone {
+                std::fs::write(out_path, &dbf_bytes)
+                    .map_err(|e| format!("Erro ao gravar DBF em '{out_path}': {e}"))?;
+            }
+            Ok(dbf_bytes)
+        })
+        .map_err(BRHealthError::new_err)?;
 
     Ok(PyBytes::new_bound(py, &dbf_bytes))
 }
@@ -543,6 +634,8 @@ pub fn compute_apvp_rate(total_apvp: u64, population: u64) -> PyResult<f64> {
 }
 
 /// Avalia vetorizadamente um RecordBatch Arrow e calcula métricas completas de APVP.
+///
+/// Libera o GIL durante o cálculo analítico intensivo sobre arrays Arrow.
 #[pyfunction]
 #[pyo3(signature = (wrapper, age_column, cutoff_age=None, reference_population=None))]
 pub fn compute_batch_apvp<'py>(
@@ -552,13 +645,13 @@ pub fn compute_batch_apvp<'py>(
     cutoff_age: Option<u16>,
     reference_population: Option<u64>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let metrics = core_compute_batch_apvp(
-        &wrapper.batch,
-        age_column,
-        cutoff_age.unwrap_or(70),
-        reference_population,
-    )
-    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let batch = wrapper.batch.clone();
+    let col = age_column.to_string();
+    let cutoff = cutoff_age.unwrap_or(70);
+
+    let metrics = py
+        .allow_threads(move || core_compute_batch_apvp(&batch, &col, cutoff, reference_population))
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     let dict = PyDict::new_bound(py);
     dict.set_item("total_apvp", metrics.total_apvp)?;
@@ -757,13 +850,14 @@ pub struct HospitalMorbidityAccessor {
 
 #[pymethods]
 impl HospitalMorbidityAccessor {
-    /// Ingestão e harmonização de AIH/SIH-SUS com suporte a anos múltiplos.
+    /// Ingestão e harmonização de AIH/SIH-SUS com suporte a anos e jurisdições múltiplas.
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (jurisdiction=None, year=None, years=None, month=None, harmonize_ibge=true, assign_h3=None, enrich_csap=true))]
+    #[pyo3(signature = (jurisdiction=None, jurisdictions=None, year=None, years=None, month=None, harmonize_ibge=true, assign_h3=None, enrich_csap=true))]
     pub fn fetch(
         &self,
         py: Python<'_>,
         jurisdiction: Option<String>,
+        jurisdictions: Option<Vec<String>>,
         year: Option<u16>,
         years: Option<Vec<u16>>,
         month: Option<u8>,
@@ -773,14 +867,41 @@ impl HospitalMorbidityAccessor {
     ) -> PyResult<RecordBatchWrapper> {
         let engine_borrow = self.engine.borrow(py);
 
-        if let Some(yr_list) = years {
-            let mut all_batches = Vec::new();
-            let mut last_manifest = None;
+        let uf_list: Vec<Option<String>> = match (jurisdictions, jurisdiction) {
+            (Some(ufs), _) => ufs.into_iter().map(Some).collect(),
+            (None, Some(uf)) => vec![Some(uf)],
+            (None, None) => vec![None],
+        };
 
-            for yr in yr_list {
+        let yr_list: Vec<u16> = match (years, year) {
+            (Some(yrs), _) => yrs,
+            (None, Some(yr)) => vec![yr],
+            (None, None) => vec![2024],
+        };
+
+        if uf_list.len() == 1 && yr_list.len() == 1 {
+            return engine_borrow.fetch(
+                py,
+                "datasus.sih",
+                uf_list[0].clone(),
+                yr_list[0],
+                month,
+                harmonize_ibge,
+                assign_h3,
+                enrich_csap,
+                None,
+            );
+        }
+
+        let mut all_batches = Vec::new();
+        let mut last_manifest = None;
+
+        for uf in &uf_list {
+            for &yr in &yr_list {
                 let res = engine_borrow.fetch(
+                    py,
                     "datasus.sih",
-                    jurisdiction.clone(),
+                    uf.clone(),
                     yr,
                     month,
                     harmonize_ibge,
@@ -791,37 +912,28 @@ impl HospitalMorbidityAccessor {
                 all_batches.push(res.batch);
                 last_manifest = res.manifest;
             }
+        }
 
-            if all_batches.is_empty() {
-                return engine_borrow.fetch(
-                    "datasus.sih",
-                    jurisdiction,
-                    year.unwrap_or(2024),
-                    month,
-                    harmonize_ibge,
-                    assign_h3,
-                    enrich_csap,
-                    None,
-                );
-            }
-
-            let schema = all_batches[0].schema();
-            let combined = concat_batches(&schema, &all_batches)
-                .map_err(|e| PyValueError::new_err(format!("Erro ao concatenar lotes SIH: {e}")))?;
-
-            Ok(RecordBatchWrapper::new(combined, last_manifest))
-        } else {
-            engine_borrow.fetch(
+        if all_batches.is_empty() {
+            return engine_borrow.fetch(
+                py,
                 "datasus.sih",
-                jurisdiction,
-                year.unwrap_or(2024),
+                None,
+                2024,
                 month,
                 harmonize_ibge,
                 assign_h3,
                 enrich_csap,
                 None,
-            )
+            );
         }
+
+        let schema = all_batches[0].schema();
+        let combined = py
+            .allow_threads(|| concat_batches(&schema, &all_batches))
+            .map_err(|e| PyValueError::new_err(format!("Erro ao concatenar lotes SIH: {e}")))?;
+
+        Ok(RecordBatchWrapper::new(combined, last_manifest))
     }
 }
 
@@ -858,6 +970,7 @@ impl VitalStatisticsAccessor {
         };
 
         engine_borrow.fetch(
+            py,
             src_id,
             jurisdiction,
             year,
@@ -896,6 +1009,7 @@ impl NotificationsAccessor {
         filters.insert("disease".into(), disease.to_uppercase());
 
         engine_borrow.fetch(
+            py,
             "datasus.sinan",
             jurisdiction,
             year,
@@ -934,6 +1048,7 @@ impl GlobalClimateAccessor {
         }
 
         engine_borrow.fetch(
+            py,
             "global.copernicus_era5",
             jurisdiction,
             year,
@@ -981,6 +1096,7 @@ impl DemographicsAccessor {
         };
 
         engine_borrow.fetch(
+            py,
             src_id,
             jurisdiction,
             year,
@@ -1025,6 +1141,7 @@ impl AmbulatoryAccessor {
         };
 
         engine_borrow.fetch(
+            py,
             src_id,
             jurisdiction,
             year,
@@ -1069,7 +1186,17 @@ impl EnvironmentalAccessor {
             }
         };
 
-        engine_borrow.fetch(src_id, jurisdiction, year, month, false, None, false, None)
+        engine_borrow.fetch(
+            py,
+            src_id,
+            jurisdiction,
+            year,
+            month,
+            false,
+            None,
+            false,
+            None,
+        )
     }
 }
 
@@ -1094,6 +1221,7 @@ impl SocialAccessor {
     ) -> PyResult<RecordBatchWrapper> {
         let engine_borrow = self.engine.borrow(py);
         engine_borrow.fetch(
+            py,
             "mds.cadunico",
             jurisdiction,
             year,
@@ -1200,10 +1328,13 @@ impl Engine {
     }
 
     /// Executa ingestão e harmonização de uma fonte de dados de saúde.
+    ///
+    /// Libera o GIL do interpretador Python durante o I/O assíncrono Tokio.
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (source_id, jurisdiction=None, year=2024, month=None, harmonize_ibge=true, assign_h3=None, enrich_csap=false, extra_filters=None))]
     pub fn fetch(
         &self,
+        py: Python<'_>,
         source_id: &str,
         jurisdiction: Option<String>,
         year: u16,
@@ -1236,22 +1367,36 @@ impl Engine {
         };
 
         let app = self.app_service.clone();
+        let rt = self.rt.clone();
         let source_id_str = source_id.to_string();
 
-        let result = self
-            .rt
-            .block_on(async move {
-                app.execute_full_pipeline(&source_id_str, &params, &options)
-                    .await
+        let result = py
+            .allow_threads(move || {
+                rt.block_on(async move {
+                    app.execute_full_pipeline(&source_id_str, &params, &options)
+                        .await
+                })
             })
-            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+            .map_err(|err| match err {
+                brhealth_core::domain::ports::outbound::PortError::ResourceNotFound(msg) => {
+                    SourceNotFoundError::new_err(msg)
+                }
+                brhealth_core::domain::ports::outbound::PortError::TransportError(msg) => {
+                    TransportError::new_err(msg)
+                }
+                brhealth_core::domain::ports::outbound::PortError::ValidationError(msg)
+                | brhealth_core::domain::ports::outbound::PortError::SchemaMismatch(msg) => {
+                    ValidationError::new_err(msg)
+                }
+                other => BRHealthError::new_err(other.to_string()),
+            })?;
 
         let combined_batch = if result.batches.is_empty() {
             let src = self
                 .app_service
                 .registry()
                 .get(source_id)
-                .map_err(|e| PyValueError::new_err(e.to_string()))?;
+                .map_err(|e| SourceNotFoundError::new_err(e.to_string()))?;
             RecordBatch::new_empty(src.target_schema())
         } else {
             result.batches[0].clone()
@@ -1264,6 +1409,8 @@ impl Engine {
     }
 
     /// Avalia um RecordBatch de internações hospitalares e calcula métricas de CSAP.
+    ///
+    /// Libera o GIL durante os cálculos de bioestatística e saúde coletiva.
     #[pyo3(signature = (wrapper, reference_population=None))]
     pub fn evaluate_csap<'py>(
         &self,
@@ -1271,7 +1418,9 @@ impl Engine {
         wrapper: &RecordBatchWrapper,
         reference_population: Option<u64>,
     ) -> PyResult<Bound<'py, PyDict>> {
-        let metrics = compute_csap_metrics(&wrapper.batch, reference_population)
+        let batch = wrapper.batch.clone();
+        let metrics = py
+            .allow_threads(move || compute_csap_metrics(&batch, reference_population))
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
         let avoidable_cost_proportion = if metrics.total_cost > 0.0 {
@@ -1337,10 +1486,13 @@ fn get_global_engine() -> PyResult<&'static Engine> {
 }
 
 /// Executa ingestão e harmonização de qualquer fonte registrada usando o motor global do BRHealth.
+///
+/// Libera o GIL do interpretador durante todo o pipeline.
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (source_id, jurisdiction=None, year=2024, month=None, harmonize_ibge=true, assign_h3=None, enrich_csap=false, extra_filters=None))]
 pub fn fetch(
+    py: Python<'_>,
     source_id: &str,
     jurisdiction: Option<String>,
     year: u16,
@@ -1352,6 +1504,7 @@ pub fn fetch(
 ) -> PyResult<RecordBatchWrapper> {
     let engine = get_global_engine()?;
     engine.fetch(
+        py,
         source_id,
         jurisdiction,
         year,
