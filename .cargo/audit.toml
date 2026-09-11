@@ -1,0 +1,7 @@
+# Configuration for cargo-audit
+[advisories]
+ignore = [
+    "RUSTSEC-2025-0020", # pyo3 buffer overflow in PyString::from_object (awaiting upstream pyo3 0.24+ bump)
+    "RUSTSEC-2026-0177", # pyo3 missing Sync bound on PyCFunction::new_closure closures
+    "RUSTSEC-2024-0436", # paste unmaintained (transitive dependency from parquet)
+]

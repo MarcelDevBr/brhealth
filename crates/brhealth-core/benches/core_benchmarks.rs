@@ -10,7 +10,9 @@
 //! - Classificação e Enriquecimento Analítico de CSAP (Portaria 221/2008).
 //! - Descompressão nativa DATASUS Blast PKWARE DCL.
 
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use std::hint::black_box;
+
+use criterion::{Criterion, criterion_group, criterion_main};
 
 use brhealth_core::decoders::blast::BlastDecompressor;
 use brhealth_core::domain::analytics::csap::classify_cid10;

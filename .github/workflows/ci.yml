@@ -74,7 +74,9 @@ jobs:
         run: pip install maturin
 
       - name: Build Python Extension in Development Mode
-        run: maturin develop --manifest-path crates/brhealth-python/Cargo.toml
+        run: |
+          maturin build --manifest-path crates/brhealth-python/Cargo.toml
+          pip install target/wheels/*.whl
 
       - name: Verify Exported Symbols & Python API Sanity
         run: |
