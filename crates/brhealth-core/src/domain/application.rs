@@ -135,12 +135,39 @@ impl BRHealthApplicationService {
         &self.context
     }
 
+    /// Limpa o cache Hive-Parquet particionado.
+    /// Se `source_id` for informado, limpa apenas a pasta daquela fonte; caso contrário, limpa todo o diretório.
+    pub fn clear_cache(&self, source_id: Option<&str>) -> Result<usize, PortError> {
+        let base_path = crate::infrastructure::cache::default_cache_dir();
+        let store = HiveParquetStore::new(base_path)?;
+        store.clear(source_id)
+    }
+
+    /// Limpa dados de cache mais antigos que a data de corte `cutoff`.
+    pub fn clear_cache_older_than(
+        &self,
+        cutoff: chrono::DateTime<Utc>,
+    ) -> Result<usize, PortError> {
+        let base_path = crate::infrastructure::cache::default_cache_dir();
+        let store = HiveParquetStore::new(base_path)?;
+        store.clear_older_than(cutoff)
+    }
+
+    /// Retorna as estatísticas do cache local (espaço em disco, contagem de snapshots).
+    pub fn cache_status(
+        &self,
+        source_id: Option<&str>,
+    ) -> Result<crate::infrastructure::storage::hive_parquet::CacheStorageStatus, PortError> {
+        let base_path = crate::infrastructure::cache::default_cache_dir();
+        let store = HiveParquetStore::new(base_path)?;
+        store.status(source_id)
+    }
+
     /// Executa o pipeline analítico de ponta a ponta:
-    /// Ingestão $\to$ Descompressão $\to$ Harmonização IBGE $\to$ Indexação H3 $\to$ Enriquecimento CSAP $\to$ Cache Hive-Parquet $\to$ Manifesto FAIR W3C PROV-O.
+    /// Cache Check (Hit prioritário) $\to$ Ingestão $\to$ Descompressão $\to$ Harmonização IBGE $\to$ Indexação H3 $\to$ Enriquecimento CSAP $\to$ Cache Hive-Parquet $\to$ Manifesto FAIR W3C PROV-O.
     ///
-    /// Em caso de falha na fonte primária, tenta mirrors declarados pela fonte.
-    /// Se todos falharem e `persist_to_cache` estiver habilitado com dados existentes,
-    /// serve os dados stale do cache Hive-Parquet local.
+    /// Se o dado já residir no cache local Hive-Parquet, ele é retornado instantaneamente sem tráfego de rede.
+    /// Em caso de ausência no cache, busca na fonte primária (ou espelhos mirrors), decodifica e grava no cache local.
     pub async fn execute_full_pipeline(
         &self,
         source_id: &str,
@@ -151,7 +178,72 @@ impl BRHealthApplicationService {
         let locator = source.resolve_locator(params)?;
         let mirror_uris = source.mirror_uris(params);
 
-        // 1. Ingestão com fallback resiliente
+        let cache_dir = options
+            .cache_base_path
+            .clone()
+            .unwrap_or_else(crate::infrastructure::cache::default_cache_dir);
+        let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
+
+        // 1. Verificação prioritária de Cache Local Hive-Parquet
+        if let Ok(store) = HiveParquetStore::new(&cache_dir)
+            && let Ok(Some(cached_batch)) =
+                store.read_as_of(source_id, uf, params.year as i32, Utc::now())
+        {
+            let raw_batches = vec![cached_batch];
+            let data_freshness = DataFreshness::Fresh;
+
+            let raw_bytes_sha256 = self
+                .sync_state
+                .get_snapshot_version(source_id)
+                .unwrap_or_else(|| {
+                    use sha2::{Digest, Sha256};
+                    let mut hasher = Sha256::new();
+                    hasher.update(locator.as_bytes());
+                    format!("{:x}", hasher.finalize())
+                });
+
+            let mut pipeline = TransformationPipeline::new();
+
+            if let (Some(res), Some((lat_col, lon_col))) = (
+                options.assign_h3_resolution,
+                options.h3_coord_columns.as_ref(),
+            ) {
+                pipeline = pipeline.add_step(H3SpatialIndexingStep::new(
+                    lat_col,
+                    lon_col,
+                    format!("h3_res{res}"),
+                    res,
+                ));
+            }
+
+            if options.enrich_csap {
+                pipeline = pipeline.add_step(CsapEnrichmentStep::new());
+            }
+
+            for custom_step in &options.custom_steps {
+                pipeline = pipeline.add_shared_step(custom_step.clone());
+            }
+
+            let processed_batches = pipeline.execute_batches(raw_batches)?;
+
+            let csap_summary = if options.enrich_csap || source_id.contains("sih") {
+                self.evaluate_hospital_csap(&processed_batches).ok()
+            } else {
+                None
+            };
+
+            let manifest = self.generate_manifest(&[locator], &[raw_bytes_sha256])?;
+
+            return Ok(PipelineExecutionResult {
+                batches: processed_batches,
+                manifest,
+                csap_summary,
+                persisted_snapshot_id: None,
+                data_freshness,
+            });
+        }
+
+        // 2. Cache miss: Ingestão remota com fallback resiliente
         let (raw_batches, data_freshness) = match self.execute_query(source_id, params).await {
             Ok(batches) => (batches, DataFreshness::Fresh),
             Err(primary_err) => {
@@ -170,7 +262,6 @@ impl BRHealthApplicationService {
                         eprintln!(
                             "✓ [BRHealth] Espelho conectado com sucesso. Descomprimindo e decodificando payload..."
                         );
-                        // Decodificar via decompressor + decoder
                         let decompressed = self.context.decompressor.decompress(&bytes)?;
                         let dbf_decoder = crate::decoders::dbf::DbfDecoder::new();
                         let raw_batch = dbf_decoder.decode_to_record_batch(&decompressed)?;
@@ -179,7 +270,6 @@ impl BRHealthApplicationService {
                             mirror_result = Some(batches);
                             break;
                         }
-                        // Se a decodificação falhar, tentar próximo mirror
                         let _ = mirror_result.insert(vec![raw_batch]);
                         break;
                     }
@@ -193,38 +283,26 @@ impl BRHealthApplicationService {
                             reason: format!("Obtido via mirror após falha primária: {primary_err}"),
                         },
                     )
-                } else if let (true, Some(base_path)) =
-                    (options.persist_to_cache, options.cache_base_path.as_ref())
+                } else if let Ok(store) = HiveParquetStore::new(&cache_dir)
+                    && let Ok(Some(cached_batch)) =
+                        store.read_as_of(source_id, uf, params.year as i32, Utc::now())
                 {
-                    // Fallback para cache Hive-Parquet stale
-                    let store = HiveParquetStore::new(base_path)?;
-                    let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
-                    match store.read_as_of(source_id, uf, params.year as i32, Utc::now())? {
-                        Some(cached_batch) => {
-                            eprintln!(
-                                "⚠ [BRHealth] Rede indisponível. Servindo snapshot local em cache para '{}'.",
-                                source_id
-                            );
-                            (
-                                vec![cached_batch],
-                                DataFreshness::Stale {
-                                    cached_at: Utc::now(),
-                                    reason: format!(
-                                        "Cache stale após falha de todas as fontes: {primary_err}"
-                                    ),
-                                },
-                            )
-                        }
-                        None => {
-                            return Err(PortError::DegradedSource(format!(
-                                "A fonte oficial '{}' está temporariamente inacessível e não há snapshot no cache local.\nDetalhes técnicos: {}\nSugestão: Verifique sua conexão à internet ou aguarde o restabelecimento do serviço do DATASUS/órgão emissor.",
-                                source_id, primary_err
-                            )));
-                        }
-                    }
+                    eprintln!(
+                        "⚠ [BRHealth] Rede indisponível. Servindo snapshot local em cache para '{}'.",
+                        source_id
+                    );
+                    (
+                        vec![cached_batch],
+                        DataFreshness::Stale {
+                            cached_at: Utc::now(),
+                            reason: format!(
+                                "Cache stale após falha de todas as fontes: {primary_err}"
+                            ),
+                        },
+                    )
                 } else {
                     return Err(PortError::DegradedSource(format!(
-                        "A fonte oficial '{}' está temporariamente inacessível nos servidores remotos.\nDetalhes técnicos: {}\nSugestão: O serviço governamental pode estar instável. Tente novamente em alguns instantes.",
+                        "A fonte oficial '{}' está temporariamente inacessível e não há dados em cache local.\nDetalhes técnicos: {}\nSugestão: Verifique sua conexão à internet ou execute a limpeza do cache se aplicável.",
                         source_id, primary_err
                     )));
                 }
@@ -274,16 +352,15 @@ impl BRHealthApplicationService {
             None
         };
 
-        // 5. Persistência em cache particionado Hive-Parquet (se configurado)
+        // 5. Persistência em cache particionado Hive-Parquet
         let mut persisted_snapshot_id = None;
-        if let (true, Some(base_path)) =
-            (options.persist_to_cache, options.cache_base_path.as_ref())
-        {
-            let store = HiveParquetStore::new(base_path)?;
+        if let Ok(store) = HiveParquetStore::new(&cache_dir) {
             let uf = params.jurisdiction_code.as_deref().unwrap_or("BR");
             for batch in &processed_batches {
-                let snap_record = store.save_batch(source_id, uf, params.year as i32, batch)?;
-                persisted_snapshot_id = Some(snap_record.snapshot_id.to_string());
+                if let Ok(snap_record) = store.save_batch(source_id, uf, params.year as i32, batch)
+                {
+                    persisted_snapshot_id = Some(snap_record.snapshot_id.to_string());
+                }
             }
         }
 

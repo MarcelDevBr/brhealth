@@ -1235,6 +1235,76 @@ impl SocialAccessor {
 }
 
 // ---------------------------------------------------------------------------
+// Gestão de Cache Colunar Hive-Parquet (CacheManager)
+// ---------------------------------------------------------------------------
+
+/// Gerenciador de cache local particionado Hive-Parquet do BRHealth.
+#[pyclass]
+pub struct CacheManager {
+    app_service: Arc<BRHealthApplicationService>,
+}
+
+#[pymethods]
+impl CacheManager {
+    /// Limpa o cache Hive-Parquet.
+    ///
+    /// Se `source_id` for informado (ex: "datasus.sih"), limpa apenas a partição daquela fonte.
+    /// Caso contrário, remove todo o diretório de cache local.
+    /// Retorna a quantidade de diretórios/arquivos removidos.
+    #[pyo3(signature = (source_id=None))]
+    pub fn clear(&self, source_id: Option<&str>) -> PyResult<usize> {
+        self.app_service
+            .clear_cache(source_id)
+            .map_err(|e| PyValueError::new_err(e.to_string()))
+    }
+
+    /// Limpa dados de snapshots mais antigos que uma quantidade de dias ou data ISO.
+    ///
+    /// Retorna a contagem de snapshots removidos.
+    #[pyo3(signature = (days=None, cutoff_date=None))]
+    pub fn clear_older_than(
+        &self,
+        days: Option<i64>,
+        cutoff_date: Option<&str>,
+    ) -> PyResult<usize> {
+        let cutoff = if let Some(iso_str) = cutoff_date {
+            chrono::DateTime::parse_from_rfc3339(iso_str)
+                .map(|dt| dt.with_timezone(&chrono::Utc))
+                .map_err(|e| PyValueError::new_err(format!("Data ISO 8601 inválida: {e}")))?
+        } else if let Some(d) = days {
+            chrono::Utc::now() - chrono::Duration::days(d)
+        } else {
+            return Err(PyValueError::new_err(
+                "Informe 'days' (ex: 30) ou 'cutoff_date' em formato ISO (ex: '2025-01-01T00:00:00Z')",
+            ));
+        };
+
+        self.app_service
+            .clear_cache_older_than(cutoff)
+            .map_err(|e| PyValueError::new_err(e.to_string()))
+    }
+
+    /// Retorna um dicionário com estatísticas do cache (tamanho em bytes, contagem de snapshots, caminho).
+    #[pyo3(signature = (source_id=None))]
+    pub fn status<'py>(
+        &self,
+        py: Python<'py>,
+        source_id: Option<&str>,
+    ) -> PyResult<Bound<'py, PyDict>> {
+        let st = self
+            .app_service
+            .cache_status(source_id)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+        let dict = PyDict::new_bound(py);
+        dict.set_item("total_bytes", st.total_bytes)?;
+        dict.set_item("snapshot_count", st.snapshot_count)?;
+        dict.set_item("base_path", st.base_path)?;
+        Ok(dict)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Motor Analítico BRHealth (Engine)
 // ---------------------------------------------------------------------------
 
@@ -1310,6 +1380,14 @@ impl Engine {
     #[getter]
     pub fn social(slf: PyRef<'_, Self>) -> SocialAccessor {
         SocialAccessor { engine: slf.into() }
+    }
+
+    /// Sub-objeto de governança e gestão de cache Hive-Parquet.
+    #[getter]
+    pub fn cache(slf: PyRef<'_, Self>) -> CacheManager {
+        CacheManager {
+            app_service: slf.app_service.clone(),
+        }
     }
 
     /// Retorna a lista de identificadores das fontes registradas.
@@ -1603,6 +1681,7 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Classes & Accessors
     m.add_class::<Engine>()?;
+    m.add_class::<CacheManager>()?;
     m.add_class::<RecordBatchWrapper>()?;
     m.add_class::<HospitalMorbidityAccessor>()?;
     m.add_class::<VitalStatisticsAccessor>()?;

@@ -284,3 +284,38 @@ fn test_python_source_alias_resolution() {
         assert!(engine.list_sources().contains(&"datasus.sih".to_string()));
     });
 }
+
+#[test]
+fn test_python_cache_manager() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        let engine_obj = Py::new(py, brhealth::Engine::new().unwrap()).unwrap();
+        let cache_obj = engine_obj.getattr(py, "cache").unwrap();
+
+        // Status do cache deve retornar dict com as chaves esperadas
+        let status_dict: Bound<'_, pyo3::types::PyDict> = cache_obj
+            .call_method0(py, "status")
+            .unwrap()
+            .extract(py)
+            .unwrap();
+        assert!(status_dict.contains("total_bytes").unwrap());
+        assert!(status_dict.contains("snapshot_count").unwrap());
+        assert!(status_dict.contains("base_path").unwrap());
+
+        // Limpeza de fonte específica
+        let cleared_sih: usize = cache_obj
+            .call_method1(py, "clear", ("datasus.sih",))
+            .unwrap()
+            .extract(py)
+            .unwrap();
+        assert_eq!(cleared_sih, 0); // nenhuma pasta criada ainda
+
+        // Limpeza por dias
+        let cleared_days: usize = cache_obj
+            .call_method1(py, "clear_older_than", (30,))
+            .unwrap()
+            .extract(py)
+            .unwrap();
+        assert_eq!(cleared_days, 0);
+    });
+}

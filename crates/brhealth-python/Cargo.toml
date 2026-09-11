@@ -18,6 +18,7 @@ extension-module = ["pyo3/extension-module"]
 [dependencies]
 brhealth-core = { path = "../brhealth-core" }
 arrow = { workspace = true }
+chrono = { workspace = true }
 pyo3 = { version = "0.22", features = ["abi3-py310"] }
 tokio = { workspace = true }
 

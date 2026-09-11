@@ -194,6 +194,160 @@ impl HiveParquetStore {
         Ok(catalog.snapshots)
     }
 
+    /// Limpa o cache Hive-Parquet. Se `dataset_id` for fornecido, limpa apenas a pasta
+    /// e o catálogo daquele conjunto de dados; caso contrário, limpa todo o diretório base.
+    /// Retorna o número de diretórios/arquivos removidos.
+    pub fn clear(&self, dataset_id: Option<&str>) -> Result<usize, PortError> {
+        let _guard = self.lock.write().map_err(|_| {
+            PortError::CacheError("Falha de concorrência ao limpar HiveParquetStore".into())
+        })?;
+
+        let mut removed = 0;
+        if let Some(id) = dataset_id {
+            let target_dir = self.base_dir.join(id);
+            if target_dir.exists() {
+                fs::remove_dir_all(&target_dir).map_err(PortError::IoError)?;
+                removed += 1;
+            }
+        } else if self.base_dir.exists() {
+            let entries = fs::read_dir(&self.base_dir).map_err(PortError::IoError)?;
+            for entry in entries {
+                let entry = entry.map_err(PortError::IoError)?;
+                let path = entry.path();
+                if path.is_dir() {
+                    fs::remove_dir_all(&path).map_err(PortError::IoError)?;
+                    removed += 1;
+                } else if path.is_file() {
+                    fs::remove_file(&path).map_err(PortError::IoError)?;
+                    removed += 1;
+                }
+            }
+        }
+        Ok(removed)
+    }
+
+    /// Remove snapshots com data de criação estritamente anterior a `cutoff`.
+    /// Exclui os arquivos Parquet associados do disco e atualiza os catálogos `snapshots.json`.
+    /// Retorna a contagem de snapshots removidos.
+    pub fn clear_older_than(&self, cutoff: DateTime<Utc>) -> Result<usize, PortError> {
+        let _guard = self.lock.write().map_err(|_| {
+            PortError::CacheError("Falha de concorrência ao expirar HiveParquetStore".into())
+        })?;
+
+        if !self.base_dir.exists() {
+            return Ok(0);
+        }
+
+        let mut total_purged = 0;
+        let entries = fs::read_dir(&self.base_dir).map_err(PortError::IoError)?;
+
+        for entry in entries {
+            let entry = entry.map_err(PortError::IoError)?;
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+
+            let dataset_id = match path.file_name().and_then(|n| n.to_str()) {
+                Some(name) if !name.starts_with('.') => name.to_string(),
+                _ => continue,
+            };
+
+            let catalog_path = self.catalog_path(&dataset_id);
+            if !catalog_path.exists() {
+                continue;
+            }
+
+            let mut catalog = self.load_catalog(&dataset_id)?;
+            let original_count = catalog.snapshots.len();
+
+            let mut retained = Vec::with_capacity(original_count);
+            for snap in catalog.snapshots {
+                if snap.created_at < cutoff {
+                    // Remover arquivo Parquet físico
+                    let full_parquet = self.base_dir.join(&snap.file_path);
+                    if full_parquet.exists() {
+                        let _ = fs::remove_file(&full_parquet);
+                        // Tentar remover diretório snapshot vazio pai
+                        if let Some(parent) = full_parquet.parent() {
+                            let _ = fs::remove_dir(parent);
+                        }
+                    }
+                    total_purged += 1;
+                } else {
+                    retained.push(snap);
+                }
+            }
+
+            if retained.len() != original_count {
+                catalog.snapshots = retained;
+                let serialized = serde_json::to_string_pretty(&catalog)
+                    .map_err(|e| PortError::TabularDecodeError(e.to_string()))?;
+                fs::write(&catalog_path, serialized).map_err(PortError::IoError)?;
+            }
+        }
+
+        Ok(total_purged)
+    }
+
+    /// Calcula estatísticas do cache: total de bytes em disco e contagem total de snapshots.
+    pub fn status(&self, dataset_id: Option<&str>) -> Result<CacheStorageStatus, PortError> {
+        let target_dir = match dataset_id {
+            Some(id) => self.base_dir.join(id),
+            None => self.base_dir.clone(),
+        };
+
+        if !target_dir.exists() {
+            return Ok(CacheStorageStatus {
+                total_bytes: 0,
+                snapshot_count: 0,
+                base_path: self.base_dir.to_string_lossy().to_string(),
+            });
+        }
+
+        let mut total_bytes = 0u64;
+        let mut snapshot_count = 0usize;
+
+        fn dir_size(path: &Path, bytes: &mut u64) -> std::io::Result<()> {
+            if path.is_dir() {
+                for entry in fs::read_dir(path)? {
+                    let entry = entry?;
+                    let p = entry.path();
+                    if p.is_dir() {
+                        dir_size(&p, bytes)?;
+                    } else if p.is_file() {
+                        *bytes += entry.metadata()?.len();
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        let _ = dir_size(&target_dir, &mut total_bytes);
+
+        if let Some(id) = dataset_id {
+            let cat = self.load_catalog(id)?;
+            snapshot_count = cat.snapshots.len();
+        } else if let Ok(entries) = fs::read_dir(&self.base_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir()
+                    && let Some(name) = p.file_name().and_then(|n| n.to_str())
+                    && !name.starts_with('.')
+                    && let Ok(cat) = self.load_catalog(name)
+                {
+                    snapshot_count += cat.snapshots.len();
+                }
+            }
+        }
+
+        Ok(CacheStorageStatus {
+            total_bytes,
+            snapshot_count,
+            base_path: self.base_dir.to_string_lossy().to_string(),
+        })
+    }
+
     fn catalog_path(&self, dataset_id: &str) -> PathBuf {
         self.base_dir
             .join(dataset_id)
@@ -232,6 +386,17 @@ impl HiveParquetStore {
 
         Ok(())
     }
+}
+
+/// Sumário das estatísticas do cache Hive-Parquet.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CacheStorageStatus {
+    /// Tamanho total ocupado no disco em bytes.
+    pub total_bytes: u64,
+    /// Total de snapshots registrados.
+    pub snapshot_count: usize,
+    /// Caminho base do diretório de cache.
+    pub base_path: String,
 }
 
 #[cfg(test)]
@@ -284,5 +449,33 @@ mod tests {
         // Listar snapshots
         let all = store.list_snapshots("datasus.sim").unwrap();
         assert_eq!(all.len(), 1);
+    }
+
+    #[test]
+    fn test_hive_parquet_clear_and_expiration() {
+        let temp = tempdir().unwrap();
+        let store = HiveParquetStore::new(temp.path()).unwrap();
+
+        let batch = create_sample_batch();
+        store.save_batch("datasus.sih", "SP", 2023, &batch).unwrap();
+        store.save_batch("datasus.sim", "RJ", 2023, &batch).unwrap();
+
+        let status = store.status(None).unwrap();
+        assert_eq!(status.snapshot_count, 2);
+        assert!(status.total_bytes > 0);
+
+        // Limpeza de uma única fonte
+        let removed_sih = store.clear(Some("datasus.sih")).unwrap();
+        assert_eq!(removed_sih, 1);
+
+        let status_after_sih = store.status(None).unwrap();
+        assert_eq!(status_after_sih.snapshot_count, 1);
+
+        // Limpeza total
+        let removed_all = store.clear(None).unwrap();
+        assert!(removed_all >= 1);
+
+        let status_empty = store.status(None).unwrap();
+        assert_eq!(status_empty.snapshot_count, 0);
     }
 }

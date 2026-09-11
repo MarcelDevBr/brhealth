@@ -469,6 +469,7 @@ version = "0.1.0"
 dependencies = [
  "arrow",
  "brhealth-core",
+ "chrono",
  "pyo3",
  "tokio",
 ]

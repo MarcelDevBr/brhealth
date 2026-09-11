@@ -32,6 +32,7 @@ pub use domain::transforms::ibge::{
 };
 pub use domain::transforms::pipeline::{BatchTransformationStep, TransformationPipeline};
 pub use infrastructure::cache::{default_cache_dir, default_data_dir};
+pub use infrastructure::storage::hive_parquet::{CacheStorageStatus, HiveParquetStore};
 pub use infrastructure::transport::{
     DataFreshness, FetchOutcome, HealthReport, ResiliencePolicy, ResilientTransport,
     SourceHealthChecker, SourceHealthEntry, SourceStatus,

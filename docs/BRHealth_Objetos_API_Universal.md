@@ -14,23 +14,23 @@ Esta documentação descreve a **API conceitual, o modelo de resolução transpa
 
 No BRHealth, **o usuário e as bibliotecas clientes interagem com as fontes de dados através de uma interface conceitual idêntica e unificada**, independentemente de onde o dado físico resida. 
 
-O consumidor da API **não precisa e não deve** gerenciar manualmente arquivos locais baixados (`.dbc`, `.dbf`, `.csv`), caminhos temporários no sistema de arquivos ou fluxos de download manuais. 
+O consumidor da API **não gerencia manualmente arquivos locais baixados (`.dbc`, `.dbf`, `.csv`)**, caminhos temporários no sistema de arquivos ou fluxos de download manuais. 
 
-### 1.1. Resolução em Camadas Gerenciada pelo Core
+### 1.1. Política de Atualização e Cache do Core
 
-O núcleo analítico (`core`) intercepta cada requisição e decide de forma transparente:
+Por padrão, a política do BRHealth é garantir **dados oficiais sempre atualizados**:
+- **`force_download = true` por padrão**: Toda consulta acessa a fonte oficial remota, garante que o dado mais recente seja obtido e atualiza o cache local.
+- **Cache como contingência e aceleração explícita**: Se o usuário desejar usar a cópia local já existente para máxima velocidade (offline / sem tocar na rede), ele pode configurar `use_cache = true` (ou `force_download = false`). Em caso de falha de rede ou queda do DATASUS, o core recorre automaticamente à versão salva no cache local (*stale fallback*).
+- **Limpeza do Cache**: O usuário pode solicitar explicitamente a invalidação/limpeza do cache a qualquer momento (total, por fonte ou por data/dias de antiguidade).
 
 ```mermaid
 flowchart TD
-    REQ["Consulta: engine.fetch(source_id, jurisdiction, year, month)"] --> CHECK_FORCE{"Forçar atualização?<br/>(force_download / bypass_cache)"}
+    REQ["Consulta: engine.fetch(source_id, jurisdiction, year, month)"] --> CHECK_FORCE{"force_download ativo?<br/>(Padrão: TRUE)"}
     
-    CHECK_FORCE -- Sim --> FETCH_REMOTE["1. Ingestão Remota Oficial (FTP / HTTP / API)"]
-    CHECK_FORCE -- Não --> CHECK_CACHE{"2. O dado existe no Cache Local Hive-Parquet?"}
+    CHECK_FORCE -- Sim (Padrão) --> FETCH_REMOTE["1. Ingestão Remota Oficial (FTP / HTTP / API)"]
+    CHECK_FORCE -- Não (use_cache=True) --> CHECK_CACHE{"2. O dado existe no Cache Local Hive-Parquet?"}
     
-    CHECK_CACHE -- Sim --> CHECK_TTL{"O snapshot no cache é mais recente que a data de corte?"}
-    CHECK_TTL -- Válido --> HIT["✓ Cache Hit: Leitura Colunar Zero-Copy imediata"]
-    CHECK_TTL -- Expirado --> FETCH_REMOTE
-    
+    CHECK_CACHE -- Sim --> HIT["✓ Cache Hit: Leitura Colunar Zero-Copy imediata"]
     CHECK_CACHE -- Não --> FETCH_REMOTE
     
     FETCH_REMOTE --> RES_PRIMARY{"Fonte primária respondeu?"}
@@ -48,27 +48,22 @@ flowchart TD
     SERVE_STALE --> OUT
 ```
 
-1. **Transparência Absoluta**: A mesma chamada (`engine.hospital_morbidity.fetch(...)` ou `engine.fetch("datasus.sih", ...)`) funciona offline (se já estiver em cache) ou online (baixando automaticamente na primeira execução).
-2. **Localização Canônica de Cache**: O cache particionado não usa diretórios temporários voláteis (como `/tmp`). Ele reside na pasta persistente padrão do usuário (`$HOME/.brhealth/cache` ou variável `BRHEALTH_CACHE_DIR`), particionado por fonte, UF e ano sob o padrão **Hive-Parquet** (`{dataset}/uf={UF}/year={ANO}/snapshot={UUID}/data.parquet`).
-3. **Governança de Ciclo de Vida do Cache**: O core oferece operações explícitas para invalidar ou limpar o cache:
-   - Limpeza total do cache ou de uma fonte específica.
-   - Limpeza seletiva de snapshots mais antigos que uma data ou período especificado (*time-to-live*).
-   - Flag de consulta `force_download=True` para contornar o cache e puxar dados atualizados diretamente do órgão emissor.
+1. **Localização Canônica de Cache**: O cache particionado não usa pastas voláteis como `/tmp`. Ele reside na pasta persistente do usuário (`$HOME/.brhealth/cache` ou variável `BRHEALTH_CACHE_DIR`), particionado por fonte, UF e ano sob o padrão **Hive-Parquet** (`{dataset}/uf={UF}/year={ANO}/snapshot={UUID}/data.parquet`).
+2. **Governança de Ciclo de Vida do Cache**: O core oferece operações explícitas para invalidar ou limpar o cache:
+   - Limpeza total do cache ou de uma fonte específica (`engine.cache.clear(source_id)`).
+   - Limpeza seletiva de dados mais antigos que uma data ou dias de corte (`engine.cache.clear_older_than(days=30)`).
 
 ---
 
-## 2. Operações de Gestão de Cache no Core
+## 2. Operações de Gestão de Cache no Core (`engine.cache`)
 
-O motor disponibiliza um sub-objeto de gerenciamento de cache (`engine.cache` / `CacheManager`):
-
-### 2.1. Métodos Conceituais de Cache
+O motor disponibiliza um sub-objeto de gerenciamento de cache:
 
 | Operação | Parâmetros | Descrição |
 | :--- | :--- | :--- |
 | **`clear()`** | `[source_id]` | Remove todos os dados em cache. Se `source_id` for informado, limpa apenas a partição daquela fonte (ex: `"datasus.sih"`). |
-| **`clear_older_than()`** | `cutoff_date` ou `days` | Remove snapshots e arquivos de dados cujos carimbos de criação sejam anteriores à data de corte especificada (ex: `days=30` ou `cutoff="2025-01-01"`). |
+| **`clear_older_than()`** | `cutoff_date` ou `days` | Remove snapshots e arquivos de dados cujos carimbos de criação sejam anteriores à data ou quantidade de dias de corte (ex: `days=60` ou `cutoff="2025-01-01"`). |
 | **`status()`** | `[source_id]` | Retorna o tamanho total ocupado em disco, contagem de snapshots salvos e intervalo de datas das fontes cacheadas. |
-| **`warmup()`** | `source_id`, `jurisdictions`, `years` | Pré-aquece o cache em segundo plano baixando e decodificando previamente os dados solicitados. |
 
 ---
 
@@ -131,16 +126,16 @@ O catálogo do BRHealth é pré-carregado no núcleo com mais de 25 fontes pront
 
 ## 4. Exemplos Conceituais de Uso da API
 
-### 4.1. Consulta Unificada em Python (Com Resolução Automática de Cache)
+### 4.1. Consulta Unificada em Python
 
 ```python
 import brhealth
 
-# 1. Inicializa o motor analítico (resgata o cache padrão em ~/.brhealth/cache)
+# 1. Inicializa o motor analítico
 engine = brhealth.Engine()
 
-# 2. Primeira chamada: o core detecta que não há cache, baixa do DATASUS,
-# descompacta via Blast nativo, persiste em Hive-Parquet e retorna RecordBatch
+# 2. Chamada Padrão (force_download=True por padrão):
+# O core busca na fonte oficial, atualiza o cache local Hive-Parquet e retorna
 batch_sp = engine.hospital_morbidity.fetch(
     jurisdiction="SP",
     year=2024,
@@ -148,30 +143,25 @@ batch_sp = engine.hospital_morbidity.fetch(
     harmonize_ibge=True  # padroniza municípios para 7 dígitos canônicos
 )
 
-# 3. Segunda chamada para os mesmos parâmetros:
-# O core lê direto do cache local Hive-Parquet instantaneamente (Zero-Copy)
+# 3. Consulta offline ou acelerada por Cache (reutiliza dados salvos localmente):
 batch_sp_cached = engine.hospital_morbidity.fetch(
     jurisdiction="SP",
     year=2024,
-    month=1
-)
-
-# 4. Consulta forçando atualização remota (bypass do cache local)
-batch_sp_updated = engine.hospital_morbidity.fetch(
-    jurisdiction="SP",
-    year=2024,
     month=1,
-    force_download=True
+    force_download=False  # Reutiliza o cache existente sem tocar na rede
 )
 
-# 5. Gestão de Cache pelo Core
-# Limpar dados com mais de 60 dias de antiguidade:
+# 4. Gestão e Limpeza Explícita de Cache:
+# Limpar registros do cache com mais de 60 dias:
 engine.cache.clear_older_than(days=60)
 
 # Limpar apenas os dados cacheados do SIH:
 engine.cache.clear(source_id="datasus.sih")
 
-# 6. Interoperabilidade direta Zero-Copy para Ciência de Dados
+# Limpeza completa de todo o cache local:
+engine.cache.clear()
+
+# 5. Interoperabilidade direta Zero-Copy para Ciência de Dados
 df_polars = batch_sp.to_polars()
 table_arrow = batch_sp.to_arrow()
 tensor_torch = batch_sp.to_torch()
@@ -180,13 +170,13 @@ tensor_torch = batch_sp.to_torch()
 ### 4.2. Consulta Unificada em Rust (`brhealth-core`)
 
 ```rust
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
 use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Instanciar o serviço com o cache gerenciado
+    // 1. Instanciar o serviço de aplicação
     let app = BRHealthApplicationService::standard_in_memory()?;
 
     // 2. Parâmetros de consulta
@@ -196,20 +186,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         year: 2024,
         month: Some(1),
         extra_filters: Default::default(),
-        as_of_snapshot: None, // Ou especificar snapshot temporal UTC
+        as_of_snapshot: None,
     };
 
+    // 3. Opções de execução (persistência e atualização automática)
     let options = PipelineExecutionOptions {
+        force_download: true, // Padrão: busca na fonte oficial e atualiza cache
         persist_to_cache: true,
         harmonize_ibge: true,
         enrich_csap: true,
         ..Default::default()
     };
 
-    // 3. Execução: resolve cache hit ou baixa automaticamente
+    // 4. Execução: busca oficial, persiste em cache e emite manifesto FAIR
     let result = app.execute_full_pipeline("datasus.sih", &params, &options).await?;
     println!("Total de registros: {}", result.batches[0].num_rows());
-    println!("Status do dado: {:?}", result.data_freshness); // Fresh ou Stale
+
+    // 5. Limpeza explícita do cache quando desejado
+    app.clear_cache(Some("datasus.sih"))?;
 
     Ok(())
 }
