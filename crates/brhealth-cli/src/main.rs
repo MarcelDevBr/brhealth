@@ -160,6 +160,9 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         cargo: bool,
     },
+
+    /// Diagnóstico do ambiente, diretórios de armazenamento e status do motor.
+    CheckEnv,
 }
 
 #[tokio::main]
@@ -680,6 +683,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!(
                 "Limpeza concluída com sucesso ({} alvos removidos).",
                 removed
+            );
+        }
+        Commands::CheckEnv => {
+            println!(
+                "┌───────────────────────────────────────────────────────────────────────────┐"
+            );
+            println!(
+                "│ BRHealth — Diagnóstico do Ambiente e Infraestrutura                       │"
+            );
+            println!(
+                "├───────────────────────────────────────────────────────────────────────────┤"
+            );
+            println!(
+                "│ Versão do Motor:       v{:<49} │",
+                env!("CARGO_PKG_VERSION")
+            );
+            println!(
+                "│ Edição Rust:           2024                                               │"
+            );
+
+            let cache_dir = brhealth_core::default_cache_dir();
+            let cache_status = if cache_dir.exists() {
+                "OK (Existe)"
+            } else {
+                "Pendente (Será criado sob demanda)"
+            };
+            println!("│ Diretório de Cache:    {:<50} │", cache_dir.display());
+            println!("│ Status do Cache:       {:<50} │", cache_status);
+
+            let data_dir = brhealth_core::default_data_dir();
+            let data_status = if data_dir.exists() {
+                "OK (Existe)"
+            } else {
+                "Pendente (Será criado sob demanda)"
+            };
+            println!("│ Diretório de Dados:    {:<50} │", data_dir.display());
+            println!("│ Status dos Dados:      {:<50} │", data_status);
+
+            let sources_br = brhealth_core::create_pack_brasil();
+            let sources_global = brhealth_core::create_pack_global();
+            let total_sources = sources_br.len() + sources_global.len();
+            let source_summary = format!(
+                "{} fontes ({} Brasil, {} Global)",
+                total_sources,
+                sources_br.len(),
+                sources_global.len()
+            );
+            println!("│ Fontes Registradas:    {:<50} │", source_summary);
+            println!(
+                "│ Licenciamento:         AGPLv3 / Comercial Exclusivo                       │"
+            );
+            println!(
+                "└───────────────────────────────────────────────────────────────────────────┘"
             );
         }
     }

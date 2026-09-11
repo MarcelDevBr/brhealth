@@ -253,3 +253,25 @@ fn test_python_decoders_file_errors() {
         assert!(brhealth::decompress_dbc(py, "/caminho/inexistente.dbc", None).is_err());
     });
 }
+
+#[test]
+fn test_python_check_environment() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|py| {
+        let env_dict = brhealth::check_environment(py).unwrap();
+        assert!(env_dict.contains("pyarrow").unwrap());
+        assert!(env_dict.contains("polars").unwrap());
+        assert!(env_dict.contains("pandas").unwrap());
+        assert!(env_dict.contains("torch").unwrap());
+    });
+}
+
+#[test]
+fn test_python_source_alias_resolution() {
+    pyo3::prepare_freethreaded_python();
+    Python::with_gil(|_py| {
+        let engine = brhealth::Engine::new().unwrap();
+        // A fonte com ponto deve existir na lista
+        assert!(engine.list_sources().contains(&"datasus.sih".to_string()));
+    });
+}

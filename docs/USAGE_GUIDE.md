@@ -195,7 +195,7 @@ if brhealth.is_amputation_procedure("0407040011"):
 ```
 
 > [!TIP]
-> Para o manual completo de Python detalhando cada parâmetro, função e exemplos para Google Colab, consulte [`docs/python_guide.md`](python_guide.md).
+> Para o manual completo de Python detalhando cada parâmetro, função e exemplos para Google Colab, consulte [`docs/PYTHON_GUIDE.md`](PYTHON_GUIDE.md).
 
 ---
 

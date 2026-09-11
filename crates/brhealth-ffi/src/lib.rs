@@ -233,7 +233,7 @@ pub unsafe extern "C" fn brhealth_fetch_mortality(
     out_array: *mut FFI_ArrowArray,
     out_schema: *mut FFI_ArrowSchema,
 ) -> i32 {
-    let source_id = match CString::new("datasus_sim") {
+    let source_id = match CString::new("datasus.sim") {
         Ok(s) => s,
         Err(_) => return BRHEALTH_ERR_INVALID_ARG,
     };

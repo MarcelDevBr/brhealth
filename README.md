@@ -188,7 +188,7 @@ print(f"Custo Hospitalar Evitável: R$ {metricas['avoidable_cost']:.2f}")
 sih_batch.export_fair_manifest("manifesto_extracao.jsonld")
 ```
 
-> Para a documentação exaustiva com todos os exemplos executáveis em Google Colab e Jupyter, consulte o [Guia Completo de Python](docs/python_guide.md).
+> Para a documentação exaustiva com todos os exemplos executáveis em Google Colab e Jupyter, consulte o [Guia Completo de Python](docs/PYTHON_GUIDE.md).
 > 
 > 💛 **Notebook Demonstrativo (Setembro Amarelo - Perfil de Lesões Autoprovocadas)**:  
 > [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MarcelDevBr/brhealth/blob/main/examples/setembro_amarelo_perfil_epidemiologico.ipynb) [`examples/setembro_amarelo_perfil_epidemiologico.ipynb`](examples/setembro_amarelo_perfil_epidemiologico.ipynb)
