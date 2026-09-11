@@ -14,7 +14,7 @@ Seja bem-vindo ao **Guia Prático do BRHealth para Python**. Este documento foi 
 
 1. [Instalação Expressa](#1-instalação-expressa)
 2. [Receitas Rápidas ("Como faço para...")](#2-receitas-rápidas-como-faço-para)
-   - [2.1 Ler arquivo `.dbc` ou `.dbf` do DATASUS direto para Polars ou Pandas](#21-ler-arquivo-dbc-ou-dbf-do-datasus)
+   - [2.1 Ingestão automatizada com política Cache-First e Zero-Copy](#21-ingestão-automatizada-e-cache-first-sem-download-manual)
    - [2.2 Validar ou harmonizar código de município do IBGE (6 vs 7 dígitos)](#22-validar-e-harmonizar-códigos-ibge)
    - [2.3 Checar se uma internação é evitável (CSAP) e calcular ROI da Atenção Primária](#23-identificar-csap-e-calcular-roi-hospitalar)
    - [2.4 Calcular Anos Potenciais de Vida Perdidos (APVP) e Taxa Padronizada da OMS](#24-calcular-apvp-e-taxa-padronizada-de-mortalidade)
@@ -27,14 +27,17 @@ Seja bem-vindo ao **Guia Prático do BRHealth para Python**. Este documento foi 
 
 ## 1. Instalação Expressa
 
-No terminal ou na primeira linha do seu **Google Colab / Jupyter Notebook**:
+No terminal ou no seu **Google Colab / Jupyter Notebook** (com `!`):
 
 ```bash
-# Instalação com suporte a Polars e PyArrow
-pip install polars pyarrow pandas
+# 1. Instalação oficial via PyPI:
+pip install brhealth
 
-# Instalação do BRHealth
+# 2. Ou instalação direta da versão mais recente do GitHub:
 pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+
+# Bibliotecas analíticas recomendadas (opcionais para Zero-Copy):
+pip install polars pyarrow pandas
 ```
 
 Para verificar se está tudo certo:

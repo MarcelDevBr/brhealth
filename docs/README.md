@@ -37,7 +37,7 @@ or a commercial license agreement directly with the author.
 
     Decodificação de arquivos comprimidos `.dbc` e `.dbf` do DATASUS 100% nativa em Rust. Elimina dependências legadas externas em C e conecta com **Polars**, **Pandas** e **PyArrow** via Zero-Copy.
 
-    [:octicons-arrow-right-24: Ver Guia de Descompressão](PYTHON_QUICKSTART.md#21-ler-arquivo-dbc-ou-dbf-do-datasus)
+    [:octicons-arrow-right-24: Ver Guia de Ingestão](PYTHON_QUICKSTART.md#21-ingestao-automatizada-e-cache-first-sem-download-manual)
 
 -   __🏥 CSAP & Economia da Saúde__
 

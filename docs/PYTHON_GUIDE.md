@@ -14,20 +14,26 @@ Construído 100% em Rust sob a arquitetura **Hexagonal Orientada a Dados (Hexago
 
 ## 1. Instalação e Configuração
 
-### 1.1 No Google Colab ou Jupyter Notebook
+### 1.1 Instalação via Pip (Terminal ou Notebook)
 
-Execute na primeira célula do seu notebook:
+Você pode instalar o **BRHealth** diretamente do PyPI ou a partir do repositório oficial:
 
-```python
-# Instalação direta do repositório
-!pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
+```bash
+# 1. Instalação padrão via PyPI:
+pip install brhealth
 
-# Ou, caso o pacote esteja publicado no PyPI:
-# !pip install brhealth
+# 2. Ou instalação direta da versão mais recente do repositório:
+pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
 
-# Bibliotecas analíticas recomendadas (opcionais para Zero-Copy)
-!pip install polars pyarrow pandas
+# Bibliotecas analíticas recomendadas (opcionais para integração Zero-Copy):
+pip install polars pyarrow pandas
 ```
+
+> [!TIP]
+> No **Google Colab** ou **Jupyter Notebook**, utilize o prefixo `!`:
+> ```python
+> !pip install brhealth polars pyarrow pandas
+> ```
 
 ### 1.2 Verificação da Instalação
 
@@ -35,13 +41,15 @@ Execute na primeira célula do seu notebook:
 import brhealth
 
 print(f"BRHealth versão: {brhealth.__version__}")
+# Diagnóstico de acelerações Zero-Copy disponíveis no seu ambiente:
+print(brhealth.check_environment())
 ```
 
 ---
 
-## 2. Decodificação Nativa de Arquivos DATASUS (.dbc e .dbf)
+## 2. Ingestão Automatizada de Microdados DATASUS (Cache-First)
 
-Uma das maiores dificuldades históricas da comunidade de dados de saúde no Brasil é ler arquivos `.dbc` comprimidos pelo algoritmo Blast PKWARE DCL do DATASUS. O BRHealth resolve isso de forma **100% nativa em Rust, sem binários externos (`dbc2dbf`) ou wrappers em C**.
+Uma das maiores dificuldades históricas da comunidade de dados de saúde no Brasil é processar microdados brutos comprimidos pelo algoritmo Blast PKWARE DCL do DATASUS. O BRHealth resolve isso de forma **100% nativa em Rust, sem binários externos (`dbc2dbf`) ou wrappers em C**, orquestrando download, descompressão e particionamento colunar sob demanda.
 
 ### 2.1 Ingestão Automatizada e Zero-Copy para Pandas, Polars ou PyArrow
 
