@@ -66,7 +66,7 @@ jobs:
           manylinux: ${{ matrix.manylinux || 'auto' }}
 
       - name: Upload Wheel Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.target }}
           path: dist/*
@@ -90,7 +90,7 @@ jobs:
           args: --manifest-path crates/brhealth-python/Cargo.toml --out dist
 
       - name: Upload sdist Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-sdist
           path: dist/*
