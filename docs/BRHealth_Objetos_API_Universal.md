@@ -4,269 +4,226 @@ Licensed under the GNU Affero General Public License v3 (AGPLv3)
 or a commercial license agreement directly with the author.
 -->
 
-# Guia Completo da API e Catálogo de Fontes — BRHealth (Agnóstico à Linguagem)
+# Guia Unificado da API e Resolução de Fontes com Cache — BRHealth (Agnóstico à Linguagem)
 
-Esta documentação descreve detalhadamente a **API conceitual, o modelo de execução e o catálogo de fontes de dados** do **BRHealth**, de forma **independente de linguagem de programação** (Rust, Python, C/C++, Java, R).
+Esta documentação descreve a **API conceitual, o modelo de resolução transparente de dados e o catálogo de fontes** do **BRHealth**, de forma **independente de linguagem de programação** (Rust, Python, C/C++, Java, R).
 
 ---
 
-## 1. Como Funciona o Acesso às Fontes de Dados
+## 1. Princípio Arquitetural: Interface Única e Transparente
 
-O acesso a dados no BRHealth segue o padrão de arquitetura **Hexagonal Orientada a Dados (Hexagonal DOD)**:
+No BRHealth, **o usuário e as bibliotecas clientes interagem com as fontes de dados através de uma interface conceitual idêntica e unificada**, independentemente de onde o dado físico resida. 
+
+O consumidor da API **não precisa e não deve** gerenciar manualmente arquivos locais baixados (`.dbc`, `.dbf`, `.csv`), caminhos temporários no sistema de arquivos ou fluxos de download manuais. 
+
+### 1.1. Resolução em Camadas Gerenciada pelo Core
+
+O núcleo analítico (`core`) intercepta cada requisição e decide de forma transparente:
 
 ```mermaid
-graph LR
-    subgraph Entrada [Inbound / Requisição]
-        USER[Usuário / Client API] --> QUERY[Parâmetros de Consulta: DataQueryParams]
-    end
-
-    subgraph Nucleo [Aplicação e Registro Central]
-        QUERY --> REG[SourceRegistry: Catálogo de Fontes]
-        REG --> SPI[HealthDataSourceSPI]
-        SPI --> RESOLVE[Resolução de URI / Locator]
-    end
-
-    subgraph Resiliencia [Transporte e Contingência]
-        RESOLVE --> PRIMARY[Fonte Primária: FTP / HTTP / API]
-        PRIMARY -.->|Falha de Rede| MIRRORS[Mirrors e Espelhos de Contingência]
-        MIRRORS -.->|Sem Conexão| HIVE[Cache Local Hive-Parquet Stale]
-    end
-
-    subgraph Decodificacao [Transformação Zero-Copy]
-        PRIMARY --> BLAST[Blast DCL / Descompressor Nativo]
-        BLAST --> DBF[DbfDecoder Colunar]
-        DBF --> BATCH[RecordBatch Apache Arrow]
-    end
+flowchart TD
+    REQ["Consulta: engine.fetch(source_id, jurisdiction, year, month)"] --> CHECK_FORCE{"Forçar atualização?<br/>(force_download / bypass_cache)"}
+    
+    CHECK_FORCE -- Sim --> FETCH_REMOTE["1. Ingestão Remota Oficial (FTP / HTTP / API)"]
+    CHECK_FORCE -- Não --> CHECK_CACHE{"2. O dado existe no Cache Local Hive-Parquet?"}
+    
+    CHECK_CACHE -- Sim --> CHECK_TTL{"O snapshot no cache é mais recente que a data de corte?"}
+    CHECK_TTL -- Válido --> HIT["✓ Cache Hit: Leitura Colunar Zero-Copy imediata"]
+    CHECK_TTL -- Expirado --> FETCH_REMOTE
+    
+    CHECK_CACHE -- Não --> FETCH_REMOTE
+    
+    FETCH_REMOTE --> RES_PRIMARY{"Fonte primária respondeu?"}
+    RES_PRIMARY -- Sim --> STORE["Decodifica, persiste no Cache e atualiza Catálogo FAIR"]
+    RES_PRIMARY -- Falha de Rede --> MIRRORS["3. Contingência: Servidores Mirrors / Espelhos"]
+    
+    MIRRORS -- Sucesso --> STORE
+    MIRRORS -- Falha Total --> STALE_FALLBACK{"Há versão anterior gravada no Cache?"}
+    
+    STALE_FALLBACK -- Sim --> SERVE_STALE["⚠ Serve Snapshot Stale + Alerta de Degradação"]
+    STALE_FALLBACK -- Não --> ERR["Retorna Erro Tipado de Fonte Indisponível"]
+    
+    STORE --> OUT["Retorna RecordBatch Apache Arrow"]
+    HIT --> OUT
+    SERVE_STALE --> OUT
 ```
 
-### 1.1. Os Três Modos Universais de Acesso às Fontes
-
-1. **Modo Automático via Catálogo (`fetch`)**:
-   Você informa apenas o identificador da fonte (`source_id`), jurisdição federativa (UF ou País) e período temporal (ano/mês). O motor resolve a URL oficial, faz o download com retentativas, gerencia mirrors de contingência e entrega os dados decodificados em formato colunar Apache Arrow.
-2. **Modo Acessadores Especializados (*Domain Accessors*)**:
-   Interfaces semânticas para domínios específicos de saúde coletiva (ex: `hospital_morbidity`, `vital_statistics`, `demographics`), com parâmetros tipados e opções padrão pré-ajustadas.
-3. **Modo Desacoplado / Arquivo Local (`read_dbc` / `read_dbf`)**:
-   Para pipelines que já possuem arquivos baixados em disco ou em data lakes locais, sem requisições de rede.
+1. **Transparência Absoluta**: A mesma chamada (`engine.hospital_morbidity.fetch(...)` ou `engine.fetch("datasus.sih", ...)`) funciona offline (se já estiver em cache) ou online (baixando automaticamente na primeira execução).
+2. **Localização Canônica de Cache**: O cache particionado não usa diretórios temporários voláteis (como `/tmp`). Ele reside na pasta persistente padrão do usuário (`$HOME/.brhealth/cache` ou variável `BRHEALTH_CACHE_DIR`), particionado por fonte, UF e ano sob o padrão **Hive-Parquet** (`{dataset}/uf={UF}/year={ANO}/snapshot={UUID}/data.parquet`).
+3. **Governança de Ciclo de Vida do Cache**: O core oferece operações explícitas para invalidar ou limpar o cache:
+   - Limpeza total do cache ou de uma fonte específica.
+   - Limpeza seletiva de snapshots mais antigos que uma data ou período especificado (*time-to-live*).
+   - Flag de consulta `force_download=True` para contornar o cache e puxar dados atualizados diretamente do órgão emissor.
 
 ---
 
-## 2. Catálogo Oficial de Fontes Nacionais e Globais
+## 2. Operações de Gestão de Cache no Core
 
-O BRHealth já vem pré-configurado com dois grandes pacotes de fontes: o **Country Pack Brasil (`pack_br`)** e o **Country Pack Global (`pack_global`)**, totalizando mais de 25 fontes oficiais integradas.
+O motor disponibiliza um sub-objeto de gerenciamento de cache (`engine.cache` / `CacheManager`):
 
-### 2.1. Estatísticas Vitais e Assistenciais Nacionais (DATASUS / Ministério da Saúde)
+### 2.1. Métodos Conceituais de Cache
 
-| Identificador (`source_id`) | Nome / Sistema | Tipo de Dado | Resolução Espacial | Temporalidade | Anos Suportados |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`datasus.sih`** (ou `sih`) | SIH-SUS (RD/AIH) | Morbidade Hospitalar / Internações | Município (IBGE) | Mensal | 1998 a 2026 |
-| **`datasus.sim`** (ou `sim`) | SIM-SUS (DO) | Declarações de Óbito e Mortalidade | Município (IBGE) | Anual / Mensal | 1996 a 2026 |
-| **`datasus.sinasc`** (ou `sinasc`) | SINASC (DN) | Nascidos Vivos e Condições Perinatais | Município (IBGE) | Anual / Mensal | 1996 a 2026 |
-| **`datasus.sinan`** (ou `sinan`) | SINAN | Notificação de Agravos Epidemiológicos | Município (IBGE) | Mensal | 2007 a 2026 |
-| **`datasus.sia`** (ou `sia`) | SIA-SUS (PA) | Produção Ambulatorial de Média/Alta Complexidade | Município (IBGE) | Mensal | 2008 a 2026 |
-| **`datasus.cnes`** (ou `cnes`) | CNES | Cadastro Nacional de Estabelecimentos e Leitos | Estabelecimento / Município | Mensal | 2005 a 2026 |
-| **`datasus.sipni`** (ou `sipni`) | SI-PNI | Imunizações e Cobertura Vacinal | Município (IBGE) | Mensal | 2010 a 2026 |
-| **`datasus.sisvan`** (ou `sisvan`) | SISVAN | Vigilância Alimentar e Nutricional | Município (IBGE) | Anual | 2008 a 2026 |
-| **`datasus.siscan`** (ou `siscan`) | SISCAN | Vigilância do Câncer (Mama e Colo do Útero) | Município (IBGE) | Anual | 2013 a 2026 |
-| **`datasus.bps`** (ou `bps`) | BPS | Banco de Preços em Saúde (Compras Públicas) | Município / Estado | Mensal | 2015 a 2026 |
+| Operação | Parâmetros | Descrição |
+| :--- | :--- | :--- |
+| **`clear()`** | `[source_id]` | Remove todos os dados em cache. Se `source_id` for informado, limpa apenas a partição daquela fonte (ex: `"datasus.sih"`). |
+| **`clear_older_than()`** | `cutoff_date` ou `days` | Remove snapshots e arquivos de dados cujos carimbos de criação sejam anteriores à data de corte especificada (ex: `days=30` ou `cutoff="2025-01-01"`). |
+| **`status()`** | `[source_id]` | Retorna o tamanho total ocupado em disco, contagem de snapshots salvos e intervalo de datas das fontes cacheadas. |
+| **`warmup()`** | `source_id`, `jurisdictions`, `years` | Pré-aquece o cache em segundo plano baixando e decodificando previamente os dados solicitados. |
 
-### 2.2. Demografia, Pesquisas Amostrais e Censitárias (IBGE)
+---
 
-| Identificador (`source_id`) | Nome da Pesquisa | Conteúdo | Granularidade | Periodicidade |
+## 3. Catálogo Oficial de Fontes de Dados Integradas
+
+O catálogo do BRHealth é pré-carregado no núcleo com mais de 25 fontes prontas para consulta automática:
+
+### 3.1. Estatísticas Vitais e Assistenciais Nacionais (DATASUS / Ministério da Saúde)
+
+| Identificador (`source_id`) | Acessador Semântico | Sistema / Conteúdo | Resolução Espacial | Temporalidade |
 | :--- | :--- | :--- | :--- | :--- |
-| **`ibge.censo`** | Censo Demográfico | População residente, pirâmides etárias, setores censitários | Setor Censitário / Município | Decenal (2010, 2022) |
-| **`ibge.pnad`** | PNAD Contínua | Condições de moradia, renda domiciliar, escolaridade | Estado / Macrorregião | Trimestral / Anual |
-| **`ibge.pof`** | Pesquisa de Orçamentos Familiares | Padrão de consumo, despesa com saúde e nutrição | Estado / Capital | Quinquenal |
-| **`ibge.pense`** | PeNSE | Saúde dos Escolares (alimentação, drogas, atividade física) | Município / Estado | Amostral |
-| **`ibge.munic`** | Pesquisa MUNIC | Gestão pública municipal e capacidade instalada de saúde | Município (IBGE 7 dígitos) | Anual |
+| **`datasus.sih`** | `engine.hospital_morbidity` | SIH-SUS: Internações Hospitalares (AIH Reduzida) | Município (IBGE) | Mensal (1998–2026) |
+| **`datasus.sim`** | `engine.vital_statistics` | SIM-SUS: Declarações de Óbito e Mortalidade Geral | Município (IBGE) | Anual/Mensal (1996–2026) |
+| **`datasus.sinasc`** | `engine.vital_statistics` | SINASC: Nascidos Vivos e Condições Perinatais | Município (IBGE) | Anual/Mensal (1996–2026) |
+| **`datasus.sinan`** | `engine.notifications` | SINAN: Doenças e Agravos de Notificação Compulsória | Município (IBGE) | Mensal (2007–2026) |
+| **`datasus.sia`** | `engine.ambulatory` | SIA-SUS: Produção Ambulatorial de Média/Alta Complexidade | Município (IBGE) | Mensal (2008–2026) |
+| **`datasus.cnes`** | `engine.ambulatory` | CNES: Estabelecimentos, Leitos e Recursos Físicos | Estabelecimento | Mensal (2005–2026) |
+| **`datasus.sipni`** | `engine.vital_statistics` | SI-PNI: Cobertura Vacinal e Imunizações | Município (IBGE) | Mensal (2010–2026) |
+| **`datasus.sisvan`** | `engine.demographics` | SISVAN: Vigilância Alimentar e Nutricional | Município (IBGE) | Anual (2008–2026) |
+| **`datasus.siscan`** | `engine.ambulatory` | SISCAN: Rastreamento do Câncer de Mama e Colo Uterino | Município (IBGE) | Anual (2013–2026) |
+| **`datasus.bps`** | `engine.social` | BPS: Banco de Preços em Saúde (Medicamentos/Insumos) | Estado / Município | Mensal (2015–2026) |
 
-### 2.3. Determinantes Ambientais, Clima e Saneamento
+### 3.2. Demografia, Orçamentos e Censo (IBGE)
 
-| Identificador (`source_id`) | Entidade Responsável | Conteúdo / Indicador | Granularidade |
+| Identificador (`source_id`) | Acessador Semântico | Pesquisa / Conteúdo | Periodicidade |
 | :--- | :--- | :--- | :--- |
-| **`environmental.inmet`** | INMET | Estações Meteorológicas (Temperatura, Umidade, Chuva) | Estação / Coordenada |
-| **`environmental.bdqueimadas`** | INPE | Focos de Calor e Queimadas via Satélite | Ponto Geográfico (Lat/Lon) |
-| **`environmental.prodes`** | INPE | Taxas Anuais de Desmatamento na Amazônia e Cerrado | Município / Polígono |
-| **`environmental.sisagua`** | Ministério da Saúde | Vigilância da Qualidade da Água para Consumo Humano | Município / Ponto de Abastecimento |
+| **`ibge.censo`** | `engine.demographics` | Censo Demográfico: População, idade, sexo, domicílios | Decenal (2010, 2022) |
+| **`ibge.pnad`** | `engine.demographics` | PNAD Contínua: Condições socioeconômicas e de trabalho | Trimestral / Anual |
+| **`ibge.pof`** | `engine.demographics` | POF: Despesas familiares com saúde e medicamentos | Quinquenal |
+| **`ibge.pense`** | `engine.demographics` | PeNSE: Saúde Escolar e Comportamentos de Risco | Amostral |
+| **`ibge.munic`** | `engine.demographics` | MUNIC: Estrutura da gestão de saúde nos municípios | Anual |
 
-### 2.4. Proteção e Vulnerabilidade Social (MDS)
+### 3.3. Clima, Ambiente e Desmatamento
 
-| Identificador (`source_id`) | Entidade Responsável | Conteúdo / Indicador | Granularidade |
+| Identificador (`source_id`) | Acessador Semântico | Órgão / Conteúdo | Granularidade |
 | :--- | :--- | :--- | :--- |
-| **`mds.cadunico`** | Ministério do Desenvolvimento Social | Microdados e contagens do Cadastro Único (famílias vulneráveis) | Município (IBGE) |
+| **`environmental.inmet`** | `engine.environmental` | INMET: Estações Meteorológicas (Chuva, Temp, Umidade) | Coordenadas / Estação |
+| **`environmental.bdqueimadas`** | `engine.environmental` | INPE: Focos de Calor e Queimadas via Satélite | Ponto Geográfico (Lat/Lon) |
+| **`environmental.prodes`** | `engine.environmental` | INPE: Taxas de Desmatamento da Amazônia e Cerrado | Polígono / Município |
+| **`environmental.sisagua`** | `engine.environmental` | Ministério da Saúde: Qualidade da Água de Abastecimento | Município |
 
-### 2.5. Fontes Supranacionais e Globais (Country Pack Global)
+### 3.4. Proteção Social (MDS)
 
-| Identificador (`source_id`) | Organização | Conteúdo | Abrangência |
+| Identificador (`source_id`) | Acessador Semântico | Órgão / Conteúdo | Granularidade |
 | :--- | :--- | :--- | :--- |
-| **`global.who_gho`** | OMS (WHO GHO) | Global Health Observatory (mortalidade infantil, DNTs) | Internacional (Países) |
-| **`global.ihme_gbd`** | IHME | Global Burden of Disease (DALYs, YLLs, YLDs por causa) | Subnacional e Global |
-| **`global.copernicus_era5`** | ECMWF / Copernicus | Reanálise climática horária/mensal de alta resolução | Grade Global 0.25° |
-| **`global.worldpop`** | WorldPop / Univ. Southampton | Distribuição espacial populacional de alta resolução | Grade 100m / 1km |
-| **`global.paho_plisa`** | OPAS / PAHO | Plataforma de Informação de Saúde das Américas | Américas |
-| **`global.openaq`** | OpenAQ | Monitoramento de qualidade do ar global ($PM_{2.5}$, $PM_{10}$, $O_3$, $NO_2$) | Sensores Pontuais |
+| **`mds.cadunico`** | `engine.social` | MDS: Cadastro Único de Famílias Vulneráveis | Município (IBGE) |
+
+### 3.5. Supranacionais e Globais (Country Pack Global)
+
+| Identificador (`source_id`) | Organização | Conteúdo | Granularidade |
+| :--- | :--- | :--- | :--- |
+| **`global.who_gho`** | OMS | Global Health Observatory: Indicadores mundiais de saúde | Países |
+| **`global.ihme_gbd`** | IHME | Global Burden of Disease: Carga de doença (DALYs/YLLs) | Subnacional e Global |
+| **`global.copernicus_era5`** | ECMWF | Copernicus ERA5: Reanálise climática de alta resolução | Grade Global 0.25° |
+| **`global.worldpop`** | WorldPop | Grade populacional georreferenciada de alta resolução | Células 100m / 1km |
+| **`global.paho_plisa`** | OPAS | Indicadores de saúde pública integrados das Américas | Américas |
+| **`global.openaq`** | OpenAQ | Dados globais de poluentes atmosféricos ($PM_{2.5}$, $PM_{10}$, $O_3$) | Sensores / Estações |
 
 ---
 
-## 3. Especificação Estruturada dos Parâmetros de Consulta
+## 4. Exemplos Conceituais de Uso da API
 
-Para acessar qualquer fonte, o consumidor passa um conjunto padronizado de parâmetros (abstratamente definido como `DataQueryParams`):
-
-```json
-{
-  "source_id": "datasus.sih",
-  "scope": "National",
-  "jurisdiction": "SP",
-  "year": 2023,
-  "month": 5,
-  "harmonize_ibge": true,
-  "assign_h3_resolution": 8,
-  "enrich_csap": true,
-  "extra_filters": {
-    "tipo_aih": "RD"
-  }
-}
-```
-
-### 3.1. Descrição dos Campos
-- **`source_id`** (`String`, obrigatório): Identificador único da fonte (ver tabelas da Seção 2). Aceita pontos ou sublinhados (`"datasus.sih"` ou `"datasus_sih"`).
-- **`jurisdiction`** (`String` ou `List<String>`, opcional para fontes globais): Sigla da Unidade da Federação (`"SP"`, `"RJ"`, `"MG"`) ou código do país (`"BRA"`). Quando suportado pela linguagem, aceita lista de estados (`["SP", "RJ"]`).
-- **`year`** (`Integer`, obrigatório): Ano de competência dos dados (ex: `2024`).
-- **`month`** (`Integer`, opcional): Mês de competência (1 a 12). Se omitido em fontes anuais (como SIM ou SINASC), todo o ano consolidado é recuperado.
-- **`harmonize_ibge`** (`Boolean`, padrão: `true`): Se ativo, localiza colunas de municípios e recalcula o Dígito Verificador via Luhn Módulo 10, padronizando de 6 para 7 dígitos canônicos.
-- **`assign_h3_resolution`** (`Integer`, opcional: 0 a 15): Se fornecido junto a colunas de coordenadas, indexa as linhas diretamente em células hexagonais Uber H3.
-- **`enrich_csap`** (`Boolean`, padrão: `false`): Quando ativado para fontes de morbidade hospitalar (SIH), aplica as regras diagnósticas da **Portaria MS/SAS 221/2008**, injetando colunas de classificação de causas evitáveis.
-- **`extra_filters`** (`Map<String, String>`, opcional): Parâmetros adicionais específicos da fonte (ex: tipo de AIH, grupo de doenças, estação).
-
----
-
-## 4. Exemplos de Uso por Linguagem
-
-### 4.1. Exemplo em Python
+### 4.1. Consulta Unificada em Python (Com Resolução Automática de Cache)
 
 ```python
 import brhealth
 
-# 1. Inicializar o Motor
+# 1. Inicializa o motor analítico (resgata o cache padrão em ~/.brhealth/cache)
 engine = brhealth.Engine()
 
-# 2. Modo 1: Acesso via Catálogo Geral
-batch_sp = engine.fetch(
-    source_id="datasus.sih",
+# 2. Primeira chamada: o core detecta que não há cache, baixa do DATASUS,
+# descompacta via Blast nativo, persiste em Hive-Parquet e retorna RecordBatch
+batch_sp = engine.hospital_morbidity.fetch(
     jurisdiction="SP",
     year=2024,
     month=1,
-    harmonize_ibge=True,
-    enrich_csap=True
+    harmonize_ibge=True  # padroniza municípios para 7 dígitos canônicos
 )
 
-# 3. Modo 2: Acesso via Acessador Especializado
-sih = engine.hospital_morbidity
-batch_mg = sih.fetch(jurisdiction="MG", year=2024, month=1)
+# 3. Segunda chamada para os mesmos parâmetros:
+# O core lê direto do cache local Hive-Parquet instantaneamente (Zero-Copy)
+batch_sp_cached = engine.hospital_morbidity.fetch(
+    jurisdiction="SP",
+    year=2024,
+    month=1
+)
 
-# 4. Modo 3: Acesso Local a Arquivo Pré-existente
-local_batch = brhealth.read_dbc("/caminho/dados/RDSP2401.dbc")
+# 4. Consulta forçando atualização remota (bypass do cache local)
+batch_sp_updated = engine.hospital_morbidity.fetch(
+    jurisdiction="SP",
+    year=2024,
+    month=1,
+    force_download=True
+)
 
-# 5. Zero-Copy para ecossistema de Data Science
+# 5. Gestão de Cache pelo Core
+# Limpar dados com mais de 60 dias de antiguidade:
+engine.cache.clear_older_than(days=60)
+
+# Limpar apenas os dados cacheados do SIH:
+engine.cache.clear(source_id="datasus.sih")
+
+# 6. Interoperabilidade direta Zero-Copy para Ciência de Dados
 df_polars = batch_sp.to_polars()
-table_pyarrow = batch_sp.to_arrow()
+table_arrow = batch_sp.to_arrow()
 tensor_torch = batch_sp.to_torch()
 ```
 
-### 4.2. Exemplo em Rust (`brhealth-core`)
+### 4.2. Consulta Unificada em Rust (`brhealth-core`)
 
 ```rust
-use std::sync::Arc;
+use chrono::{Duration, Utc};
 use brhealth_core::domain::application::{BRHealthApplicationService, PipelineExecutionOptions};
 use brhealth_core::domain::source_spi::{DataQueryParams, GeographicScope};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Inicializar o Serviço de Aplicação
+    // 1. Instanciar o serviço com o cache gerenciado
     let app = BRHealthApplicationService::standard_in_memory()?;
 
-    // 2. Definir parâmetros da consulta
+    // 2. Parâmetros de consulta
     let params = DataQueryParams {
         scope: GeographicScope::National { iso_3166_alpha3: "BRA".into() },
-        jurisdiction_code: Some("SP".into()),
+        jurisdiction_code: Some("MG".into()),
         year: 2024,
         month: Some(1),
         extra_filters: Default::default(),
-        as_of_snapshot: None,
+        as_of_snapshot: None, // Ou especificar snapshot temporal UTC
     };
 
     let options = PipelineExecutionOptions {
+        persist_to_cache: true,
         harmonize_ibge: true,
         enrich_csap: true,
         ..Default::default()
     };
 
-    // 3. Executar o pipeline analítico completo
+    // 3. Execução: resolve cache hit ou baixa automaticamente
     let result = app.execute_full_pipeline("datasus.sih", &params, &options).await?;
-
-    println!("Linhas processadas: {}", result.batches[0].num_rows());
-    println!("Manifesto FAIR SHA-256: {:?}", result.manifest.sources[0].raw_sha256);
+    println!("Total de registros: {}", result.batches[0].num_rows());
+    println!("Status do dado: {:?}", result.data_freshness); // Fresh ou Stale
 
     Ok(())
 }
 ```
 
-### 4.3. Exemplo em C / C++ (via `brhealth-ffi` / Arrow C Data Interface)
-
-```c
-#include "brhealth.h"
-#include <stdio.h>
-
-int main() {
-    // 1. Descomprimir e decodificar arquivo DBC diretamente para Arrow C Data
-    struct ArrowArray array;
-    struct ArrowSchema schema;
-
-    int status = brhealth_read_dbc_to_c_arrow(
-        "/caminho/RDSP2401.dbc",
-        &array,
-        &schema
-    );
-
-    if (status == 0) {
-        printf("Tabela Arrow importada com sucesso! Colunas: %lld, Linhas: %lld\n",
-               schema.n_children, array.length);
-        
-        // Liberar estruturas Arrow C Data após uso
-        if (array.release) array.release(&array);
-        if (schema.release) schema.release(&schema);
-    } else {
-        printf("Erro na decodificação do arquivo DBC.\n");
-    }
-    return 0;
-}
-```
-
 ---
 
-## 5. Como Adicionar Novas Fontes de Dados (Extensibilidade)
+## 5. Estrutura Canônica de Dados e Metadados do Objeto Retornado
 
-O BRHealth oferece dois métodos para cadastrar novas fontes:
+Independentemente da fonte consultada, a saída é encapsulada em um contêiner colunar contíguo **Apache Arrow `RecordBatch`**, contendo:
 
-### 5.1. Via Definição Declarativa (YAML)
-Sem escrever uma única linha de código, crie um arquivo YAML e registre no motor:
-
-```yaml
-id: "meu_estado.morbidade"
-display_name: "Dados Locais de Internação do Estado X"
-maintaining_agency: "Secretaria Estadual de Saúde"
-category: "ClinicalMorbidity"
-scope:
-  type: "Subnational"
-  iso_3166_2: "BR-SP"
-locator_template: "https://dados.saude.sp.gov.br/internacoes_{year}_{month:02}.csv"
-temporal_resolution: "Mensal"
-spatial_resolution: "Municipal"
-supported_years: [2020, 2026]
-```
-
-### 5.2. Via Código (Implementando `HealthDataSourceSPI`)
-Para fontes que requerem autenticação, paginação complexa ou decodificadores específicos, basta implementar a interface SPI:
-- `metadata(&self) -> SourceMetadata`: Descreve a fonte, agência mantenedora e escopo.
-- `resolve_locator(&self, params) -> Result<String>`: Constrói a URL/caminho baseando-se no ano, mês e estado.
-- `fetch_and_decode(&self, params, context) -> Result<Vec<RecordBatch>>`: Baixa os bytes brutos usando `context.transport` e transforma em `RecordBatch` Apache Arrow.
-- `mirror_uris(&self, params) -> Vec<String>`: Declara servidores espelho para contingência automática caso a URL principal caia.
+1. **Schema Rigoroso de Tipos**: Tipagem forte (inteiros de 32/64 bits, floats, timestamps, strings UTF-8 ou dicionários categóricos) sem perda de precisão ou truncamento.
+2. **Harmonização Territorial Embutida**: Colunas de municípios (`MUNIC_RES`, `MUNIC_MOV`, etc.) padronizadas em 7 dígitos canônicos oficiais do IBGE com DV calculado via Luhn Módulo 10.
+3. **Manifesto FAIR W3C PROV-O (`manifest`)**:
+   - `raw_sha256`: Hash criptográfico SHA-256 do arquivo original no órgão emissor.
+   - `created_at_utc`: Carimbo ISO-8601 exato do processamento.
+   - `transformations`: Grafo de operações aplicadas (descompressão Blast, decodificação DBF, CSAP, H3).
