@@ -1546,7 +1546,6 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Diagnóstico
     m.add_function(wrap_pyfunction!(check_environment, m)?)?;
 
-
     // Harmonização Territorial IBGE
     m.add_function(wrap_pyfunction!(calculate_ibge_dv, m)?)?;
     m.add_function(wrap_pyfunction!(harmonize_ibge_code, m)?)?;
