@@ -1,0 +1,1661 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Motor Analítico Colunar de Alta Performance para Saúde Coletiva e Determinantes Sociais">
+      
+      
+        <meta name="author" content="Marcel <MarcelDevBr>">
+      
+      
+        <link rel="canonical" href="https://marceldevbr.github.io/brhealth/architecture/exemplo_analise_custos_csap/">
+      
+      
+        <link rel="prev" href="../../BRHealth_API_Python_Ciencia_de_Dados/">
+      
+      
+        <link rel="next" href="../sdd_brhealth/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Custos Hospitalares de CSAP - BRHealth Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#caso-de-uso-analise-de-custos-hospitalares-e-economia-com-atencao-primaria-csap-diabetes-mellitus" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../.." title="BRHealth Documentation" class="md-header__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BRHealth Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Custos Hospitalares de CSAP
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Compartilhar" aria-label="Compartilhar" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../INSTALLATION/" class="md-tabs__link">
+          
+  
+  
+  Primeiros Passos
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../PYTHON_QUICKSTART/" class="md-tabs__link">
+          
+  
+  
+  🐍 Python
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  🏥 Bioestatística & Economia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../sdd_brhealth/" class="md-tabs__link">
+          
+  
+  
+  📐 Arquitetura & Engenharia
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="BRHealth Documentation" class="md-nav__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BRHealth Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primeiros Passos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Primeiros Passos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalação Modular
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../USAGE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual Prático Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🐍 Python
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🐍 Python
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PYTHON_QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚡ Guia Rápido (Quickstart)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PYTHON_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📘 Guia Definitivo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../BRHealth_API_Python_Ciencia_de_Dados/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📋 API para Pesquisadores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏥 Bioestatística & Economia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🏥 Bioestatística & Economia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custos Hospitalares de CSAP
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custos Hospitalares de CSAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-contexto-e-problema-de-gestao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Contexto e Problema de Gestão
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-matriz-de-fontes-e-dados-utilizados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Matriz de Fontes e Dados Utilizados
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-metodologia-de-modelagem-de-custos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Metodologia de Modelagem de Custos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Metodologia de Modelagem de Custos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-custo-hospitalar-direto-evitavel-camada-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Custo Hospitalar Direto Evitável (Camada A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-custo-por-paciente-na-atencao-primaria-vs-custo-da-complicacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Custo por Paciente na Atenção Primária vs. Custo da Complicação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-implementacao-pratica-com-o-brhealth-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Implementação Prática com o BRHealth (Python)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-simulacao-de-indicadores-para-o-painel-de-tomada-de-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Simulação de Indicadores para o Painel de Tomada de Decisão
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Simulação de Indicadores para o Painel de Tomada de Decisão">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projecao-contrafactual-e-se-a-atencao-primaria-fosse-fortalecida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projeção Contrafactual ("E se a Atenção Primária fosse fortalecida?")
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-conclusao-e-valor-estrategico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Conclusão e Valor Estratégico
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📐 Arquitetura & Engenharia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📐 Arquitetura & Engenharia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sdd_brhealth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software Design Document (SDD)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../BRHealth_Objetos_API_Universal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objetos da API Universal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EXTENDING_BRHEALTH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensão de Fontes (SPI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LGPD_GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governança e LGPD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CICD_AND_WORKFLOWS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD e Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../BRHealth_Analise_Tecnica/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análise Técnica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ideia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto Conceitual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-contexto-e-problema-de-gestao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Contexto e Problema de Gestão
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-matriz-de-fontes-e-dados-utilizados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Matriz de Fontes e Dados Utilizados
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-metodologia-de-modelagem-de-custos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Metodologia de Modelagem de Custos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Metodologia de Modelagem de Custos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-custo-hospitalar-direto-evitavel-camada-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Custo Hospitalar Direto Evitável (Camada A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-custo-por-paciente-na-atencao-primaria-vs-custo-da-complicacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Custo por Paciente na Atenção Primária vs. Custo da Complicação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-implementacao-pratica-com-o-brhealth-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Implementação Prática com o BRHealth (Python)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-simulacao-de-indicadores-para-o-painel-de-tomada-de-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Simulação de Indicadores para o Painel de Tomada de Decisão
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Simulação de Indicadores para o Painel de Tomada de Decisão">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projecao-contrafactual-e-se-a-atencao-primaria-fosse-fortalecida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projeção Contrafactual ("E se a Atenção Primária fosse fortalecida?")
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-conclusao-e-valor-estrategico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Conclusão e Valor Estratégico
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navegação" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Início
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="./" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    🏥 Bioestatística & Economia
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/MarcelDevBr/brhealth/edit/main/docs/architecture/exemplo_analise_custos_csap.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/MarcelDevBr/brhealth/raw/main/docs/architecture/exemplo_analise_custos_csap.md" title="Exibir fonte desta página" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="caso-de-uso-analise-de-custos-hospitalares-e-economia-com-atencao-primaria-csap-diabetes-mellitus">Caso de Uso: Análise de Custos Hospitalares e Economia com Atenção Primária (CSAP - Diabetes Mellitus)<a class="headerlink" href="#caso-de-uso-analise-de-custos-hospitalares-e-economia-com-atencao-primaria-csap-diabetes-mellitus" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Exemplo Prático de Aplicação do BRHealth na Gestão Pública Municipal e Estadual</strong><br />
+<em>Foco: Condições Sensíveis à Atenção Primária (CSAP), Portaria MS/SAS nº 221/2008, Otimização de Recursos e Redução de Complicações Graves.</em></p>
+</blockquote>
+<hr />
+<h2 id="1-contexto-e-problema-de-gestao">1. Contexto e Problema de Gestão<a class="headerlink" href="#1-contexto-e-problema-de-gestao" title="Permanent link">&para;</a></h2>
+<p>Na gestão do Sistema Único de Saúde (SUS), prefeitos, secretários de saúde e gestores hospitalares enfrentam o desafio constante de alocação de orçamento entre a <strong>Atenção Primária à Saúde (APS / UBS / Saúde da Família)</strong> e a <strong>Média e Alta Complexidade (MAC / Hospitais / UPAs)</strong>.</p>
+<p>Um dos pilares da Economia da Saúde e da Bioestatística aplicada é a análise das <strong>Condições Sensíveis à Atenção Primária (CSAP)</strong> (<em>Ambulatory Care Sensitive Conditions</em>).</p>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>Premissa Clínica e Epidemiológica (Portaria MS/SAS nº 221/2008):</strong><br />
+Se a Atenção Básica for resolutiva, realizar busca ativa, fornecer medicamentos contínuos e acompanhar os pacientes precocemente, <strong>as internações hospitalares e suas sequelas graves (como cetoacidose, amputações de membros e falência renal) são majoritariamente evitáveis.</strong></p>
+</blockquote>
+<p>O <strong>BRHealth</strong> permite transformar essa teoria em um painel quantitativo de inteligência em tempo real, calculando com precisão o <strong>Custo Hospitalar Evitável</strong> e o <strong>Retorno sobre o Investimento (ROI)</strong> da Atenção Primária.</p>
+<hr />
+<h2 id="2-matriz-de-fontes-e-dados-utilizados">2. Matriz de Fontes e Dados Utilizados<a class="headerlink" href="#2-matriz-de-fontes-e-dados-utilizados" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Sistema</th>
+<th style="text-align: left;">Órgão Mantenedor</th>
+<th style="text-align: left;">Informação Extraída</th>
+<th style="text-align: left;">Variáveis-Chave Analisadas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>SIHSUS (RD/AIH)</strong></td>
+<td style="text-align: left;">DATASUS / MS</td>
+<td style="text-align: left;">Todas as internações ocorridas ou pagas pelo município/estado.</td>
+<td style="text-align: left;"><code>DIAG_PRINC</code> (CIDs <code>E10</code> a <code>E14</code>), <code>VAL_TOT</code> (valor pago na AIH), <code>DIAS_PERM</code> (dias de internação), <code>MORTE</code> (óbito), <code>PROC_REA</code> (código SIGTAP de amputação).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SIASUS (APAC/BPA)</strong></td>
+<td style="text-align: left;">DATASUS / MS</td>
+<td style="text-align: left;">Tratamentos ambulatoriais crônicos e de alto custo.</td>
+<td style="text-align: left;">Sessões de hemodiálise por nefropatia diabética crônica, curativos especiais em pé diabético.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SISAB / e-SUS APS</strong></td>
+<td style="text-align: left;">Ministério da Saúde</td>
+<td style="text-align: left;">Indicadores de desempenho da atenção básica no território.</td>
+<td style="text-align: left;">Consultas a diabéticos na UBS, solicitação de Hemoglobina Glicada, visitas de Agentes Comunitários de Saúde (ACS).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SIOPS</strong></td>
+<td style="text-align: left;">Ministério da Saúde</td>
+<td style="text-align: left;">Execução orçamentária e gasto público consolidado.</td>
+<td style="text-align: left;">Percentual aplicado da receita própria (mínimo de 15% municipal / 12% estadual), gasto alocado em APS vs. MAC.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SIM</strong></td>
+<td style="text-align: left;">DATASUS / MS</td>
+<td style="text-align: left;">Mortalidade prematura e desfechos fatais evitáveis.</td>
+<td style="text-align: left;">Óbitos por complicações agudas ou crônicas de diabetes e cálculo dos <strong>Anos Potenciais de Vida Perdidos (APVP)</strong>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-metodologia-de-modelagem-de-custos">3. Metodologia de Modelagem de Custos<a class="headerlink" href="#3-metodologia-de-modelagem-de-custos" title="Permanent link">&para;</a></h2>
+<p>Para alimentar o painel de tomada de decisão, o BRHealth estrutura os custos em três camadas financeiras:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph CamadaA["1. Custos Hospitalares Diretos (Imediato)"]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        aih["Internações Clínicas por Descompensação (AIH)"]
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        amp["Cirurgias de Amputação de Membro (SIGTAP)"]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        uti["Diárias de UTI e Tratamento Pós-Cirúrgico"]
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    end
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    subgraph CamadaB["2. Custos Ambulatoriais Contínuos (Médio Prazo)"]
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        hemo["Hemodiálise Crônica por Nefropatia (APAC)"]
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        curativos["Curativos Complexos e Ambulatório de Feridas"]
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        medic["Polifarmácia para Complicações Secundárias"]
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    end
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    subgraph CamadaC["3. Custos Sociais e Previdenciários (Longo Prazo)"]
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        renda["Perda de Capacidade Produtiva e Renda Familiar"]
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        inss["Afastamento do Trabalho e Invalidez Precoce (INSS)"]
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        cuidador["Dependência de Cuidadores Informais da Família"]
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    end
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    CamadaA --&gt; Painel["Painel de Economia Potencial da APS"]
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    CamadaB --&gt; Painel
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    CamadaC --&gt; Painel
+</span></code></pre></div>
+<h3 id="31-custo-hospitalar-direto-evitavel-camada-a">3.1 Custo Hospitalar Direto Evitável (Camada A)<a class="headerlink" href="#31-custo-hospitalar-direto-evitavel-camada-a" title="Permanent link">&para;</a></h3>
+<p>Calcula-se a soma direta dos valores pagos nas Autorizações de Internação Hospitalar (AIH) para as causas classificadas como CSAP:</p>
+<div class="arithmatex">\[\text{Custo Hospitalar Evitável} = \sum_{i \in \text{CSAP}} \text{VAL\_TOT}_i\]</div>
+<h3 id="32-custo-por-paciente-na-atencao-primaria-vs-custo-da-complicacao">3.2 Custo por Paciente na Atenção Primária vs. Custo da Complicação<a class="headerlink" href="#32-custo-por-paciente-na-atencao-primaria-vs-custo-da-complicacao" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Custo Anual do Acompanhamento Resolutivo na UBS</strong>: Aprox. <strong>R$ 600 a R$ 900 / ano por paciente</strong> (metformina, insulina básica, fitas reagentes de glicemia, glicosímetro, consultas trimestrais, avaliação odontológica e rastreio de fundo de olho).</li>
+<li><strong>Custo Hospitalar de uma Amputação e Internação</strong>: Varia de <strong>R$ 4.000 a R$ 15.000</strong> por internação na tabela do SUS (sem contar os custos posteriores de órteses, próteses e cadeira de rodas).</li>
+<li><strong>Custo Anual de Manutenção em Hemodiálise</strong>: Entre <strong>R$ 35.000 e R$ 50.000 / ano por paciente</strong>.</li>
+</ul>
+<hr />
+<h2 id="4-implementacao-pratica-com-o-brhealth-python">4. Implementação Prática com o BRHealth (Python)<a class="headerlink" href="#4-implementacao-pratica-com-o-brhealth-python" title="Permanent link">&para;</a></h2>
+<p>Abaixo está o script completo que ingere os microdados do DATASUS via <strong>BRHealth</strong>, processa as internações em memória contígua via <strong>Apache Arrow / Polars</strong> e gera o relatório para o painel:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bh</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># 1. Inicializa o motor analítico BRHealth</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">bh</span><span class="o">.</span><span class="n">Engine</span><span class="p">()</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># 2. Município de estudo: Campinas/SP (Código IBGE oficial: 3509502)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># O motor resolve automaticamente o DV do IBGE e descompacta os arquivos .dbc com paralelismo Rayon</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">CODIGO_MUNICIPIO</span> <span class="o">=</span> <span class="s2">"3509502"</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">ANOS_ANALISE</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">2023</span><span class="p">,</span> <span class="mi">2024</span><span class="p">]</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"[INFO] Carregando microdados de Morbidade Hospitalar (SIHSUS)..."</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">df_sih</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">hospital_morbidity</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">jurisdiction</span><span class="o">=</span><span class="n">CODIGO_MUNICIPIO</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">years</span><span class="o">=</span><span class="n">ANOS_ANALISE</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">harmonize_ibge</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="p">)</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="c1"># 3. Lista de CIDs de Diabetes da Portaria MS/SAS nº 221/2008 (CSAP)</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="n">CIDS_DIABETES_CSAP</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"E10"</span><span class="p">,</span> <span class="s2">"E11"</span><span class="p">,</span> <span class="s2">"E12"</span><span class="p">,</span> <span class="s2">"E13"</span><span class="p">,</span> <span class="s2">"E14"</span><span class="p">]</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="c1"># Códigos de Procedimentos SIGTAP associados a Amputação de Membros Inferiores</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="n">PROCEDIMENTOS_AMPUTACAO</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="s2">"0407040080"</span><span class="p">,</span>  <span class="c1"># Amputação/Desarticulação de artelhos</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="s2">"0407040098"</span><span class="p">,</span>  <span class="c1"># Amputação/Desarticulação de pé e tarso</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    <span class="s2">"0407040101"</span><span class="p">,</span>  <span class="c1"># Amputação/Desarticulação de perna</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    <span class="s2">"0407040110"</span><span class="p">,</span>  <span class="c1"># Amputação/Desarticulação de coxa</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="p">]</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="c1"># 4. Filtragem e enriquecimento colunar de alta performance</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="n">df_analise</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    <span class="n">df_sih</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"cid_principal"</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">CIDS_DIABETES_CSAP</span><span class="p">)</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    <span class="p">)</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>        <span class="c1"># Identifica se houve amputação</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"procedimento_realizado"</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">PROCEDIMENTOS_AMPUTACAO</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"houve_amputacao"</span><span class="p">),</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>        <span class="c1"># Extrai o ano do atendimento</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"data_internacao"</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"ano_atendimento"</span><span class="p">)</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    <span class="p">])</span>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="p">)</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="c1"># 5. Agregação financeira e de impacto assistencial para o Painel</span>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="n">painel_custos</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>    <span class="n">df_analise</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">"ano_atendimento"</span><span class="p">)</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    <span class="o">.</span><span class="n">agg</span><span class="p">([</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">len</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"internacoes_evitaveis"</span><span class="p">),</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"houve_amputacao"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"amputacoes_realizadas"</span><span class="p">),</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"valor_total_aih"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"custo_hospitalar_total_reais"</span><span class="p">),</span>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"dias_permanencia"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"dias_leito_ocupados"</span><span class="p">),</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"obito"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"obitos_evitaveis"</span><span class="p">)</span>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>    <span class="p">])</span>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    <span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">"ano_atendimento"</span><span class="p">)</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="p">)</span>
+</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
+</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="c1"># Exibe o resultado consolidado</span>
+</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">=== RESUMO EXECUTIVO PARA O PAINEL DE GESTÃO ==="</span><span class="p">)</span>
+</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="nb">print</span><span class="p">(</span><span class="n">painel_custos</span><span class="p">)</span>
+</span><span id="__span-1-61"><a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+</span><span id="__span-1-62"><a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="c1"># 6. Exporta manifesto FAIR com proveniência criptográfica (W3C PROV-O)</span>
+</span><span id="__span-1-63"><a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="n">df_analise</span><span class="o">.</span><span class="n">export_fair_manifest</span><span class="p">(</span><span class="s2">"manifesto_custos_csap_campinas.json"</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="5-simulacao-de-indicadores-para-o-painel-de-tomada-de-decisao">5. Simulação de Indicadores para o Painel de Tomada de Decisão<a class="headerlink" href="#5-simulacao-de-indicadores-para-o-painel-de-tomada-de-decisao" title="Permanent link">&para;</a></h2>
+<p>Com os dados processados pelo BRHealth, o painel interativo (construído em Streamlit, React ou PowerBI) apresenta a seguinte comparação estratégica:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>┌──────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>│                  PAINEL EXECUTIVO: IMPACTO DE CSAP - DIABETES                │
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│                         Município: Campinas / SP                             │
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├────────────────────────────────┬─────────────────────────────────────────────┤
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│ Internações Hospitalares CSAP: │ 1.840 internações / ano                     │
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│ Cirurgias de Amputação:        │ 142 amputações / ano                        │
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│ Dias de Leito Hospitalar:      │ 12.880 dias de leito ocupados               │
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│ Gasto Hospitalar Pago (SUS):   │ R$ 4.850.000,00 / ano                       │
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>└────────────────────────────────┴─────────────────────────────────────────────┘
+</span></code></pre></div>
+<h3 id="projecao-contrafactual-e-se-a-atencao-primaria-fosse-fortalecida">Projeção Contrafactual ("E se a Atenção Primária fosse fortalecida?")<a class="headerlink" href="#projecao-contrafactual-e-se-a-atencao-primaria-fosse-fortalecida" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>┌──────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>│            PROJEÇÃO DE RETORNO SOBRE INVESTIMENTO (ROI DA APS)               │
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├──────────────────────────────────────────────────────────────────────────────┤
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>│ Meta: Aumentar a cobertura da Estratégia Saúde da Família (ESF) de 60% p/ 85%│
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>│       e garantir 3 consultas/ano + exames de Hemoglobina Glicada.            │
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>│                                                                              │
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>│ Redução estimada de internações CSAP (Literatura MS / Fiocruz): -40%         │
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>│                                                                              │
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>│ [ECONOMIA DIRETA ESTIMADA]:                                                  │
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>│ • Economia hospitalar imediata: R$ 1.940.000,00 / ano                        │
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>│ • Leitos liberados para cirurgias eletivas: 5.152 diárias / ano              │
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>│ • Amputações evitadas: 56 cidadãos preservados de mutilação física / ano     │
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>│                                                                              │
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>│ [CUSTO DA INTERVENÇÃO NA UBS]:                                               │
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>│ • Medicamentos contínuos + insumos de glicemia para os pacientes de risco:   │
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>│   R$ 720.000,00 / ano                                                        │
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>│                                                                              │
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>│ [SALDO LÍQUIDO POSITIVO PARA O MUNICÍPIO]:                                   │
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>│ + R$ 1.220.000,00 por ano de economia líquida e ganho em vidas salvas.       │
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>└──────────────────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<hr />
+<h2 id="6-conclusao-e-valor-estrategico">6. Conclusão e Valor Estratégico<a class="headerlink" href="#6-conclusao-e-valor-estrategico" title="Permanent link">&para;</a></h2>
+<p>Este caso de uso demonstra que o <strong>BRHealth</strong> não é apenas uma ferramenta acadêmica, mas um <strong>instrumento decisório para prefeitos e secretários de saúde</strong>:</p>
+<ol>
+<li><strong>Auditoria de Recursos</strong>: Mostra com precisão onde o dinheiro público está sendo drenado por falhas no rastreamento primário.</li>
+<li><strong>Humanização e Qualidade de Vida</strong>: Cada internação evitada representa uma família que não precisou vivenciar a dor de uma amputação ou um leito de hospital.</li>
+<li><strong>Decisão Baseada em Evidências</strong>: Permite justificar perante a Câmara Municipal e o Tribunal de Contas (TCE) o aumento de investimentos na Atenção Básica, demonstrando retorno financeiro e assistencial mensurável.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1837 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Motor Analítico Colunar de Alta Performance para Saúde Coletiva e Determinantes Sociais">
+      
+      
+        <meta name="author" content="Marcel <MarcelDevBr>">
+      
+      
+        <link rel="canonical" href="https://marceldevbr.github.io/brhealth/PYTHON_QUICKSTART/">
+      
+      
+        <link rel="prev" href="../USAGE_GUIDE/">
+      
+      
+        <link rel="next" href="../PYTHON_GUIDE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>⚡ Guia Rápido (Quickstart) - BRHealth Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guia-rapido-de-python-brhealth-quickstart-cookbook" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="BRHealth Documentation" class="md-header__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BRHealth Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ⚡ Guia Rápido (Quickstart)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Compartilhar" aria-label="Compartilhar" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../INSTALLATION/" class="md-tabs__link">
+          
+  
+  
+  Primeiros Passos
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  🐍 Python
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/exemplo_analise_custos_csap/" class="md-tabs__link">
+          
+  
+  
+  🏥 Bioestatística & Economia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/sdd_brhealth/" class="md-tabs__link">
+          
+  
+  
+  📐 Arquitetura & Engenharia
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="BRHealth Documentation" class="md-nav__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BRHealth Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primeiros Passos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Primeiros Passos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalação Modular
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../USAGE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual Prático Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🐍 Python
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🐍 Python
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚡ Guia Rápido (Quickstart)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚡ Guia Rápido (Quickstart)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sumario-rapido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Sumário Rápido
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-instalacao-expressa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Instalação Expressa
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-receitas-rapidas-como-faco-para" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Receitas Rápidas ("Como faço para...")
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Receitas Rápidas (&#34;Como faço para...&#34;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-ler-arquivo-dbc-ou-dbf-do-datasus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Ler arquivo .dbc ou .dbf do DATASUS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-validar-e-harmonizar-codigos-ibge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Validar e harmonizar códigos IBGE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-identificar-csap-e-calcular-roi-hospitalar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Identificar CSAP e calcular ROI hospitalar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-calcular-apvp-e-taxa-padronizada-de-mortalidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Calcular APVP e taxa padronizada de mortalidade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-indexacao-espacial-com-uber-h3-e-google-s2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Indexação espacial com Uber H3 e Google S2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-consultar-o-catalogo-federado-com-o-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Consultar o catálogo federado com o Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cheat-sheet-de-bolso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Cheat Sheet de Bolso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tratamento-de-erros-comuns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tratamento de Erros Comuns
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PYTHON_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📘 Guia Definitivo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_API_Python_Ciencia_de_Dados/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📋 API para Pesquisadores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏥 Bioestatística & Economia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🏥 Bioestatística & Economia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/exemplo_analise_custos_csap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custos Hospitalares de CSAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📐 Arquitetura & Engenharia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📐 Arquitetura & Engenharia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/sdd_brhealth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software Design Document (SDD)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_Objetos_API_Universal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objetos da API Universal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXTENDING_BRHEALTH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensão de Fontes (SPI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LGPD_GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governança e LGPD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CICD_AND_WORKFLOWS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD e Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_Analise_Tecnica/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análise Técnica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/ideia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto Conceitual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sumario-rapido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Sumário Rápido
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-instalacao-expressa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Instalação Expressa
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-receitas-rapidas-como-faco-para" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Receitas Rápidas ("Como faço para...")
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Receitas Rápidas (&#34;Como faço para...&#34;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-ler-arquivo-dbc-ou-dbf-do-datasus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Ler arquivo .dbc ou .dbf do DATASUS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-validar-e-harmonizar-codigos-ibge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Validar e harmonizar códigos IBGE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-identificar-csap-e-calcular-roi-hospitalar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Identificar CSAP e calcular ROI hospitalar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-calcular-apvp-e-taxa-padronizada-de-mortalidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Calcular APVP e taxa padronizada de mortalidade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-indexacao-espacial-com-uber-h3-e-google-s2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Indexação espacial com Uber H3 e Google S2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-consultar-o-catalogo-federado-com-o-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Consultar o catálogo federado com o Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cheat-sheet-de-bolso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Cheat Sheet de Bolso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tratamento-de-erros-comuns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tratamento de Erros Comuns
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navegação" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Início
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="./" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    🐍 Python
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/MarcelDevBr/brhealth/edit/main/docs/PYTHON_QUICKSTART.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/MarcelDevBr/brhealth/raw/main/docs/PYTHON_QUICKSTART.md" title="Exibir fonte desta página" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<!--
+Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+Licensed under the GNU Affero General Public License v3 (AGPLv3)
+or a commercial license agreement directly with the author.
+-->
+
+<h1 id="guia-rapido-de-python-brhealth-quickstart-cookbook">⚡ Guia Rápido de Python (BRHealth Quickstart &amp; Cookbook)<a class="headerlink" href="#guia-rapido-de-python-brhealth-quickstart-cookbook" title="Permanent link">&para;</a></h1>
+<p>Seja bem-vindo ao <strong>Guia Prático do BRHealth para Python</strong>. Este documento foi elaborado para que você possa copiar, colar e rodar tarefas comuns de epidemiologia, economia da saúde e geoprocessamento em menos de 2 minutos.</p>
+<hr />
+<h2 id="sumario-rapido">📌 Sumário Rápido<a class="headerlink" href="#sumario-rapido" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-instalação-expressa">Instalação Expressa</a></li>
+<li><a href="#2-receitas-rápidas-como-faço-para">Receitas Rápidas ("Como faço para...")</a></li>
+<li><a href="#21-ler-arquivo-dbc-ou-dbf-do-datasus">2.1 Ler arquivo <code>.dbc</code> ou <code>.dbf</code> do DATASUS direto para Polars ou Pandas</a></li>
+<li><a href="#22-validar-e-harmonizar-códigos-ibge">2.2 Validar ou harmonizar código de município do IBGE (6 vs 7 dígitos)</a></li>
+<li><a href="#23-identificar-csap-e-calcular-roi-hospitalar">2.3 Checar se uma internação é evitável (CSAP) e calcular ROI da Atenção Primária</a></li>
+<li><a href="#24-calcular-apvp-e-taxa-padronizada-de-mortalidade">2.4 Calcular Anos Potenciais de Vida Perdidos (APVP) e Taxa Padronizada da OMS</a></li>
+<li><a href="#25-indexação-espacial-com-uber-h3-e-google-s2">2.5 Converter latitude/longitude em hexágono Uber H3 ou Google S2</a></li>
+<li><a href="#26-consultar-o-catálogo-federado-com-o-engine">2.6 Consultar fontes e gerenciar cache pelo <code>Engine</code></a></li>
+<li><a href="#3-cheat-sheet-de-bolso">Cheat Sheet de Bolso (Tabela de Referência de Funções)</a></li>
+<li><a href="#4-tratamento-de-erros-comuns">Tratamento de Erros Comuns (Troubleshooting)</a></li>
+</ol>
+<hr />
+<h2 id="1-instalacao-expressa">1. Instalação Expressa<a class="headerlink" href="#1-instalacao-expressa" title="Permanent link">&para;</a></h2>
+<p>No terminal ou na primeira linha do seu <strong>Google Colab / Jupyter Notebook</strong>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Instalação com suporte a Polars e PyArrow</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>polars<span class="w"> </span>pyarrow<span class="w"> </span>pandas
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Instalação do BRHealth</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/MarcelDevBr/brhealth.git#subdirectory<span class="o">=</span>crates/brhealth-python
+</span></code></pre></div>
+<p>Para verificar se está tudo certo:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"BRHealth versão: </span><span class="si">{</span><span class="n">brhealth</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Diagnóstico de acelerações Zero-Copy disponíveis no seu sistema</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">brhealth</span><span class="o">.</span><span class="n">check_environment</span><span class="p">())</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># {'pyarrow': True, 'polars': True, 'pandas': True, 'torch': False}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="2-receitas-rapidas-como-faco-para">2. Receitas Rápidas ("Como faço para...")<a class="headerlink" href="#2-receitas-rapidas-como-faco-para" title="Permanent link">&para;</a></h2>
+<h3 id="21-ler-arquivo-dbc-ou-dbf-do-datasus">2.1 Ler arquivo <code>.dbc</code> ou <code>.dbf</code> do DATASUS<a class="headerlink" href="#21-ler-arquivo-dbc-ou-dbf-do-datasus" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Sem necessidade de binários externos ou <code>dbc2dbf</code></strong>. A descompressão é 100% nativa e rápida em Rust.</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># 1. Carregar arquivo comprimido do DATASUS (.dbc)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">read_dbc</span><span class="p">(</span><span class="s2">"doac2022.dbc"</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># 2. Converter sem cópia de memória (Zero-Copy) para seu DataFrame favorito:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">df_polars</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">to_polars</span><span class="p">()</span>  <span class="c1"># Para máxima velocidade e multithreading</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">df_pandas</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>  <span class="c1"># Para ecossistema Pandas / Seaborn</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">pa_table</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">to_pyarrow</span><span class="p">()</span>  <span class="c1"># Para processamento colunar Arrow</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total de registros: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> linhas x </span><span class="si">{</span><span class="n">batch</span><span class="o">.</span><span class="n">num_columns</span><span class="si">}</span><span class="s2"> colunas"</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">df_polars</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+</span></code></pre></div>
+<p>Se quiser apenas descompactar um arquivo <code>.dbc</code> para <code>.dbf</code> no disco:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">brhealth</span><span class="o">.</span><span class="n">decompress_dbc</span><span class="p">(</span><span class="s2">"doac2022.dbc"</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="s2">"doac2022.dbf"</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="22-validar-e-harmonizar-codigos-ibge">2.2 Validar e harmonizar códigos IBGE<a class="headerlink" href="#22-validar-e-harmonizar-codigos-ibge" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>O DATASUS frequentemente utiliza códigos municipais com <strong>6 dígitos</strong>, enquanto o IBGE e Censos utilizam <strong>7 dígitos</strong> (com o Dígito Verificador de Luhn Módulo 10).</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Validar consistência matemática do código</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">assert</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">validate_ibge_code</span><span class="p">(</span><span class="s2">"3550308"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span>  <span class="c1"># São Paulo/SP (7 dígitos válido)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">assert</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">validate_ibge_code</span><span class="p">(</span><span class="s2">"3550309"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span> <span class="c1"># DV adulterado (deveria ser 8)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">assert</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">validate_ibge_code</span><span class="p">(</span><span class="mi">3550308</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span>    <span class="c1"># Aceita int ou str</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Calcular o 7º dígito verificador (DV) oficial</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">dv</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">calculate_ibge_dv</span><span class="p">(</span><span class="s2">"355030"</span><span class="p">)</span>  <span class="c1"># Retorna 8</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># Harmonizar de 6 para 7 dígitos canônicos</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">codigo_7d</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">harmonize_ibge_code</span><span class="p">(</span><span class="s2">"355030"</span><span class="p">)</span>  <span class="c1"># "3550308"</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="c1"># Reconciliar municípios com mudanças históricas (ex: Goiás -&gt; Tocantins em 1988)</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="n">araguaina_atual</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">reconcile_historical_ibge_code</span><span class="p">(</span><span class="s2">"520210"</span><span class="p">,</span> <span class="n">reference_year</span><span class="o">=</span><span class="mi">1985</span><span class="p">)</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="nb">print</span><span class="p">(</span><span class="n">araguaina_atual</span><span class="p">)</span>  <span class="c1"># Retorna '1702107' (Araguaína contemporânea no TO)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="23-identificar-csap-e-calcular-roi-hospitalar">2.3 Identificar CSAP e calcular ROI hospitalar<a class="headerlink" href="#23-identificar-csap-e-calcular-roi-hospitalar" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Implementação estrita da <strong>Portaria MS/SAS nº 221/2008</strong> (Lista Brasileira de Internações por Condições Sensíveis à Atenção Primária).</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># 1. Checar se um CID-10 é evitável na Atenção Primária</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">brhealth</span><span class="o">.</span><span class="n">is_csap</span><span class="p">(</span><span class="s2">"J45.0"</span><span class="p">))</span>  <span class="c1"># True (Asma)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">brhealth</span><span class="o">.</span><span class="n">is_csap</span><span class="p">(</span><span class="s2">"I10"</span><span class="p">))</span>    <span class="c1"># True (Hipertensão)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">brhealth</span><span class="o">.</span><span class="n">is_csap</span><span class="p">(</span><span class="s2">"S06.0"</span><span class="p">))</span>  <span class="c1"># False (Trauma cerebral / Não evitável)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># 2. Descobrir qual dos 19 grupos oficiais de CSAP o diagnóstico pertence</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">grupo_id</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">classify_cid10</span><span class="p">(</span><span class="s2">"J45.0"</span><span class="p">)</span>  <span class="c1"># 7</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Grupo </span><span class="si">{</span><span class="n">grupo_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">brhealth</span><span class="o">.</span><span class="n">csap_group_name</span><span class="p">(</span><span class="n">grupo_id</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1"># Grupo 7: Asma</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 3. Modelagem de Retorno sobre o Investimento (ROI)</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1"># Exemplo: R$ 500.000 de custos com internações evitáveis de asma e hipertensão,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1"># investimento de R$ 100.000 em equipes da Saúde da Família (eSF),</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># e redução estimada de 45% (fração atribuível evitável):</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="n">roi</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">compute_roi</span><span class="p">(</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="n">avoidable_cost</span><span class="o">=</span><span class="mf">500_000.0</span><span class="p">,</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="n">investment</span><span class="o">=</span><span class="mf">100_000.0</span><span class="p">,</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    <span class="n">attributable_fraction</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="p">)</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ROI da Atenção Primária: </span><span class="si">{</span><span class="n">roi</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="c1"># Retorna 125.0% (cada R$ 1,00 investido na APS gera R$ 2,25 em benefícios)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="24-calcular-apvp-e-taxa-padronizada-de-mortalidade">2.4 Calcular APVP e taxa padronizada de mortalidade<a class="headerlink" href="#24-calcular-apvp-e-taxa-padronizada-de-mortalidade" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Coorte com idades de óbito observadas</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">idades</span> <span class="o">=</span> <span class="p">[</span><span class="mi">14</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">62</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">73</span><span class="p">,</span> <span class="mi">81</span><span class="p">]</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># 1. Anos Potenciais de Vida Perdidos (Limite do Ministério da Saúde = 70 anos)</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">apvp</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">compute_apvp</span><span class="p">(</span><span class="n">idades</span><span class="p">,</span> <span class="n">cutoff_age</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total de Anos de Vida Perdidos: </span><span class="si">{</span><span class="n">apvp</span><span class="si">}</span><span class="s2"> anos"</span><span class="p">)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># 2. Taxa de APVP por 100.000 habitantes</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="n">taxa_apvp</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">compute_apvp_rate</span><span class="p">(</span><span class="n">total_apvp</span><span class="o">=</span><span class="n">apvp</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="mi">50_000</span><span class="p">)</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Taxa de APVP: </span><span class="si">{</span><span class="n">taxa_apvp</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> por 100k hab."</span><span class="p">)</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="c1"># 3. Padronização Direta da Mortalidade (18 faixas quinquenais da OMS)</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">obitos</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">*</span> <span class="mi">18</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="n">populacao</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">]</span> <span class="o">*</span> <span class="mi">18</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="n">taxa_oms</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">compute_age_standardized_mortality_rate</span><span class="p">(</span><span class="n">obitos</span><span class="p">,</span> <span class="n">populacao</span><span class="p">)</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Taxa Padronizada Direta da OMS: </span><span class="si">{</span><span class="n">taxa_oms</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> por 100k hab."</span><span class="p">)</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="c1"># 4. Validar consistência biológica estrita (impede incongruências em microdados)</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    <span class="n">brhealth</span><span class="o">.</span><span class="n">validate_biological_consistency</span><span class="p">(</span><span class="n">icd10</span><span class="o">=</span><span class="s2">"O00"</span><span class="p">,</span> <span class="n">sex</span><span class="o">=</span><span class="s2">"M"</span><span class="p">,</span> <span class="n">age_years</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Inconsistência biológica rejeitada com sucesso!"</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="25-indexacao-espacial-com-uber-h3-e-google-s2">2.5 Indexação espacial com Uber H3 e Google S2<a class="headerlink" href="#25-indexacao-espacial-com-uber-h3-e-google-s2" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Permite transformar latitude e longitude em índices inteiros (<code>uint64</code>), acelerando agregações, detecção de surtos (hotspots) e cruzamentos territoriais.</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Coordenadas (Praça da Sé - São Paulo/SP)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="o">-</span><span class="mf">23.550520</span><span class="p">,</span> <span class="o">-</span><span class="mf">46.633308</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># 1. Obter índice hexagonal H3 (Resolução 8 ~ 0.7 km² de área média)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">h3_index</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">latlng_to_h3</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Célula H3: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">h3_index</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># 2. Obter anel de vizinhança espacial (1 centro + 6 hexágonos vizinhos)</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">vizinhos</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">h3_grid_disk</span><span class="p">(</span><span class="n">h3_index</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total de células no anel de raio 1: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vizinhos</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1"># 3. Obter índice esférico Google S2 (Nível 12 ~ 3 a 5 km²)</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">s2_cell</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">coord_to_s2_cell</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"S2 Cell ID: </span><span class="si">{</span><span class="n">s2_cell</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h3 id="26-consultar-o-catalogo-federado-com-o-engine">2.6 Consultar o catálogo federado com o <code>Engine</code><a class="headerlink" href="#26-consultar-o-catalogo-federado-com-o-engine" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">brhealth</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">()</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Versão: </span><span class="si">{</span><span class="n">engine</span><span class="o">.</span><span class="n">version</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fontes catalogadas: </span><span class="si">{</span><span class="n">engine</span><span class="o">.</span><span class="n">source_count</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># Listar primeiras fontes registradas</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">for</span> <span class="n">fonte</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">list_sources</span><span class="p">()[:</span><span class="mi">5</span><span class="p">]:</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">" - </span><span class="si">{</span><span class="n">fonte</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1"># Status e governança do cache Hive-Parquet local</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">status</span><span class="p">())</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># Limpar snapshots de cache com mais de 60 dias</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="n">engine</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear_older_than</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="3-cheat-sheet-de-bolso">3. Cheat Sheet de Bolso<a class="headerlink" href="#3-cheat-sheet-de-bolso" title="Permanent link">&para;</a></h2>
+<p>Tabela de consulta ultra rápida com as principais funções do módulo <code>brhealth</code>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Função</th>
+<th style="text-align: left;">Argumentos</th>
+<th style="text-align: left;">Retorno</th>
+<th style="text-align: left;">Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>read_dbc(path)</code></td>
+<td style="text-align: left;"><code>path: str</code></td>
+<td style="text-align: left;"><code>RecordBatchWrapper</code></td>
+<td style="text-align: left;">Descomprime arquivo <code>.dbc</code> e carrega em memória contígua Arrow.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>read_dbf(path)</code></td>
+<td style="text-align: left;"><code>path: str</code></td>
+<td style="text-align: left;"><code>RecordBatchWrapper</code></td>
+<td style="text-align: left;">Lê arquivo <code>.dbf</code> em lote colunar Arrow.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>decompress_dbc(in, out=None)</code></td>
+<td style="text-align: left;"><code>in: str, out: str?</code></td>
+<td style="text-align: left;"><code>bytes</code></td>
+<td style="text-align: left;">Descomprime <code>.dbc</code> retornando bytes e opcionalmente salva <code>.dbf</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>calculate_ibge_dv(code)</code></td>
+<td style="text-align: left;"><code>str \| int</code> (6 dígitos)</td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;">Calcula o 7º dígito verificador oficial (Luhn Módulo 10).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>validate_ibge_code(code)</code></td>
+<td style="text-align: left;"><code>str \| int</code> (6 ou 7D)</td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;">Valida consistência matemática e cadastral de município.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>harmonize_ibge_code(code)</code></td>
+<td style="text-align: left;"><code>str \| int</code> (6 dígitos)</td>
+<td style="text-align: left;"><code>str</code> (7 dígitos)</td>
+<td style="text-align: left;">Converte código de 6 dígitos em código canônico de 7 dígitos.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reconcile_historical_ibge_code(code, year)</code></td>
+<td style="text-align: left;"><code>str \| int, int?</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;">Reconcilia transições territoriais históricas (1970–2026).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>is_csap(cid)</code></td>
+<td style="text-align: left;"><code>cid: str</code></td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;">Retorna <code>True</code> se o CID-10 for condição sensível à APS (Portaria 221/2008).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>classify_cid10(cid)</code></td>
+<td style="text-align: left;"><code>cid: str</code></td>
+<td style="text-align: left;"><code>int?</code> (1 a 19)</td>
+<td style="text-align: left;">Identifica o número do grupo de CSAP oficial.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>csap_group_name(group_id)</code></td>
+<td style="text-align: left;"><code>group_id: int</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;">Retorna o nome oficial em português do grupo CSAP.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_roi(cost, invest, alpha)</code></td>
+<td style="text-align: left;"><code>float, float, float</code></td>
+<td style="text-align: left;"><code>float</code></td>
+<td style="text-align: left;">Modela o Retorno sobre o Investimento da APS em custos evitados.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_apvp(ages, cutoff=70)</code></td>
+<td style="text-align: left;"><code>list[int], int?</code></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;">Calcula o total de Anos Potenciais de Vida Perdidos (YLL).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_apvp_rate(apvp, pop)</code></td>
+<td style="text-align: left;"><code>int, int</code></td>
+<td style="text-align: left;"><code>float</code></td>
+<td style="text-align: left;">Taxa de APVP por 100.000 habitantes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_age_standardized_mortality_rate(d, p)</code></td>
+<td style="text-align: left;"><code>list[int], list[int]</code></td>
+<td style="text-align: left;"><code>float</code></td>
+<td style="text-align: left;">Taxa direta padronizada com 18 faixas quinquenais da OMS.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>validate_biological_consistency(cid, sex, age)</code></td>
+<td style="text-align: left;"><code>str, str, int</code></td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;">Valida compatibilidade fisiológica de diagnóstico, sexo e idade.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>latlng_to_h3(lat, lon, res)</code></td>
+<td style="text-align: left;"><code>float, float, int</code></td>
+<td style="text-align: left;"><code>int</code> (uint64)</td>
+<td style="text-align: left;">Converte coordenadas em célula hexagonal Uber H3.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>h3_to_latlng(h3_index)</code></td>
+<td style="text-align: left;"><code>int</code> (uint64)</td>
+<td style="text-align: left;"><code>tuple[float, float]</code></td>
+<td style="text-align: left;">Centróide (lat, lon) de uma célula H3.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>h3_grid_disk(h3_index, k)</code></td>
+<td style="text-align: left;"><code>int, int</code></td>
+<td style="text-align: left;"><code>list[int]</code></td>
+<td style="text-align: left;">Retorna hexágonos no anel de vizinhança de raio <span class="arithmatex">\(k\)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>coord_to_s2_cell(lat, lon, level)</code></td>
+<td style="text-align: left;"><code>float, float, int?</code></td>
+<td style="text-align: left;"><code>int</code> (uint64)</td>
+<td style="text-align: left;">Converte coordenadas em Google S2 Cell ID.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>map_icd9_to_icd10(code)</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>str?</code></td>
+<td style="text-align: left;">Mapeia código histórico CID-9 para CID-10.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>map_icd10_to_icd11(code)</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>str?</code></td>
+<td style="text-align: left;">Mapeia código CID-10 para CID-11.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>map_icd10_to_snomed(code)</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>str?</code></td>
+<td style="text-align: left;">Mapeia CID-10 para SNOMED-CT Concept ID.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lookup_atc(atc_code)</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>str?</code></td>
+<td style="text-align: left;">Retorna o princípio ativo farmacológico da OMS.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>map_atc_to_rxnorm(atc_code)</code></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>str?</code></td>
+<td style="text-align: left;">Mapeia código ATC para conceito internacional RxNorm.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-tratamento-de-erros-comuns">4. Tratamento de Erros Comuns<a class="headerlink" href="#4-tratamento-de-erros-comuns" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>ValueError: Inconsistência biológica: CID 'O00' atribuído a indivíduo do sexo masculino</code></strong>:
+  O validador biológico do BRHealth barrou um registro incongruente. Use um bloco <code>try/except ValueError</code> para capturar inconsistências nos seus dados de limpeza.</li>
+<li><strong><code>ValueError: Código IBGE inválido</code></strong>:
+  O código possui caracteres não numéricos ou quantidade de dígitos diferente de 6 ou 7.</li>
+<li><strong><code>AttributeError: 'RecordBatchWrapper' object has no attribute 'xyz'</code></strong>:
+  Converta primeiro o lote para o seu DataFrame preferido usando <code>.to_polars()</code>, <code>.to_pandas()</code> ou <code>.to_pyarrow()</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

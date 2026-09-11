@@ -1,0 +1,1962 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Motor Analítico Colunar de Alta Performance para Saúde Coletiva e Determinantes Sociais">
+      
+      
+        <meta name="author" content="Marcel <MarcelDevBr>">
+      
+      
+        <link rel="canonical" href="https://marceldevbr.github.io/brhealth/EXTENDING_BRHEALTH/">
+      
+      
+        <link rel="prev" href="../BRHealth_Objetos_API_Universal/">
+      
+      
+        <link rel="next" href="../LGPD_GOVERNANCE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Extensão de Fontes (SPI) - BRHealth Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guia-de-extensao-e-desenvolvimento-de-novas-fontes-brhealth" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="BRHealth Documentation" class="md-header__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BRHealth Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Extensão de Fontes (SPI)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Compartilhar" aria-label="Compartilhar" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../INSTALLATION/" class="md-tabs__link">
+          
+  
+  
+  Primeiros Passos
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../PYTHON_QUICKSTART/" class="md-tabs__link">
+          
+  
+  
+  🐍 Python
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/exemplo_analise_custos_csap/" class="md-tabs__link">
+          
+  
+  
+  🏥 Bioestatística & Economia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/sdd_brhealth/" class="md-tabs__link">
+          
+  
+  
+  📐 Arquitetura & Engenharia
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="BRHealth Documentation" class="md-nav__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BRHealth Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primeiros Passos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Primeiros Passos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalação Modular
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../USAGE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual Prático Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🐍 Python
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🐍 Python
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PYTHON_QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚡ Guia Rápido (Quickstart)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PYTHON_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📘 Guia Definitivo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_API_Python_Ciencia_de_Dados/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📋 API para Pesquisadores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏥 Bioestatística & Economia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🏥 Bioestatística & Economia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/exemplo_analise_custos_csap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custos Hospitalares de CSAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📐 Arquitetura & Engenharia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📐 Arquitetura & Engenharia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/sdd_brhealth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software Design Document (SDD)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_Objetos_API_Universal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objetos da API Universal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensão de Fontes (SPI)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensão de Fontes (SPI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#indice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Índice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-arquitetura-hexagonal-dod-e-filosofia-de-extensao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Arquitetura Hexagonal DOD e Filosofia de Extensão
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Arquitetura Hexagonal DOD e Filosofia de Extensão">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regras-arquiteturais-fundamentais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regras Arquiteturais Fundamentais:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-o-contrato-spi-healthdatasourcespi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. O Contrato SPI: HealthDataSourceSPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-tutorial-passo-a-passo-implementando-um-novo-adaptador" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tutorial Passo a Passo: Implementando um Novo Adaptador
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Tutorial Passo a Passo: Implementando um Novo Adaptador">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#passo-1-definir-os-esquemas-canonicos-e-metadados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 1: Definir os Esquemas Canônicos e Metadados
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-2-implementar-a-resolucao-de-localizadores-resolve_locator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 2: Implementar a Resolução de Localizadores (resolve_locator)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-3-decodificacao-colunar-vetorizada-fetch_and_decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 3: Decodificação Colunar Vetorizada (fetch_and_decode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-4-registro-no-countrypack-ou-sourceregistry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 4: Registro no CountryPack ou SourceRegistry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-fontes-declarativas-via-manifestos-yamljson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Fontes Declarativas via Manifestos YAML/JSON
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Fontes Declarativas via Manifestos YAML/JSON">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-de-manifesto-fonte_declarativajson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo de Manifesto (fonte_declarativa.json):
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#carregamento-dinamico-em-rust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carregamento Dinâmico em Rust:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-criacao-de-novos-country-packs-internacionais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Criação de Novos Country Packs Internacionais
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-implementacao-de-novas-portas-de-infraestrutura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Implementação de Novas Portas de Infraestrutura
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Implementação de Novas Portas de Infraestrutura">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementar-um-novo-cacheport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementar um Novo CachePort:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-diretrizes-rigorosas-de-engenharia-e-checklist-de-qualidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Diretrizes Rigorosas de Engenharia e Checklist de Qualidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LGPD_GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governança e LGPD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CICD_AND_WORKFLOWS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD e Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_Analise_Tecnica/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análise Técnica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/ideia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto Conceitual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#indice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Índice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-arquitetura-hexagonal-dod-e-filosofia-de-extensao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Arquitetura Hexagonal DOD e Filosofia de Extensão
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Arquitetura Hexagonal DOD e Filosofia de Extensão">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regras-arquiteturais-fundamentais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regras Arquiteturais Fundamentais:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-o-contrato-spi-healthdatasourcespi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. O Contrato SPI: HealthDataSourceSPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-tutorial-passo-a-passo-implementando-um-novo-adaptador" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tutorial Passo a Passo: Implementando um Novo Adaptador
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Tutorial Passo a Passo: Implementando um Novo Adaptador">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#passo-1-definir-os-esquemas-canonicos-e-metadados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 1: Definir os Esquemas Canônicos e Metadados
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-2-implementar-a-resolucao-de-localizadores-resolve_locator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 2: Implementar a Resolução de Localizadores (resolve_locator)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-3-decodificacao-colunar-vetorizada-fetch_and_decode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 3: Decodificação Colunar Vetorizada (fetch_and_decode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passo-4-registro-no-countrypack-ou-sourceregistry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 4: Registro no CountryPack ou SourceRegistry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-fontes-declarativas-via-manifestos-yamljson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Fontes Declarativas via Manifestos YAML/JSON
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Fontes Declarativas via Manifestos YAML/JSON">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-de-manifesto-fonte_declarativajson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo de Manifesto (fonte_declarativa.json):
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#carregamento-dinamico-em-rust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carregamento Dinâmico em Rust:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-criacao-de-novos-country-packs-internacionais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Criação de Novos Country Packs Internacionais
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-implementacao-de-novas-portas-de-infraestrutura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Implementação de Novas Portas de Infraestrutura
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Implementação de Novas Portas de Infraestrutura">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementar-um-novo-cacheport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementar um Novo CachePort:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-diretrizes-rigorosas-de-engenharia-e-checklist-de-qualidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Diretrizes Rigorosas de Engenharia e Checklist de Qualidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navegação" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Início
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../architecture/sdd_brhealth/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    📐 Arquitetura & Engenharia
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/MarcelDevBr/brhealth/edit/main/docs/EXTENDING_BRHEALTH.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/MarcelDevBr/brhealth/raw/main/docs/EXTENDING_BRHEALTH.md" title="Exibir fonte desta página" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<!--
+Copyright (c) 2024-2026 Marcel <MarcelDevBr> and BRHealth Contributors.
+Licensed under the GNU Affero General Public License v3 (AGPLv3)
+or a commercial license agreement directly with the author.
+-->
+
+<h1 id="guia-de-extensao-e-desenvolvimento-de-novas-fontes-brhealth">Guia de Extensão e Desenvolvimento de Novas Fontes - BRHealth<a class="headerlink" href="#guia-de-extensao-e-desenvolvimento-de-novas-fontes-brhealth" title="Permanent link">&para;</a></h1>
+<p>Este documento é o guia definitivo para arquitetos, engenheiros de software e pesquisadores que desejam <strong>estender</strong> o motor analítico BRHealth. Aqui você aprenderá como implementar novos adaptadores de dados governamentais, criar <em>Country Packs</em> para outros países, adicionar decodificadores de novos formatos e estender as portas de infraestrutura.</p>
+<hr />
+<h2 id="indice">Índice<a class="headerlink" href="#indice" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#1-arquitetura-hexagonal-dod-e-filosofia-de-extensão">Arquitetura Hexagonal DOD e Filosofia de Extensão</a></li>
+<li><a href="#2-o-contrato-spi-healthdatasourcespi">O Contrato SPI: <code>HealthDataSourceSPI</code></a></li>
+<li><a href="#3-tutorial-passo-a-passo-implementando-um-novo-adaptador">Tutorial Passo a Passo: Implementando um Novo Adaptador</a></li>
+<li><a href="#passo-1-definir-os-esquemas-canônicos-e-metadados">Passo 1: Definir os Esquemas Canônicos e Metadados</a></li>
+<li><a href="#passo-2-implementar-a-resolução-de-localizadores-resolve_locator">Passo 2: Implementar a Resolução de Localizadores (<code>resolve_locator</code>)</a></li>
+<li><a href="#passo-3-decodificação-colunar-vetorizada-fetch_and_decode">Passo 3: Decodificação Colunar Vetorizada (<code>fetch_and_decode</code>)</a></li>
+<li><a href="#passo-4-registro-no-countrypack-ou-sourceregistry">Passo 4: Registro no <code>CountryPack</code> ou <code>SourceRegistry</code></a></li>
+<li><a href="#4-fontes-declarativas-via-manifestos-yamljson-sem-recompilar">Fontes Declarativas via Manifestos YAML/JSON (Sem Recompilar)</a></li>
+<li><a href="#5-criação-de-novos-country-packs-internacionais">Criação de Novos Country Packs Internacionais</a></li>
+<li><a href="#6-implementação-de-novas-portas-de-infraestrutura">Implementação de Novas Portas de Infraestrutura (Transporte e Cache)</a></li>
+<li><a href="#7-diretrizes-rigorosas-de-engenharia-e-checklist-de-qualidade">Diretrizes Rigorosas de Engenharia e Checklist de Qualidade</a></li>
+</ol>
+<hr />
+<h2 id="1-arquitetura-hexagonal-dod-e-filosofia-de-extensao">1. Arquitetura Hexagonal DOD e Filosofia de Extensão<a class="headerlink" href="#1-arquitetura-hexagonal-dod-e-filosofia-de-extensao" title="Permanent link">&para;</a></h2>
+<p>O BRHealth opera sob a arquitetura <strong>Hexagonal Orientada a Dados (Hexagonal DOD)</strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                       INBOUND PORTS                         │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│       (CLI / Python PyO3 / C-ABI FFI / Panama JNI)          │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>└──────────────────────────────┬──────────────────────────────┘
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                               │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                               ▼
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│                        DOMAIN CORE                          │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│          (Apache Arrow RecordBatch, Memória Contígua,        │
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│          Zero I/O, Zero Alocações Ociosas, Zero Unwraps)    │
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└──────────────────────────────┬──────────────────────────────┘
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                               │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>                               ▼
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│                 SERVICE PROVIDER INTERFACE (SPI)            │
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│            HealthDataSourceSPI / Outbound Ports             │
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>└──────────────────────────────┬──────────────────────────────┘
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>                               │
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>                               ▼
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│                  ADAPTERS &amp; INFRASTRUCTURE                  │
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│       (DatasusBlastDecoder, Tokio FTP, HTTP Streaming,      │
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│            Hive-Parquet Storage, GeoArrow, NetCDF)          │
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>└─────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<h3 id="regras-arquiteturais-fundamentais">Regras Arquiteturais Fundamentais:<a class="headerlink" href="#regras-arquiteturais-fundamentais" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Núcleo de Domínio Puro (<code>domain/</code>)</strong>: Nunca adicione dependências de rede, I/O de disco, chamadas de shell ou <code>tokio</code> dentro dos módulos de domínio analítico.</li>
+<li><strong>Zero Unwraps</strong>: O uso de <code>.unwrap()</code> ou <code>.expect()</code> é expressamente proibido em todo o código de produção (<code>src/</code>). Erros devem ser mapeados em <code>PortError</code> ou tipos de erro de domínio.</li>
+<li><strong>Memória Contígua e Zero-Copy</strong>: Todos os dados decodificados devem ser estruturados diretamente em buffers Apache Arrow (<code>RecordBatch</code>) alinhados a 64 bytes.</li>
+</ol>
+<hr />
+<h2 id="2-o-contrato-spi-healthdatasourcespi">2. O Contrato SPI: <code>HealthDataSourceSPI</code><a class="headerlink" href="#2-o-contrato-spi-healthdatasourcespi" title="Permanent link">&para;</a></h2>
+<p>Toda fonte de dados no BRHealth implementa a trait assíncrona <code>HealthDataSourceSPI</code>, localizada em <code>crates/brhealth-core/src/domain/source_spi.rs</code>:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">#[async_trait]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">pub</span><span class="w"> </span><span class="k">trait</span><span class="w"> </span><span class="n">HealthDataSourceSPI</span><span class="p">:</span><span class="w"> </span><span class="nb">Send</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Sync</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="sd">/// Retorna os metadados descritivos da fonte (ID, nome oficial, órgão, periodicidade).</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">metadata</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">SourceMetadata</span><span class="p">;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="sd">/// Retorna o esquema canônico estrito em Apache Arrow que a fonte produz.</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">target_schema</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">Arc</span><span class="o">&lt;</span><span class="n">Schema</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="sd">/// Resolve parâmetros de consulta (ano, mês, UF) em um localizador de recurso físico.</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">resolve_locator</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">DataQueryParams</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">SourceLocator</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="sd">/// Executa o transporte assíncrono, descompressão nativa e projeção colunar.</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">fetch_and_decode</span><span class="p">(</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="n">locator</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SourceLocator</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="n">context</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SourceExecutionContext</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">RecordBatch</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="3-tutorial-passo-a-passo-implementando-um-novo-adaptador">3. Tutorial Passo a Passo: Implementando um Novo Adaptador<a class="headerlink" href="#3-tutorial-passo-a-passo-implementando-um-novo-adaptador" title="Permanent link">&para;</a></h2>
+<p>Vamos construir como exemplo um adaptador para o <strong>SIASUS - Boletim de Produção Ambulatorial Individualizado (BPAI)</strong>.</p>
+<h3 id="passo-1-definir-os-esquemas-canonicos-e-metadados">Passo 1: Definir os Esquemas Canônicos e Metadados<a class="headerlink" href="#passo-1-definir-os-esquemas-canonicos-e-metadados" title="Permanent link">&para;</a></h3>
+<p>Crie o arquivo em <code>crates/brhealth-core/src/sources/datasus/meu_adaptador.rs</code>:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Copyright (c) 2024-2026 Marcel &lt;MarcelDevBr&gt; and BRHealth Contributors.</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// Licensed under the GNU Affero General Public License v3 (AGPLv3)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">// or a commercial license agreement directly with the author.</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">use</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">sync</span><span class="p">::</span><span class="n">Arc</span><span class="p">;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">use</span><span class="w"> </span><span class="n">async_trait</span><span class="p">::</span><span class="n">async_trait</span><span class="p">;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">use</span><span class="w"> </span><span class="n">arrow</span><span class="p">::</span><span class="n">datatypes</span><span class="p">::{</span><span class="n">DataType</span><span class="p">,</span><span class="w"> </span><span class="n">Field</span><span class="p">,</span><span class="w"> </span><span class="n">Schema</span><span class="p">};</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">use</span><span class="w"> </span><span class="n">arrow</span><span class="p">::</span><span class="n">record_batch</span><span class="p">::</span><span class="n">RecordBatch</span><span class="p">;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">use</span><span class="w"> </span><span class="k">crate</span><span class="p">::</span><span class="n">domain</span><span class="p">::</span><span class="n">ports</span><span class="p">::</span><span class="n">PortError</span><span class="p">;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">use</span><span class="w"> </span><span class="k">crate</span><span class="p">::</span><span class="n">domain</span><span class="p">::</span><span class="n">schema</span><span class="p">::{</span><span class="n">canonical_columns</span><span class="p">,</span><span class="w"> </span><span class="n">default_values</span><span class="p">};</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="k">use</span><span class="w"> </span><span class="k">crate</span><span class="p">::</span><span class="n">domain</span><span class="p">::</span><span class="n">source_spi</span><span class="p">::{</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="n">DataQueryParams</span><span class="p">,</span><span class="w"> </span><span class="n">HealthDataSourceSPI</span><span class="p">,</span><span class="w"> </span><span class="n">SourceExecutionContext</span><span class="p">,</span><span class="w"> </span><span class="n">SourceLocator</span><span class="p">,</span><span class="w"> </span><span class="n">SourceMetadata</span><span class="p">,</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">};</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="k">use</span><span class="w"> </span><span class="k">crate</span><span class="p">::</span><span class="n">sources</span><span class="p">::</span><span class="n">datasus</span><span class="p">::</span><span class="n">helpers</span><span class="p">::{</span><span class="n">build_columnar_batch</span><span class="p">,</span><span class="w"> </span><span class="n">ColumnBuilderSpec</span><span class="p">};</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">SiasusBpaiSource</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="n">schema</span><span class="p">:</span><span class="w"> </span><span class="nc">Arc</span><span class="o">&lt;</span><span class="n">Schema</span><span class="o">&gt;</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="p">}</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="k">impl</span><span class="w"> </span><span class="n">SiasusBpaiSource</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">new</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">Self</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="fm">vec!</span><span class="p">[</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">MUNICIPALITY_CODE</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">Utf8</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">COMPETENCE_YEAR</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">UInt16</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">COMPETENCE_MONTH</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">UInt8</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">PATIENT_AGE_YEARS</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">UInt16</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">),</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">PATIENT_SEX</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">Utf8</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">),</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">PROCEDURE_CODE</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">Utf8</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">PRIMARY_DIAGNOSIS</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">Utf8</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">),</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">            </span><span class="n">Field</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">canonical_columns</span><span class="p">::</span><span class="n">QUANTITY</span><span class="p">,</span><span class="w"> </span><span class="n">DataType</span><span class="p">::</span><span class="n">UInt32</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">),</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">        </span><span class="p">];</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">        </span><span class="bp">Self</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">            </span><span class="n">schema</span><span class="p">:</span><span class="w"> </span><span class="nc">Arc</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">Schema</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">fields</span><span class="p">)),</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h3 id="passo-2-implementar-a-resolucao-de-localizadores-resolve_locator">Passo 2: Implementar a Resolução de Localizadores (<code>resolve_locator</code>)<a class="headerlink" href="#passo-2-implementar-a-resolucao-de-localizadores-resolve_locator" title="Permanent link">&para;</a></h3>
+<p>O localizador mapeia como a URL do FTP governamental é formada a partir da UF e da data:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">impl</span><span class="w"> </span><span class="n">HealthDataSourceSPI</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">SiasusBpaiSource</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">metadata</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">SourceMetadata</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="n">SourceMetadata</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">            </span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="s">"datasus.siasus_bpai"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">            </span><span class="n">display_name</span><span class="p">:</span><span class="w"> </span><span class="s">"SIA-SUS - Boletim Ambulatorial Individualizado (BPAI)"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">            </span><span class="n">maintaining_agency</span><span class="p">:</span><span class="w"> </span><span class="s">"DATASUS / Ministério da Saúde"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">            </span><span class="n">temporal_resolution</span><span class="p">:</span><span class="w"> </span><span class="s">"Mensal (1994-2026)"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">            </span><span class="n">geographic_granularity</span><span class="p">:</span><span class="w"> </span><span class="s">"Municipal (Código IBGE de 6 e 7 dígitos)"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">            </span><span class="n">fair_license</span><span class="p">:</span><span class="w"> </span><span class="s">"Domínio Público Governamental / Open Data"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">            </span><span class="n">underlying_format</span><span class="p">:</span><span class="w"> </span><span class="s">"PKWARE DCL (.dbc) / xBase DBF"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">target_schema</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">Arc</span><span class="o">&lt;</span><span class="n">Schema</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">schema</span><span class="p">.</span><span class="n">clone</span><span class="p">()</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="k">fn</span><span class="w"> </span><span class="nf">resolve_locator</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">DataQueryParams</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">SourceLocator</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">uf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">            </span><span class="p">.</span><span class="n">jurisdiction_code</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">            </span><span class="p">.</span><span class="n">as_deref</span><span class="p">()</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">            </span><span class="p">.</span><span class="n">ok_or_else</span><span class="p">(</span><span class="o">||</span><span class="w"> </span><span class="n">PortError</span><span class="p">::</span><span class="n">InvalidArgument</span><span class="p">(</span><span class="s">"UF é obrigatória para SIA-SUS"</span><span class="p">.</span><span class="n">into</span><span class="p">()))</span><span class="o">?</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">            </span><span class="p">.</span><span class="n">to_uppercase</span><span class="p">();</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">            </span><span class="p">.</span><span class="n">month</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">            </span><span class="p">.</span><span class="n">ok_or_else</span><span class="p">(</span><span class="o">||</span><span class="w"> </span><span class="n">PortError</span><span class="p">::</span><span class="n">InvalidArgument</span><span class="p">(</span><span class="s">"Mês é obrigatório para SIA-SUS"</span><span class="p">.</span><span class="n">into</span><span class="p">()))</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="w">        </span><span class="c1">// Convenção DATASUS: PA + UF + YY + MM + .dbc (ex: PABA2305.dbc)</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">yy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">.</span><span class="n">year</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="fm">format!</span><span class="p">(</span><span class="s">"PA{}{:02}{:02}.dbc"</span><span class="p">,</span><span class="w"> </span><span class="n">uf</span><span class="p">,</span><span class="w"> </span><span class="n">yy</span><span class="p">,</span><span class="w"> </span><span class="n">month</span><span class="p">);</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="fm">format!</span><span class="p">(</span><span class="s">"/dissemin/publicos/SIASUS/200801_/Dados/{}"</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">);</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="n">SourceLocator</span><span class="p">::</span><span class="n">Ftp</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="w">            </span><span class="n">host</span><span class="p">:</span><span class="w"> </span><span class="s">"ftp.datasus.gov.br"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="w">            </span><span class="n">path</span><span class="p">,</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="w">        </span><span class="p">})</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="w">    </span><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h3 id="passo-3-decodificacao-colunar-vetorizada-fetch_and_decode">Passo 3: Decodificação Colunar Vetorizada (<code>fetch_and_decode</code>)<a class="headerlink" href="#passo-3-decodificacao-colunar-vetorizada-fetch_and_decode" title="Permanent link">&para;</a></h3>
+<p>Aproveite o utilitário <code>build_columnar_batch</code> para decodificar registros do DBF diretamente em vetores tipados com pré-alocação precisa de capacidade:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">fetch_and_decode</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">        </span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="n">locator</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SourceLocator</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="n">context</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SourceExecutionContext</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="n">RecordBatch</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">        </span><span class="c1">// 1. Download resiliente com stream hashing</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">raw_bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">context</span><span class="p">.</span><span class="n">transport</span><span class="p">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">locator</span><span class="p">).</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="c1">// 2. Descompressão Blast PKWARE DCL 100% nativa em Rust</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">dbf_bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">context</span><span class="p">.</span><span class="n">decompressor</span><span class="p">.</span><span class="n">decompress_dbc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">raw_bytes</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="c1">// 3. Parsing do cabeçalho DBF</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">dbf_reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">crate</span><span class="p">::</span><span class="n">decoders</span><span class="p">::</span><span class="n">dbf</span><span class="p">::</span><span class="n">DbfReader</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="o">&amp;</span><span class="n">dbf_bytes</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">num_records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dbf_reader</span><span class="p">.</span><span class="n">num_records</span><span class="p">();</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">        </span><span class="c1">// 4. Especificações de Projeção Colunar Canônica</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="fm">vec!</span><span class="p">[</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">Text</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_UFMUN"</span><span class="p">,</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="nc">default_values</span><span class="p">::</span><span class="n">MUNICIPALITY_UNKNOWN</span><span class="p">,</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">UInt16</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_ANO"</span><span class="p">,</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">UInt8</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_MES"</span><span class="p">,</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">UInt16</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_IDADE"</span><span class="p">,</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">Text</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_SEXO"</span><span class="p">,</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="nc">default_values</span><span class="p">::</span><span class="n">SEX_UNKNOWN</span><span class="p">,</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">Text</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_PROC_ID"</span><span class="p">,</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="nc">default_values</span><span class="p">::</span><span class="n">TEXT_UNKNOWN</span><span class="p">,</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">Text</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_CIDPRI"</span><span class="p">,</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="nc">default_values</span><span class="p">::</span><span class="n">CID10_UNKNOWN</span><span class="p">,</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="w">            </span><span class="n">ColumnBuilderSpec</span><span class="p">::</span><span class="n">UInt32</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a><span class="w">                </span><span class="n">source_column</span><span class="p">:</span><span class="w"> </span><span class="s">"PA_QTDPRO"</span><span class="p">,</span>
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="w">                </span><span class="n">default_value</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a><span class="w">            </span><span class="p">},</span>
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="w">        </span><span class="p">];</span>
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="w">        </span><span class="c1">// 5. Construção vetorizada direta no esquema Apache Arrow</span>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">build_columnar_batch</span><span class="p">(</span>
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">schema</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span>
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a><span class="w">            </span><span class="o">&amp;</span><span class="n">dbf_reader</span><span class="p">,</span>
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="w">            </span><span class="o">&amp;</span><span class="n">specs</span><span class="p">,</span>
+</span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="w">            </span><span class="n">num_records</span><span class="p">,</span>
+</span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-4-59"><a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a>
+</span><span id="__span-4-60"><a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a><span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="fm">vec!</span><span class="p">[</span><span class="n">batch</span><span class="p">])</span>
+</span><span id="__span-4-61"><a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-62"><a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h3 id="passo-4-registro-no-countrypack-ou-sourceregistry">Passo 4: Registro no <code>CountryPack</code> ou <code>SourceRegistry</code><a class="headerlink" href="#passo-4-registro-no-countrypack-ou-sourceregistry" title="Permanent link">&para;</a></h3>
+<p>No arquivo <code>crates/brhealth-core/src/sources/mod.rs</code>, instancie seu novo adaptador e adicione ao pacote:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">pub</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">create_pack_brasil</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">CountryPack</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">pack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CountryPack</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="s">"Brasil"</span><span class="p">,</span><span class="w"> </span><span class="s">"BRA"</span><span class="p">);</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="n">pack</span><span class="p">.</span><span class="n">register_source</span><span class="p">(</span><span class="n">Arc</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">SiasusBpaiSource</span><span class="p">::</span><span class="n">new</span><span class="p">()));</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="c1">// ... demais fontes</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="n">pack</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="4-fontes-declarativas-via-manifestos-yamljson">4. Fontes Declarativas via Manifestos YAML/JSON<a class="headerlink" href="#4-fontes-declarativas-via-manifestos-yamljson" title="Permanent link">&para;</a></h2>
+<p>Para integrar fontes externas sem a necessidade de compilar código Rust, o BRHealth fornece o carregador dinâmico <code>DeclarativeDataSource</code>.</p>
+<h3 id="exemplo-de-manifesto-fonte_declarativajson">Exemplo de Manifesto (<code>fonte_declarativa.json</code>):<a class="headerlink" href="#exemplo-de-manifesto-fonte_declarativajson" title="Permanent link">&para;</a></h3>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"parceiro.atencao_domiciliar"</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">"display_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Programa Melhor em Casa - Atendimentos"</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">"maintaining_agency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Secretaria Municipal de Saúde"</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">"temporal_resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Mensal"</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">"geographic_granularity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Setor Censitário"</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">"fair_license"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CC-BY-4.0"</span><span class="p">,</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">"underlying_format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CSV / GeoArrow"</span><span class="p">,</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">"url_template"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.saude.gov.br/v1/atendimentos?ano={year}&amp;mes={month}&amp;ibge={jurisdiction}"</span><span class="p">,</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nt">"schema_fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"municipio_ibge"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Utf8"</span><span class="p">,</span><span class="w"> </span><span class="nt">"nullable"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ano_competencia"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UInt16"</span><span class="p">,</span><span class="w"> </span><span class="nt">"nullable"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"codigo_cid10"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Utf8"</span><span class="p">,</span><span class="w"> </span><span class="nt">"nullable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"total_visitas"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UInt32"</span><span class="p">,</span><span class="w"> </span><span class="nt">"nullable"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">}</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="carregamento-dinamico-em-rust">Carregamento Dinâmico em Rust:<a class="headerlink" href="#carregamento-dinamico-em-rust" title="Permanent link">&para;</a></h3>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">use</span><span class="w"> </span><span class="n">brhealth_core</span><span class="p">::</span><span class="n">sources</span><span class="p">::</span><span class="n">declarative</span><span class="p">::</span><span class="n">DeclarativeDataSource</span><span class="p">;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kd">let</span><span class="w"> </span><span class="n">json_str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">fs</span><span class="p">::</span><span class="n">read_to_string</span><span class="p">(</span><span class="s">"fonte_declarativa.json"</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="kd">let</span><span class="w"> </span><span class="n">declarative_source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeclarativeDataSource</span><span class="p">::</span><span class="n">from_json</span><span class="p">(</span><span class="o">&amp;</span><span class="n">json_str</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">registry</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">Arc</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">declarative_source</span><span class="p">));</span>
+</span></code></pre></div>
+<hr />
+<h2 id="5-criacao-de-novos-country-packs-internacionais">5. Criação de Novos Country Packs Internacionais<a class="headerlink" href="#5-criacao-de-novos-country-packs-internacionais" title="Permanent link">&para;</a></h2>
+<p>Você pode criar um pacote nacional completo (ex: Portugal, Colômbia, Chile) implementando uma função construtora de <code>CountryPack</code>:</p>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">use</span><span class="w"> </span><span class="n">brhealth_core</span><span class="p">::</span><span class="n">domain</span><span class="p">::</span><span class="n">source_spi</span><span class="p">::</span><span class="n">CountryPack</span><span class="p">;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">pub</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">create_pack_portugal</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nc">CountryPack</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">pack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CountryPack</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="s">"Portugal"</span><span class="p">,</span><span class="w"> </span><span class="s">"PRT"</span><span class="p">);</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="c1">// Registrar fontes do SNS (Serviço Nacional de Saúde de Portugal)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="c1">// pack.register_source(Arc::new(SnsMortalidadeSource::new()));</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="c1">// pack.register_source(Arc::new(SnsInternamentosSource::new()));</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="n">pack</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="6-implementacao-de-novas-portas-de-infraestrutura">6. Implementação de Novas Portas de Infraestrutura<a class="headerlink" href="#6-implementacao-de-novas-portas-de-infraestrutura" title="Permanent link">&para;</a></h2>
+<p>Caso sua infraestrutura utilize armazenamento em nuvem (Amazon S3, Google Cloud Storage, MinIO) ou mensageria, você pode estender as portas de saída (<code>OutboundPorts</code>):</p>
+<h3 id="implementar-um-novo-cacheport">Implementar um Novo <code>CachePort</code>:<a class="headerlink" href="#implementar-um-novo-cacheport" title="Permanent link">&para;</a></h3>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">use</span><span class="w"> </span><span class="n">async_trait</span><span class="p">::</span><span class="n">async_trait</span><span class="p">;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">use</span><span class="w"> </span><span class="n">brhealth_core</span><span class="p">::</span><span class="n">domain</span><span class="p">::</span><span class="n">ports</span><span class="p">::{</span><span class="n">CachePort</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="p">};</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">S3ObjectCache</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="n">bucket</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="c1">// cliente S3</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">}</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="cp">#[async_trait]</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">impl</span><span class="w"> </span><span class="n">CachePort</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">S3ObjectCache</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="nb">Option</span><span class="o">&lt;</span><span class="nb">Vec</span><span class="o">&lt;</span><span class="kt">u8</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">        </span><span class="c1">// Implementar busca no S3</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="nb">None</span><span class="p">)</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">set</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="p">[</span><span class="kt">u8</span><span class="p">])</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="p">(),</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">        </span><span class="c1">// Gravar no S3</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">invalidate</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="p">(),</span><span class="w"> </span><span class="n">PortError</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="p">}</span>
+</span></code></pre></div>
+<hr />
+<h2 id="7-diretrizes-rigorosas-de-engenharia-e-checklist-de-qualidade">7. Diretrizes Rigorosas de Engenharia e Checklist de Qualidade<a class="headerlink" href="#7-diretrizes-rigorosas-de-engenharia-e-checklist-de-qualidade" title="Permanent link">&para;</a></h2>
+<p>Antes de abrir um <em>Pull Request</em> ou submeter um novo módulo ao BRHealth, certifique-se de que seu código cumpre os 7 mandamentos de qualidade do projeto:</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Zero Unwraps</strong>: Nenhuma ocorrência de <code>.unwrap()</code> ou <code>.expect()</code> em <code>src/</code>. Tratamento explícito via <code>Result&lt;T, PortError&gt;</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Constantes Canônicas</strong>: Usar estritamente nomes de colunas de <code>domain::schema::canonical_columns</code> e valores sentinela de <code>domain::schema::default_values</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Clippy Estrito</strong>: Compilar sem nenhum aviso sob <code>cargo clippy --workspace --all-targets -- -D warnings</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Testes de Unidade e Propriedades</strong>: Adicionar testes unitários abrangentes com dados de borda e <em>property-based testing</em> via <code>proptest</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Doc-tests Executáveis</strong>: Todos os blocos de código nas docstrings devem ser compiláveis via <code>cargo test --doc</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Cabeçalho de Direitos Autorais</strong>: Todos os arquivos <code>.rs</code> devem conter:
+  <div class="language-rust highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">// Copyright (c) 2024-2026 Marcel &lt;MarcelDevBr&gt; and BRHealth Contributors.</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1">// Licensed under the GNU Affero General Public License v3 (AGPLv3)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1">// or a commercial license agreement directly with the author.</span>
+</span></code></pre></div></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Formulação Científica</strong>: Qualquer algoritmo ou métrica matemática nova deve ter sua fórmula documentada em LaTeX nas docstrings e manuais.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1833 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Motor Analítico Colunar de Alta Performance para Saúde Coletiva e Determinantes Sociais">
+      
+      
+        <meta name="author" content="Marcel <MarcelDevBr>">
+      
+      
+        <link rel="canonical" href="https://marceldevbr.github.io/brhealth/BRHealth_Analise_Tecnica/">
+      
+      
+        <link rel="prev" href="../CICD_AND_WORKFLOWS/">
+      
+      
+        <link rel="next" href="../architecture/ideia/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Análise Técnica - BRHealth Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#analise-tecnica-projeto-brhealth" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="BRHealth Documentation" class="md-header__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BRHealth Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Análise Técnica
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Mudar para modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Compartilhar" aria-label="Compartilhar" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../INSTALLATION/" class="md-tabs__link">
+          
+  
+  
+  Primeiros Passos
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../PYTHON_QUICKSTART/" class="md-tabs__link">
+          
+  
+  
+  🐍 Python
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/exemplo_analise_custos_csap/" class="md-tabs__link">
+          
+  
+  
+  🏥 Bioestatística & Economia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/sdd_brhealth/" class="md-tabs__link">
+          
+  
+  
+  📐 Arquitetura & Engenharia
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="BRHealth Documentation" class="md-nav__button md-logo" aria-label="BRHealth Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BRHealth Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarcelDevBr/brhealth" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarcelDevBr/brhealth
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primeiros Passos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Primeiros Passos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalação Modular
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../USAGE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual Prático Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🐍 Python
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🐍 Python
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PYTHON_QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚡ Guia Rápido (Quickstart)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PYTHON_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📘 Guia Definitivo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_API_Python_Ciencia_de_Dados/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📋 API para Pesquisadores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏥 Bioestatística & Economia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🏥 Bioestatística & Economia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/exemplo_analise_custos_csap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custos Hospitalares de CSAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📐 Arquitetura & Engenharia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📐 Arquitetura & Engenharia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/sdd_brhealth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software Design Document (SDD)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRHealth_Objetos_API_Universal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objetos da API Universal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXTENDING_BRHEALTH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensão de Fontes (SPI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LGPD_GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governança e LGPD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CICD_AND_WORKFLOWS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD e Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análise Técnica
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análise Técnica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-resumo-executivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Resumo Executivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pontos-fortes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pontos Fortes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-falhas-e-riscos-por-severidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Falhas e Riscos (por severidade)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Falhas e Riscos (por severidade)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔴 Crítico
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🟠 Alto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🟡 Médio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-melhorias-de-uso-da-api-guia-pratico-para-o-colab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Melhorias de Uso da API — Guia Prático para o Colab
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Melhorias de Uso da API — Guia Prático para o Colab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-o-que-funciona-bem-hoje-testado-e-confirmado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 O que funciona bem hoje (testado e confirmado)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-workaround-para-o-exemplo-quebrado-do-readme-read_dbc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Workaround para o exemplo quebrado do README (read_dbc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-ids-de-fonte-corretos-confirmados-via-list_sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 IDs de fonte corretos (confirmados via list_sources())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-sempre-envolva-chamadas-de-rede-em-tryexcept-explicito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Sempre envolva chamadas de rede em try/except explícito
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-sugestao-de-celula-de-setup-para-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Sugestão de célula de setup para notebooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-recomendacoes-de-design-de-api-para-o-mantenedor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 Recomendações de design de API para o mantenedor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-plano-de-acao-priorizado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Plano de Ação Priorizado
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-anexo-reprodutibilidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Anexo — Reprodutibilidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/ideia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto Conceitual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-resumo-executivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Resumo Executivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pontos-fortes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pontos Fortes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-falhas-e-riscos-por-severidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Falhas e Riscos (por severidade)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Falhas e Riscos (por severidade)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔴 Crítico
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🟠 Alto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🟡 Médio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-melhorias-de-uso-da-api-guia-pratico-para-o-colab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Melhorias de Uso da API — Guia Prático para o Colab
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Melhorias de Uso da API — Guia Prático para o Colab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-o-que-funciona-bem-hoje-testado-e-confirmado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 O que funciona bem hoje (testado e confirmado)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-workaround-para-o-exemplo-quebrado-do-readme-read_dbc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Workaround para o exemplo quebrado do README (read_dbc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-ids-de-fonte-corretos-confirmados-via-list_sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 IDs de fonte corretos (confirmados via list_sources())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-sempre-envolva-chamadas-de-rede-em-tryexcept-explicito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Sempre envolva chamadas de rede em try/except explícito
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-sugestao-de-celula-de-setup-para-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Sugestão de célula de setup para notebooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#46-recomendacoes-de-design-de-api-para-o-mantenedor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 Recomendações de design de API para o mantenedor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-plano-de-acao-priorizado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Plano de Ação Priorizado
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-anexo-reprodutibilidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Anexo — Reprodutibilidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navegação" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Início
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../architecture/sdd_brhealth/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    📐 Arquitetura & Engenharia
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/MarcelDevBr/brhealth/edit/main/docs/BRHealth_Analise_Tecnica.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/MarcelDevBr/brhealth/raw/main/docs/BRHealth_Analise_Tecnica.md" title="Exibir fonte desta página" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="analise-tecnica-projeto-brhealth">Análise Técnica — Projeto BRHealth<a class="headerlink" href="#analise-tecnica-projeto-brhealth" title="Permanent link">&para;</a></h1>
+<p><strong>Repositório analisado:</strong> <code>MarcelDevBr/brhealth</code> (branch <code>main</code>)
+<strong>Versão avaliada:</strong> <code>0.1.0</code> (código-fonte + pacote publicado no PyPI)
+<strong>Metodologia:</strong> clone completo do repositório, leitura do código-fonte Rust (98 arquivos, ~19.000 linhas), inspeção do <code>Cargo.toml</code>, workflows de CI/CD, e <strong>teste ao vivo</strong> do pacote Python via <code>pip install brhealth</code> em ambiente isolado, reproduzindo o fluxo que um usuário teria no Google Colab.</p>
+<hr />
+<h2 id="1-resumo-executivo">1. Resumo Executivo<a class="headerlink" href="#1-resumo-executivo" title="Permanent link">&para;</a></h2>
+<p>O BRHealth é um projeto tecnicamente ambicioso e, em vários aspectos, bem executado: arquitetura hexagonal limpa, uso disciplinado de <code>Result</code>/<code>thiserror</code> no domínio, quase zero <code>.unwrap()</code> fora de testes, e um pipeline de dados sofisticado (Arrow zero-copy, PROV-O, H3/S2). Isso é incomum para um projeto em v0.1.0.</p>
+<p>Ao mesmo tempo, o teste real da API Python revelou <strong>um bug bloqueante no fluxo de "primeiro contato"</strong> (o exemplo do próprio README não funciona) e uma <strong>inconsistência de nomes de fonte entre CLI, README e o motor real</strong>. Também há uma lacuna estrutural importante: <code>panic = "abort"</code> combinado com bindings FFI (Python/Java) sem <code>catch_unwind</code>, o que pode derrubar o processo do usuário inteiro em vez de lançar uma exceção tratável.</p>
+<p>Nenhum desses problemas é difícil de corrigir — mas juntos, prejudicam bastante a primeira impressão de "quem for usar".</p>
+<hr />
+<h2 id="2-pontos-fortes">2. Pontos Fortes<a class="headerlink" href="#2-pontos-fortes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Área</th>
+<th>Evidência</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tratamento de erros no domínio</td>
+<td>Enum <code>PortError</code> com <code>thiserror</code>, mensagens descritivas, zero <code>panic!</code>/<code>unwrap()</code> fora de código de teste no core</td>
+</tr>
+<tr>
+<td>Qualidade de CI</td>
+<td><code>cargo fmt --check</code> + <code>cargo clippy -D warnings</code> como gate obrigatório</td>
+</tr>
+<tr>
+<td>Escolhas de dependência</td>
+<td><code>rustls-tls</code> em vez de OpenSSL (menos superfície de ataque e dependência nativa)</td>
+</tr>
+<tr>
+<td>Resiliência de rede</td>
+<td>Sistema de espelhos de contingência real ao buscar dados do DATASUS (testei: falhou o FTP principal e o motor tentou automaticamente 2 espelhos alternativos, com mensagem de erro clara e acionável)</td>
+</tr>
+<tr>
+<td>Design de API Python</td>
+<td>Uso de <code>PyResult</code> consistente, acessores especializados (<code>engine.hospital_morbidity</code>, <code>engine.vital_statistics</code>) que tornam a API mais navegável que uma lista plana de funções</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-falhas-e-riscos-por-severidade">3. Falhas e Riscos (por severidade)<a class="headerlink" href="#3-falhas-e-riscos-por-severidade" title="Permanent link">&para;</a></h2>
+<h3 id="critico">🔴 Crítico<a class="headerlink" href="#critico" title="Permanent link">&para;</a></h3>
+<p><strong>3.1 — <code>read_dbc</code> / <code>read_dbf</code> ausentes no pacote publicado (bug confirmado)</strong>
+O README anuncia como primeiro exemplo de uso:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">batch_dbc</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">read_dbc</span><span class="p">(</span><span class="s2">"RDSP2401.dbc"</span><span class="p">)</span>
+</span></code></pre></div>
+Testei isso após <code>pip install brhealth</code> (versão publicada no PyPI, <code>0.1.0</code>) e o resultado é:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>AttributeError: module 'brhealth' has no attribute 'read_dbc'
+</span></code></pre></div>
+Inspecionando <code>dir(brhealth)</code>, essas funções <strong>não existem</strong> no módulo compilado, embora existam no código-fonte Rust (<code>crates/brhealth-python/src/lib.rs</code>, função <code>pub fn read_dbc</code>). Ou seja: o wheel publicado no PyPI está dessincronizado do código-fonte, ou a função não foi registrada no <code>#[pymodule]</code> da build de release.
+<strong>Impacto:</strong> o exemplo literal do README — a primeira coisa que qualquer novo usuário roda — quebra imediatamente.
+<strong>Correção:</strong> verificar o registro da função no <code>#[pymodule]</code>, gerar novo build/release, e adicionar um teste de CI que importe o pacote <strong>publicado</strong> (não só compilado localmente) e valide <code>dir(brhealth)</code> contra uma lista esperada de símbolos públicos — isso pega esse tipo de regressão de empacotamento automaticamente.</p>
+<p><strong>3.2 — IDs de fonte inconsistentes entre README, <code>--help</code> da CLI e o motor real</strong>
+O README e o próprio texto de ajuda da CLI (<code>crates/brhealth-cli/src/main.rs</code>) usam o formato <code>datasus_sih</code>, <code>datasus_sim</code>, <code>ibge_censo</code> (underscore). Mas o motor real registra as fontes como <code>datasus.sih</code>, <code>datasus.sim</code>, <code>ibge.censo</code> (ponto), confirmado via <code>engine.list_sources()</code>. Testei diretamente:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">engine</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">source_id</span><span class="o">=</span><span class="s1">'datasus_sih'</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># ValueError: Recurso não encontrado: Fonte 'datasus_sih' não registrada</span>
+</span></code></pre></div>
+<strong>Impacto:</strong> qualquer usuário que copie o comando de exemplo da CLI (<code>brhealth fetch --source datasus_sih ...</code>) recebe erro, sem indicação clara de qual é o nome correto.
+<strong>Correção:</strong> padronizar em um único formato (sugiro manter <code>datasus.sih</code>, é mais consistente com namespacing hierárquico) e, criticamente, <strong>listar as fontes válidas na própria mensagem de erro</strong> quando o ID não é encontrado — o motor já tem <code>list_sources()</code>, é só reaproveitar no <code>PortError::ResourceNotFound</code>.</p>
+<p><strong>3.3 — <code>panic = "abort"</code> no perfil de release do workspace, sem <code>catch_unwind</code> nas bindings</strong>
+O <code>Cargo.toml</code> raiz define <code>panic = "abort"</code> para <strong>todo o workspace</strong>, incluindo <code>brhealth-python</code> e <code>brhealth-jni</code>. Não há nenhum uso de <code>catch_unwind</code> no código (busquei em todo o repositório). Isso significa que qualquer panic no core Rust — um arquivo <code>.dbc</code> malformado que quebre um invariante interno, overflow aritmético, índice fora de limites — <strong>derruba o processo Python/Java inteiro</strong>, em vez de virar uma exceção Python capturável.
+<strong>Impacto:</strong> em um notebook Colab, isso significa perder a sessão inteira (e todo o estado em memória) por causa de um único arquivo de dado malformado — algo bem provável ao lidar com décadas de arquivos legados do DATASUS.
+<strong>Correção:</strong> usar <code>panic = "unwind"</code> nos crates de binding (perfil de release separado, ou removendo o <code>panic = "abort"</code> do workspace raiz e definindo por crate), e envolver os pontos de entrada FFI com <code>catch_unwind</code>, convertendo panics em <code>PyErr</code>/exceção Java com mensagem útil.</p>
+<h3 id="alto">🟠 Alto<a class="headerlink" href="#alto" title="Permanent link">&para;</a></h3>
+<p><strong>3.4 — Ausência de varredura de dependências (supply chain)</strong>
+Não há <code>cargo audit</code>, <code>cargo-deny</code>, nem Dependabot configurados. Com dependências como <code>reqwest</code>, <code>tokio</code> e parsers binários customizados, isso é uma lacuna básica de segurança.</p>
+<p><strong>3.5 — CI só testa em <code>ubuntu-latest</code></strong>
+O job de testes roda exclusivamente em Linux, mas o projeto distribui binários para Windows, macOS (Intel/ARM) e Linux ARM64/musl. Esses alvos só são <em>compilados</em> no pipeline de release, nunca <em>testados</em>. Código de I/O (<code>http.rs</code>, <code>ftp.rs</code>, paths de arquivo) é justamente onde diferenças de plataforma costumam quebrar.</p>
+<p><strong>3.6 — Sem fuzzing no decodificador binário PKWARE Blast (<code>.dbc</code>)</strong>
+É o código que faz parsing manual de bytes vindos de fontes externas — historicamente a área de maior risco em bibliotecas de dados (overread de buffer, overflow em tamanhos declarados no header). Não há harness de <code>cargo-fuzz</code> no repositório.</p>
+<p><strong>3.7 — Dados de saúde sensíveis sem menção a LGPD</strong>
+O projeto processa SIM (mortalidade), SINASC, CadÚnico (vulnerabilidade social) — dados pessoais sensíveis por natureza — mas não há nenhuma seção sobre LGPD, anonimização ou política de tratamento de dados em todo o repositório.</p>
+<h3 id="medio">🟡 Médio<a class="headerlink" href="#medio" title="Permanent link">&para;</a></h3>
+<p><strong>3.8 — Mensagens de erro apenas em português</strong>
+Todas as mensagens de erro observadas (<code>Erro de validação ou esquema: ...</code>, <code>Recurso não encontrado: ...</code>) estão hardcoded em PT-BR. Isso é natural para o Country Pack Brasil, mas o projeto também expõe o Country Pack Global (WHO GHO, IHME GBD, Copernicus) — sinalizando ambição internacional. Mensagens só em português limitam adoção fora do Brasil.</p>
+<p><strong>3.9 — Governança de projeto incompleta</strong>
+Faltam <code>CONTRIBUTING.md</code>, <code>CODE_OF_CONDUCT.md</code>, <code>SECURITY.md</code> (processo de disclosure de vulnerabilidade) e templates de issue/PR. Dado o licenciamento duplo (AGPLv3 + comercial), um <code>CONTRIBUTING.md</code> também é importante para deixar claro sob qual licença o contribuidor está cedendo o código.</p>
+<p><strong>3.10 — Sem <code>CHANGELOG.md</code></strong>
+Não há histórico de mudanças. Para uma biblioteca em v0.1.0 já publicada no PyPI e integrada por terceiros, isso dificulta saber o que muda entre versões.</p>
+<p><strong>3.11 — Sem medição de cobertura de teste</strong>
+116 testes para 254 funções públicas no core é um bom começo, mas sem <code>cargo-llvm-cov</code>/<code>tarpaulin</code> no CI não há visibilidade sobre quais caminhos de erro (não só os de sucesso) estão realmente cobertos.</p>
+<hr />
+<h2 id="4-melhorias-de-uso-da-api-guia-pratico-para-o-colab">4. Melhorias de Uso da API — Guia Prático para o Colab<a class="headerlink" href="#4-melhorias-de-uso-da-api-guia-pratico-para-o-colab" title="Permanent link">&para;</a></h2>
+<p>Com base no teste real do pacote, seguem recomendações concretas para quem está usando <code>import brhealth</code> hoje, e para tornar a API mais agradável no futuro.</p>
+<h3 id="41-o-que-funciona-bem-hoje-testado-e-confirmado">4.1 O que funciona bem hoje (testado e confirmado)<a class="headerlink" href="#41-o-que-funciona-bem-hoje-testado-e-confirmado" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Validação e harmonização IBGE — funciona perfeitamente</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">dv</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">calculate_ibge_dv</span><span class="p">(</span><span class="s2">"355030"</span><span class="p">)</span>        <span class="c1"># 8</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">codigo</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">harmonize_ibge_code</span><span class="p">(</span><span class="s2">"355030"</span><span class="p">)</span>  <span class="c1"># "3550308"</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Classificação CSAP — funciona</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">brhealth</span><span class="o">.</span><span class="n">is_csap</span><span class="p">(</span><span class="s2">"J45.0"</span><span class="p">)</span>                        <span class="c1"># True (Asma)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># Motor principal</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">Engine</span><span class="p">()</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">version</span><span class="p">())</span>         <span class="c1"># "0.1.0"</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">source_count</span><span class="p">())</span>    <span class="c1"># 26</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nb">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">list_sources</span><span class="p">()))</span>   <span class="c1"># ver nomes REAIS das fontes abaixo</span>
+</span></code></pre></div>
+<h3 id="42-workaround-para-o-exemplo-quebrado-do-readme-read_dbc">4.2 Workaround para o exemplo quebrado do README (<code>read_dbc</code>)<a class="headerlink" href="#42-workaround-para-o-exemplo-quebrado-do-readme-read_dbc" title="Permanent link">&para;</a></h3>
+<p>Como <code>brhealth.read_dbc()</code> <strong>não está disponível na versão publicada no PyPI</strong> (ver item 3.1), se você já tem um arquivo <code>.dbc</code> e quer ingeri-lo hoje, o caminho que de fato funciona é via <code>Engine</code>, não via a função solta:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">Engine</span><span class="p">()</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Use o ID de fonte REAL (com ponto, não underscore — ver item 3.2)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">batch</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">hospital_morbidity</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">jurisdiction</span><span class="o">=</span><span class="s2">"SP"</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2023</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">df</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>  <span class="c1"># ou .to_polars()</span>
+</span></code></pre></div>
+<p>Se seu objetivo é especificamente decodificar um <code>.dbc</code> local (não baixar do DATASUS), monitore o repositório para o próximo release — ou instale direto do código-fonte do GitHub em vez do PyPI, que deve ter a função registrada:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/MarcelDevBr/brhealth.git#subdirectory<span class="o">=</span>crates/brhealth-python
+</span></code></pre></div></p>
+<h3 id="43-ids-de-fonte-corretos-confirmados-via-list_sources">4.3 IDs de fonte corretos (confirmados via <code>list_sources()</code>)<a class="headerlink" href="#43-ids-de-fonte-corretos-confirmados-via-list_sources" title="Permanent link">&para;</a></h3>
+<p>Use estes, não os do README/CLI atual:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>datasus.bps        datasus.cnes       datasus.siasus     datasus.sih
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>datasus.sim         datasus.sinan      datasus.sinasc     datasus.sipni
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>datasus.siscan      datasus.sisvan     environmental.bdqueimadas
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>environmental.inmet environmental.prodes  environmental.sisagua
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>global.copernicus_era5  global.ihme_gbd  global.openaq  global.paho_plisa
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>global.who_gho       global.worldpop
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>ibge.censo   ibge.munic   ibge.pense   ibge.pnad   ibge.pof
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>mds.cadunico
+</span></code></pre></div>
+<h3 id="44-sempre-envolva-chamadas-de-rede-em-tryexcept-explicito">4.4 Sempre envolva chamadas de rede em <code>try/except</code> explícito<a class="headerlink" href="#44-sempre-envolva-chamadas-de-rede-em-tryexcept-explicito" title="Permanent link">&para;</a></h3>
+<p>O motor tem um bom sistema de fallback (espelhos de contingência), mas em ambientes com rede restrita (Colab corporativo, sandbox, firewall) a chamada pode falhar mesmo assim. Padrão recomendado:</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">try</span><span class="p">:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">batch</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">hospital_morbidity</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">jurisdiction</span><span class="o">=</span><span class="s2">"SP"</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2023</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Falha ao buscar dados: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="c1"># a mensagem já vem com sugestão prática, ex:</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="c1"># "O serviço governamental pode estar instável. Tente novamente em alguns instantes."</span>
+</span></code></pre></div>
+Note que hoje todo erro do motor chega ao Python como <code>ValueError</code> genérico (perda de tipagem do enum <code>PortError</code> do Rust) — não dá para diferenciar programaticamente "arquivo não encontrado" de "timeout de rede" de "esquema inválido" sem fazer parsing de string. Ver recomendação 4.6.</p>
+<h3 id="45-sugestao-de-celula-de-setup-para-notebooks">4.5 Sugestão de célula de setup para notebooks<a class="headerlink" href="#45-sugestao-de-celula-de-setup-para-notebooks" title="Permanent link">&para;</a></h3>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Célula 1 — instalação e diagnóstico do ambiente</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">brhealth</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">brhealth</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"brhealth"</span><span class="p">,</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Fontes disponíveis:"</span><span class="p">,</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">Engine</span><span class="p">()</span><span class="o">.</span><span class="n">source_count</span><span class="p">())</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Célula 2 — sanity check antes de qualquer fetch pesado</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">brhealth</span><span class="o">.</span><span class="n">Engine</span><span class="p">()</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">assert</span> <span class="s2">"datasus.sih"</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">list_sources</span><span class="p">(),</span> <span class="s2">"fonte esperada não registrada"</span>
+</span></code></pre></div>
+Isso evita descobrir um erro de nome de fonte só depois de esperar um download inteiro.</p>
+<h3 id="46-recomendacoes-de-design-de-api-para-o-mantenedor">4.6 Recomendações de design de API para o mantenedor<a class="headerlink" href="#46-recomendacoes-de-design-de-api-para-o-mantenedor" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Exceções tipadas em vez de <code>ValueError</code> genérico.</strong> Criar uma hierarquia (<code>BRHealthError</code> → <code>SourceNotFoundError</code>, <code>TransportError</code>, <code>ValidationError</code>, <code>SchemaError</code>) mapeada 1:1 a partir do enum <code>PortError</code> do Rust. Isso permite <code>except brhealth.SourceNotFoundError</code> em vez de fazer <code>str(e).startswith(...)</code>.</li>
+<li><strong><code>engine.list_sources()</code> deveria aparecer na mensagem de erro</strong> quando uma fonte não é encontrada (fuzzy match tipo "você quis dizer 'datasus.sih'?" seria ainda melhor).</li>
+<li><strong>Adicionar <code>brhealth.__version__</code> já é feito, mas falta <code>brhealth.check_environment()</code></strong> — uma função de diagnóstico que valida se <code>pandas</code>/<code>polars</code>/<code>torch</code> estão instalados antes do usuário descobrir isso no meio de um <code>to_pandas()</code>.</li>
+<li><strong>Publicar um notebook "Colab Quickstart" testado por CI.</strong> O projeto já tem <code>examples/setembro_amarelo_perfil_epidemiologico.ipynb</code> — sugiro rodá-lo automaticamente no CI (via <code>nbconvert --execute</code>) a cada release, para que o problema do item 3.1 (README quebrado) nunca mais passe despercebido.</li>
+<li><strong>Padronizar nomes entre camadas.</strong> Hoje <code>compute_primary_care_roi</code> (Rust) vira <code>compute_roi</code> (Python) — está OK como atalho, mas documentar essa tabela de correspondência Rust↔Python↔CLI evitaria confusão ao migrar entre linguagens.</li>
+</ol>
+<hr />
+<h2 id="5-plano-de-acao-priorizado">5. Plano de Ação Priorizado<a class="headerlink" href="#5-plano-de-acao-priorizado" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Item</th>
+<th>Severidade</th>
+<th>Esforço estimado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Corrigir/republicar pacote PyPI com <code>read_dbc</code>/<code>read_dbf</code> funcionando</td>
+<td>🔴 Crítico</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Unificar IDs de fonte (README, <code>--help</code> da CLI, motor)</td>
+<td>🔴 Crítico</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>panic = "unwind"</code> + <code>catch_unwind</code> nas bindings FFI</td>
+<td>🔴 Crítico</td>
+<td>Médio</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>cargo audit</code>/<code>cargo-deny</code> + Dependabot no CI</td>
+<td>🟠 Alto</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Matriz de testes (Linux/macOS/Windows) no CI</td>
+<td>🟠 Alto</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Fuzzing do decoder <code>.dbc</code>/Blast</td>
+<td>🟠 Alto</td>
+<td>Médio</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Seção de LGPD/tratamento de dados sensíveis</td>
+<td>🟠 Alto</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Exceções tipadas na API Python</td>
+<td>🟡 Médio</td>
+<td>Médio</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>SECURITY.md</code>, <code>CONTRIBUTING.md</code>, <code>CHANGELOG.md</code></td>
+<td>🟡 Médio</td>
+<td>Baixo</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Executar notebook de exemplo no CI a cada release</td>
+<td>🟡 Médio</td>
+<td>Baixo</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-anexo-reprodutibilidade">6. Anexo — Reprodutibilidade<a class="headerlink" href="#6-anexo-reprodutibilidade" title="Permanent link">&para;</a></h2>
+<p>Comandos usados para os achados verificados neste documento:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/MarcelDevBr/brhealth.git
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">"\.unwrap()\|\.expect(\|panic!"</span><span class="w"> </span>crates/*/src<span class="w"> </span>--include<span class="o">=</span><span class="s2">"*.rs"</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">"panic"</span><span class="w"> </span>Cargo.toml
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">"catch_unwind"</span><span class="w"> </span>crates<span class="w"> </span>--include<span class="o">=</span><span class="s2">"*.rs"</span><span class="w">   </span><span class="c1"># nenhum resultado</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">"runs-on"</span><span class="w"> </span>.github/workflows/ci.yml
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>pip<span class="w"> </span>install<span class="w"> </span>brhealth
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import brhealth; print(dir(brhealth))"</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import brhealth; brhealth.read_dbc('x.dbc')"</span><span class="w">   </span><span class="c1"># AttributeError</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import brhealth; e=brhealth.Engine(); e.fetch(source_id='datasus_sih')"</span><span class="w">  </span><span class="c1"># ValueError</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
