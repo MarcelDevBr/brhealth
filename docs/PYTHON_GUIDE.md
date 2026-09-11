@@ -43,13 +43,13 @@ print(f"BRHealth versão: {brhealth.__version__}")
 
 Uma das maiores dificuldades históricas da comunidade de dados de saúde no Brasil é ler arquivos `.dbc` comprimidos pelo algoritmo Blast PKWARE DCL do DATASUS. O BRHealth resolve isso de forma **100% nativa em Rust, sem binários externos (`dbc2dbf`) ou wrappers em C**.
 
-### 2.1 Leitura Direta de `.dbc` para Pandas, Polars ou PyArrow
+### 2.1 Ingestão Automatizada e Zero-Copy para Pandas, Polars ou PyArrow
 
 ```python
 import brhealth
 
-# Lê o arquivo comprimido do DATASUS diretamente da pasta local ou do Drive montado no Colab
-batch = brhealth.read_dbc("RDSP2401.dbc")
+# Ingestão canônica automatizada com política Cache-First
+batch = brhealth.fetch("datasus.sih", jurisdiction="SP", year=2023, month=1)
 
 print(f"Total de registros: {len(batch)} linhas")
 print(f"Colunas encontradas: {batch.columns[:10]}")
@@ -66,22 +66,34 @@ print(df_polars.glimpse())
 pa_table = batch.to_pyarrow()
 ```
 
-### 2.2 Leitura Direta de Tabelas `.dbf`
+### 2.2 Ingestão por Acessores Semânticos do Engine
+
+O BRHealth provê acessores tipados e semânticos por domínio de saúde pública:
 
 ```python
-# Lê arquivo dBase III/IV (.dbf) diretamente em memória contígua Apache Arrow
-batch_dbf = brhealth.read_dbf("municipios.dbf")
-df = batch_dbf.to_pandas()
+engine = brhealth.Engine()
+
+# Subsistema Hospitalar (SIH - AIH)
+batch_sih = engine.hospital_morbidity.fetch(jurisdiction="SP", year=2023, month=1)
+
+# Subsistema de Mortalidade (SIM - DO)
+batch_sim = engine.vital_statistics.fetch(source="SIM", jurisdiction="AC", year=2022)
+
+# Demografia e Censos (IBGE)
+batch_censo = engine.demographics.fetch(source="CENSO", year=2022)
 ```
 
-### 2.3 Descompressão de `.dbc` para Arquivo ou Bytes `.dbf`
+### 2.3 Gestão e Inspeção do Cache Hive-Parquet
 
-Caso necessite apenas do arquivo `.dbf` descompactado para outro software ou visualizador:
+A camada de cache Hive-Parquet opera de forma totalmente transparente e em Zero-Copy:
 
 ```python
-# Descomprime o DBC salvando como DBF canônico no disco
-dbf_bytes = brhealth.decompress_dbc("RDSP2401.dbc", output_path="RDSP2401.dbf")
-print(f"Tamanho do DBF descomprimido: {len(dbf_bytes) / (1024 * 1024):.2f} MB")
+engine = brhealth.Engine()
+status = engine.cache.status()
+
+print(f"Diretório: {status['base_path']}")
+print(f"Volume ocupado: {status['total_bytes'] / 1024:.1f} KB")
+print(f"Snapshots em cache: {status['snapshot_count']}")
 ```
 
 ---
@@ -417,7 +429,7 @@ O `RecordBatchWrapper` expõe a **Arrow C Data Interface** (`__arrow_c_array__`)
 import brhealth
 import torch
 
-batch = brhealth.read_dbc("exemplo.dbc")
+batch = brhealth.fetch("datasus.sim", jurisdiction="AC", year=2022)
 
 # Passagem direta para PyTorch via DLPack sem cópia intermediária de buffers
 tensor = torch.from_dlpack(batch)
@@ -430,9 +442,8 @@ print(f"Tensor Shape: {tensor.shape}, Dispositivo: {tensor.device}")
 
 | Assinatura | Tipo | Descrição |
 | :--- | :--- | :--- |
-| `read_dbc(path)` | Função | Descomprime e decodifica arquivo `.dbc` do DATASUS diretamente para `RecordBatchWrapper`. |
-| `read_dbf(path)` | Função | Decodifica tabela `.dbf` diretamente para `RecordBatchWrapper`. |
-| `decompress_dbc(in, out=None)` | Função | Descomprime arquivo `.dbc` retornando bytes `.dbf` (e opcionalmente salva em disco). |
+| `fetch(source, jurisdiction, year, month)` | Função | Ingestão automática com política Cache-First (Hive-Parquet / DATASUS). |
+| `check_environment()` | Função | Diagnóstico de bibliotecas opcionais instaladas (pyarrow, polars, pandas, torch). |
 | `calculate_ibge_dv(code)` | Função | Calcula o Dígito Verificador oficial de 6 dígitos pelo Módulo 10 Luhn. |
 | `harmonize_ibge_code(code)` | Função | Harmoniza código municipal de 6 ou 7 dígitos para 7 dígitos canônicos. |
 | `validate_ibge_code(code)` | Função | Valida consistência matemática e cadastral de um código municipal do IBGE. |

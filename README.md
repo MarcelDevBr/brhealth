@@ -166,10 +166,10 @@ import brhealth
 from brhealth import Engine
 import torch
 
-# 1. Leitura Direta de Arquivos Comprimidos DATASUS (.dbc e .dbf)
-batch_dbc = brhealth.read_dbc("RDSP2401.dbc")
-df_pandas = batch_dbc.to_pandas()  # Conversão Zero-Copy para Pandas
-df_polars = batch_dbc.to_polars()  # Conversão Zero-Copy para Polars
+# 1. Ingestão Automatizada e Transparente com Cache-First (Hive-Parquet Zero-Copy)
+batch = brhealth.fetch("datasus.sih", jurisdiction="SP", year=2023, month=1)
+df_pandas = batch.to_pandas()  # Conversão Zero-Copy para Pandas
+df_polars = batch.to_polars()  # Conversão Zero-Copy para Polars
 
 # 2. Validação IBGE e CSAP
 dv = brhealth.calculate_ibge_dv("355030") # 8

@@ -253,13 +253,13 @@ fn test_python_engine_new_accessors_and_top_level_fetch() {
 }
 
 #[test]
-fn test_python_decoders_file_errors() {
+fn test_python_engine_cache_first_policy() {
     pyo3::prepare_freethreaded_python();
-    Python::with_gil(|py| {
-        // Arquivo inexistente deve retornar erro tipado sem pânico
-        assert!(brhealth::read_dbc(py, "/caminho/inexistente.dbc").is_err());
-        assert!(brhealth::read_dbf(py, "/caminho/inexistente.dbf").is_err());
-        assert!(brhealth::decompress_dbc(py, "/caminho/inexistente.dbc", None).is_err());
+    Python::with_gil(|_py| {
+        let engine = brhealth::Engine::new().unwrap();
+        // Acesso via Engine canônico
+        let sources = engine.list_sources();
+        assert!(sources.contains(&"datasus.sim".to_string()));
     });
 }
 

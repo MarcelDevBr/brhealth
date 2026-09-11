@@ -63,7 +63,7 @@ Este é o **Quality Gate** principal do projeto. É executado em todo `push` ou 
 | :--- | :--- | :--- | :--- |
 | **Formatting & Strict Clippy Gate** | Garante estilo de código padronizado e zero avisos de depreciação ou lint. | `cargo fmt --check`<br>`cargo clippy --workspace --all-targets -- -D warnings` | ~20–35s |
 | **Test Suite & Doc-Tests** | Executa testes unitários, testes de integração de 26 fontes, testes baseados em propriedades (*proptest*) e testes de documentação formal. | `cargo test --workspace`<br>`cargo test --workspace --doc` | ~40s (Push)<br>~1m30s (PR) |
-| **Python Package & Symbol Sanity** | Compila a extensão nativa C-Python e valida a exportação correta de métodos e símbolos (`Engine`, `read_dbc`, `cache`, etc.). | `maturin build`<br>`pip install *.whl`<br>Smoke tests em Python 3.11 | ~1m20s |
+| **Python Package & Symbol Sanity** | Compila a extensão nativa C-Python e valida a exportação correta de métodos e símbolos (`Engine`, `fetch`, `cache`, etc.). | `maturin build`<br>`pip install *.whl`<br>Smoke tests em Python 3.11 | ~1m20s |
 | **Supply Chain Security Audit** | Varre todas as 300+ dependências contra o banco oficial de vulnerabilidades da RustSec. | `taiki-e/install-action@cargo-audit`<br>`cargo audit` | ~9–12s |
 | **Benchmarks Compilation Check** | Garante que os micro-benchmarks do Criterion continuam compilando sem quebrar a assinatura dos algoritmos do domínio. | `cargo bench --workspace --no-run` | ~2m |
 

@@ -52,29 +52,31 @@ print(brhealth.check_environment())
 
 ## 2. Receitas Rápidas ("Como faço para...")
 
-### 2.1 Ler arquivo `.dbc` ou `.dbf` do DATASUS
+### 2.1 Ingestão Automatizada e Cache-First (Sem download manual)
 
-> **Sem necessidade de binários externos ou `dbc2dbf`**. A descompressão é 100% nativa e rápida em Rust.
+> **Você não precisa baixar arquivos `.dbc` manualmente pela internet nem gerenciar pastas locais.**  
+> O BRHealth opera sob a política **Cache-First Automatizada**:
+> 1. **Se tem cache, usa**: Se os microdados já estiverem no cache local Hive-Parquet (`~/.brhealth/cache`), carrega instantaneamente em **Zero-Copy** sem tráfego de rede.
+> 2. **Senão, baixa da fonte**: Conecta automaticamente aos servidores oficiais do DATASUS (FTP/HTTP), baixa o microdado, executa descompressão Blast nativa em Rust, grava no cache particionado e retorna o lote Arrow.
 
 ```python
 import brhealth
 
-# 1. Carregar arquivo comprimido do DATASUS (.dbc)
-batch = brhealth.read_dbc("doac2022.dbc")
+# Modo 1: Ingestão Canônica Automatizada (Política Cache-First)
+# Verifica o cache Hive-Parquet local; se ausente, baixa da fonte oficial DATASUS
+batch = brhealth.fetch("datasus.sim", jurisdiction="AC", year=2022)
 
-# 2. Converter sem cópia de memória (Zero-Copy) para seu DataFrame favorito:
+# Modo 2: Ingestão por Acessor Semântico do Engine
+engine = brhealth.Engine()
+batch = engine.vital_statistics.fetch(source="SIM", jurisdiction="AC", year=2022)
+
+# Converter Zero-Copy para o seu DataFrame favorito:
 df_polars = batch.to_polars()  # Para máxima velocidade e multithreading
 df_pandas = batch.to_pandas()  # Para ecossistema Pandas / Seaborn
-pa_table = batch.to_pyarrow()  # Para processamento colunar Arrow
+pa_table = batch.to_pyarrow()  # Para ecossistema Apache Arrow
 
 print(f"Total de registros: {len(batch):,} linhas x {batch.num_columns} colunas")
 print(df_polars.head(3))
-```
-
-Se quiser apenas descompactar um arquivo `.dbc` para `.dbf` no disco:
-
-```python
-brhealth.decompress_dbc("doac2022.dbc", output_path="doac2022.dbf")
 ```
 
 ---
@@ -218,11 +220,8 @@ engine.cache.clear_older_than(days=60)
 
 Tabela de consulta ultra rápida com as principais funções do módulo `brhealth`:
 
-| Função | Argumentos | Retorno | Descrição |
-| :--- | :--- | :--- | :--- |
-| `read_dbc(path)` | `path: str` | `RecordBatchWrapper` | Descomprime arquivo `.dbc` e carrega em memória contígua Arrow. |
-| `read_dbf(path)` | `path: str` | `RecordBatchWrapper` | Lê arquivo `.dbf` em lote colunar Arrow. |
-| `decompress_dbc(in, out=None)` | `in: str, out: str?` | `bytes` | Descomprime `.dbc` retornando bytes e opcionalmente salva `.dbf`. |
+| `fetch(source, jurisdiction, year)` | `str, str?, int?, int?` | `RecordBatchWrapper` | Ingestão automática com política Cache-First (Hive-Parquet / DATASUS). |
+| `check_environment()` | `nenhum` | `dict[str, bool]` | Verifica disponibilidade de pyarrow, polars, pandas e torch. |
 | `calculate_ibge_dv(code)` | `str \| int` (6 dígitos) | `int` | Calcula o 7º dígito verificador oficial (Luhn Módulo 10). |
 | `validate_ibge_code(code)` | `str \| int` (6 ou 7D) | `bool` | Valida consistência matemática e cadastral de município. |
 | `harmonize_ibge_code(code)` | `str \| int` (6 dígitos) | `str` (7 dígitos) | Converte código de 6 dígitos em código canônico de 7 dígitos. |

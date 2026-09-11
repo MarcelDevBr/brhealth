@@ -164,10 +164,10 @@ pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/
 ```python
 import brhealth
 
-# 1. Leitura Nativa de Arquivos .dbc e .dbf do DATASUS
-batch_dbc = brhealth.read_dbc("RDSP2401.dbc")
-df_pandas = batch_dbc.to_pandas() # Conversão Zero-Copy para Pandas
-df_polars = batch_dbc.to_polars() # Conversão Zero-Copy para Polars
+# 1. Ingestão Automatizada e Transparente com Cache-First (Hive-Parquet Zero-Copy)
+batch = brhealth.fetch("datasus.sih", jurisdiction="SP", year=2023, month=1)
+df_pandas = batch.to_pandas() # Conversão Zero-Copy para Pandas
+df_polars = batch.to_polars() # Conversão Zero-Copy para Polars
 
 # 2. Validação e Harmonização canônica do IBGE
 dv = brhealth.calculate_ibge_dv("355030") # Retorna 8

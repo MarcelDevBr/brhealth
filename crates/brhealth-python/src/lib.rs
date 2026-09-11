@@ -23,7 +23,7 @@ use arrow::record_batch::RecordBatch;
 use pyo3::create_exception;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyCapsule, PyDict};
+use pyo3::types::{PyCapsule, PyDict};
 
 create_exception!(brhealth, BRHealthError, pyo3::exceptions::PyException);
 create_exception!(brhealth, SourceNotFoundError, BRHealthError);
@@ -51,7 +51,6 @@ where
     }
 }
 
-use brhealth_core::decoders::{DbcDecompressor, DbfDecoder};
 use brhealth_core::domain::analytics::csap::{
     classify_cid10 as core_classify_cid10, compute_csap_metrics, compute_primary_care_roi,
     is_csap as core_is_csap, CsapGroup,
@@ -394,87 +393,6 @@ impl RecordBatchWrapper {
             ))
         }
     }
-}
-
-// ---------------------------------------------------------------------------
-// Decodificadores Nativos (.dbc e .dbf)
-// ---------------------------------------------------------------------------
-
-/// Descomprime um arquivo .dbc do DATASUS e decodifica diretamente para um RecordBatch Arrow Zero-Copy.
-///
-/// Libera o GIL do Python durante o I/O e a descompressão Blast para máxima responsividade.
-#[pyfunction]
-pub fn read_dbc(py: Python<'_>, path: &str) -> PyResult<RecordBatchWrapper> {
-    let path_str = path.to_string();
-    let batch = py
-        .allow_threads(|| -> Result<RecordBatch, String> {
-            let input = std::fs::read(&path_str)
-                .map_err(|e| format!("Erro ao ler arquivo '{path_str}': {e}"))?;
-            let decompressor = DbcDecompressor::new()
-                .map_err(|e| format!("Falha ao inicializar descompressor DBC: {e}"))?;
-            let dbf_bytes = decompressor
-                .decompress_dbc(&input)
-                .map_err(|e| format!("Falha na descompressão Blast do DBC: {e}"))?;
-            let decoder = DbfDecoder::new();
-            decoder
-                .decode_to_record_batch(&dbf_bytes)
-                .map_err(|e| format!("Falha na decodificação DBF: {e}"))
-        })
-        .map_err(BRHealthError::new_err)?;
-    Ok(RecordBatchWrapper::new(batch, None))
-}
-
-/// Decodifica um arquivo .dbf diretamente para um RecordBatch Arrow Zero-Copy.
-///
-/// Libera o GIL do Python durante o I/O e a decodificação DBF.
-#[pyfunction]
-pub fn read_dbf(py: Python<'_>, path: &str) -> PyResult<RecordBatchWrapper> {
-    let path_str = path.to_string();
-    let batch = py
-        .allow_threads(|| -> Result<RecordBatch, String> {
-            let input = std::fs::read(&path_str)
-                .map_err(|e| format!("Erro ao ler arquivo '{path_str}': {e}"))?;
-            let decoder = DbfDecoder::new();
-            decoder
-                .decode_to_record_batch(&input)
-                .map_err(|e| format!("Falha na decodificação DBF: {e}"))
-        })
-        .map_err(BRHealthError::new_err)?;
-    Ok(RecordBatchWrapper::new(batch, None))
-}
-
-/// Descomprime um arquivo .dbc do DATASUS retornando os bytes brutos do arquivo .dbf correspondente.
-///
-/// Caso `output_path` seja fornecido, grava os bytes descomprimidos no caminho de arquivo especificado.
-/// Libera o GIL do Python durante o processamento.
-#[pyfunction]
-#[pyo3(signature = (input_path, output_path=None))]
-pub fn decompress_dbc<'py>(
-    py: Python<'py>,
-    input_path: &str,
-    output_path: Option<String>,
-) -> PyResult<Bound<'py, PyBytes>> {
-    let input_path_str = input_path.to_string();
-
-    let dbf_bytes = py
-        .allow_threads(move || -> Result<Vec<u8>, String> {
-            let input = std::fs::read(&input_path_str)
-                .map_err(|e| format!("Erro ao ler arquivo '{input_path_str}': {e}"))?;
-            let decompressor = DbcDecompressor::new()
-                .map_err(|e| format!("Falha ao inicializar descompressor DBC: {e}"))?;
-            let dbf_bytes = decompressor
-                .decompress_dbc(&input)
-                .map_err(|e| format!("Falha na descompressão Blast do DBC: {e}"))?;
-
-            if let Some(ref out_path) = output_path {
-                std::fs::write(out_path, &dbf_bytes)
-                    .map_err(|e| format!("Erro ao gravar DBF em '{out_path}': {e}"))?;
-            }
-            Ok(dbf_bytes)
-        })
-        .map_err(BRHealthError::new_err)?;
-
-    Ok(PyBytes::new_bound(py, &dbf_bytes))
 }
 
 // ---------------------------------------------------------------------------
@@ -1628,10 +1546,6 @@ fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Diagnóstico
     m.add_function(wrap_pyfunction!(check_environment, m)?)?;
 
-    // Decodificadores
-    m.add_function(wrap_pyfunction!(read_dbc, m)?)?;
-    m.add_function(wrap_pyfunction!(read_dbf, m)?)?;
-    m.add_function(wrap_pyfunction!(decompress_dbc, m)?)?;
 
     // Harmonização Territorial IBGE
     m.add_function(wrap_pyfunction!(calculate_ibge_dv, m)?)?;

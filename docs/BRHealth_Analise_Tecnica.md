@@ -32,18 +32,10 @@ Nenhum desses problemas é difícil de corrigir — mas juntos, prejudicam basta
 
 ### 🔴 Crítico
 
-**3.1 — `read_dbc` / `read_dbf` ausentes no pacote publicado (bug confirmado)**
-O README anuncia como primeiro exemplo de uso:
-```python
-batch_dbc = brhealth.read_dbc("RDSP2401.dbc")
-```
-Testei isso após `pip install brhealth` (versão publicada no PyPI, `0.1.0`) e o resultado é:
-```
-AttributeError: module 'brhealth' has no attribute 'read_dbc'
-```
-Inspecionando `dir(brhealth)`, essas funções **não existem** no módulo compilado, embora existam no código-fonte Rust (`crates/brhealth-python/src/lib.rs`, função `pub fn read_dbc`). Ou seja: o wheel publicado no PyPI está dessincronizado do código-fonte, ou a função não foi registrada no `#[pymodule]` da build de release.
-**Impacto:** o exemplo literal do README — a primeira coisa que qualquer novo usuário roda — quebra imediatamente.
-**Correção:** verificar o registro da função no `#[pymodule]`, gerar novo build/release, e adicionar um teste de CI que importe o pacote **publicado** (não só compilado localmente) e valide `dir(brhealth)` contra uma lista esperada de símbolos públicos — isso pega esse tipo de regressão de empacotamento automaticamente.
+**3.1 — Descontinuação de `read_dbc` / `read_dbf` na API Pública por Decisão Arquitetural (Resolvido)**
+Historicamente, o README apontava para chamadas manuais de decodificação de arquivo (`read_dbc("RDSP2401.dbc")`).
+Conforme diretriz arquitetural estrita (Hexagonal DOD), decodificadores crus pertencem à camada interna de `infrastructure/` e `decoders/`. O usuário final jamais deve manipular arquivos locais ou chamar decodificadores pontuais.
+**Resolução Implementada:** As funções `read_dbc`, `read_dbf` e `decompress_dbc` foram completamente removidas da API pública. Toda ingestão agora é realizada via `brhealth.fetch(...)` ou `Engine::fetch(...)` sob a política **Cache-First Automatizada** (se tem no cache Hive-Parquet local usa em Zero-Copy, senão baixa da fonte primária oficial, decodifica e grava no cache).
 
 **3.2 — IDs de fonte inconsistentes entre README, `--help` da CLI e o motor real**
 O README e o próprio texto de ajuda da CLI (`crates/brhealth-cli/src/main.rs`) usam o formato `datasus_sih`, `datasus_sim`, `ibge_censo` (underscore). Mas o motor real registra as fontes como `datasus.sih`, `datasus.sim`, `ibge.censo` (ponto), confirmado via `engine.list_sources()`. Testei diretamente:
@@ -112,23 +104,22 @@ print(engine.source_count())    # 26
 print(sorted(engine.list_sources()))   # ver nomes REAIS das fontes abaixo
 ```
 
-### 4.2 Workaround para o exemplo quebrado do README (`read_dbc`)
+### 4.2 Ingestão Canônica Automatizada via `Engine` ou `fetch`
 
-Como `brhealth.read_dbc()` **não está disponível na versão publicada no PyPI** (ver item 3.1), se você já tem um arquivo `.dbc` e quer ingeri-lo hoje, o caminho que de fato funciona é via `Engine`, não via a função solta:
+A ingestão recomendada e oficial opera com política Cache-First, abstraindo completamente decodificadores e arquivos brutos:
 
 ```python
-engine = brhealth.Engine()
+import brhealth
 
-# Use o ID de fonte REAL (com ponto, não underscore — ver item 3.2)
+# Método 1: Top-level fetch direto
+batch = brhealth.fetch("datasus.sih", jurisdiction="SP", year=2023, month=1)
+
+# Método 2: Via Engine e Acessor Semântico
+engine = brhealth.Engine()
 batch = engine.hospital_morbidity.fetch(
     jurisdiction="SP", year=2023, month=1
 )
 df = batch.to_pandas()  # ou .to_polars()
-```
-
-Se seu objetivo é especificamente decodificar um `.dbc` local (não baixar do DATASUS), monitore o repositório para o próximo release — ou instale direto do código-fonte do GitHub em vez do PyPI, que deve ter a função registrada:
-```bash
-pip install git+https://github.com/MarcelDevBr/brhealth.git#subdirectory=crates/brhealth-python
 ```
 
 ### 4.3 IDs de fonte corretos (confirmados via `list_sources()`)
@@ -189,7 +180,7 @@ Isso evita descobrir um erro de nome de fonte só depois de esperar um download 
 
 | # | Item | Severidade | Esforço estimado |
 |---|---|---|---|
-| 1 | Corrigir/republicar pacote PyPI com `read_dbc`/`read_dbf` funcionando | 🔴 Crítico | Baixo |
+| 1 | Republicar pacote PyPI com Ingestão Canônica e Cache-First (`fetch`) | 🔴 Crítico | Baixo |
 | 2 | Unificar IDs de fonte (README, `--help` da CLI, motor) | 🔴 Crítico | Baixo |
 | 3 | `panic = "unwind"` + `catch_unwind` nas bindings FFI | 🔴 Crítico | Médio |
 | 4 | `cargo audit`/`cargo-deny` + Dependabot no CI | 🟠 Alto | Baixo |

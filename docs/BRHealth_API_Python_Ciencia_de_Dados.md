@@ -24,7 +24,7 @@ Na versão inicial `0.1.0` distribuída via PyPI, mais de 15 símbolos públicos
 
 | Categoria | Presente no código-fonte (`main`) | Presente no PyPI (`0.1.0` inicial) | Status Atual |
 |---|---|---|---|
-| Decodificação Nativa | `read_dbc`, `read_dbf`, `decompress_dbc` | ❌ nenhuma | ✅ Implementado com `allow_threads` |
+| Decodificação Nativa | Descontinuado da API pública (abstraído internamente por `fetch`) | ❌ | ✅ Ingestão automatizada com Cache-First |
 | Harmonização IBGE | `validate_ibge_code`, `reconcile_historical_ibge_code` | ❌ | ✅ Implementado |
 | Geoespacial Analítico | `h3_to_latlng`, `h3_index_to_coord`, `h3_grid_disk`, `s2_cell_to_coord` | ❌ | ✅ Implementado |
 | Bioestatística | `compute_batch_apvp`, `compute_age_standardized_mortality_rate` | ❌ | ✅ Implementado com `allow_threads` |
@@ -42,7 +42,7 @@ Na versão inicial `0.1.0` distribuída via PyPI, mais de 15 símbolos públicos
 
 ### 3.1 Liberação do GIL (`py.allow_threads`)
 - **Problema:** Chamadas de I/O de rede e descompressão Blast pesada bloqueavam a thread Python com o GIL retido, travando o kernel do Jupyter/Colab e impossibilitando o cancelamento com `Ctrl+C`.
-- **Resolução Implementada:** Envolvimento de todas as operações de I/O, decodificação de arquivos (`read_dbc`, `read_dbf`) e chamadas de pipelines assíncronos Tokio no `Engine::fetch` com `py.allow_threads(|| { ... })`.
+- **Resolução Implementada:** Envolvimento de todas as operações de I/O, download, descompressão e chamadas de pipelines assíncronos Tokio no `Engine::fetch` e `brhealth.fetch` com `py.allow_threads(|| { ... })`.
 
 ### 3.2 Tipagem Estática e Autocomplete (PEP 561)
 - **Problema:** Usuários de IDEs (VS Code, PyCharm) e notebooks não recebiam autocompletar nem checagem de tipos.
