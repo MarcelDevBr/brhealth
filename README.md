@@ -19,8 +19,10 @@
 
 | Guia | Público-Alvo | Descrição |
 | :--- | :--- | :--- |
+| 🏥 **[Portal de Documentação (com Menus)](docs/README.md)** | **Todos** | **Portal central com menus interativos por tópicos, mapa de leitura e catálogo unificado.** |
+| ⚡ **[Guia Rápido de Python (Quickstart)](docs/PYTHON_QUICKSTART.md)** | Cientistas de Dados | Receitas práticas "como faço para...", cookbook e **Cheat Sheet de Bolso** com todas as funções. |
 | 📖 **[Guia de Instalação Modular](docs/INSTALLATION.md)** | Pesquisadores, Devs | Instalação desacoplada: Core (Rust puro), Python (Polars/PyTorch), R (Tidyverse/Arrow), C++20 e Java 21+. |
-| 🚀 **[Manual de Utilização](docs/USAGE_GUIDE.md)** | Bioestatísticos, Gestores | Manual prático completo: CLI, Python, R (Arrow Zero-Copy), Rust e formulações científicas em LaTeX. |
+| 🚀 **[Manual de Utilização Geral](docs/USAGE_GUIDE.md)** | Bioestatísticos, Gestores | Manual prático completo: CLI, Python, R (Arrow Zero-Copy), Rust e formulações científicas em LaTeX. |
 | 🧩 **[Guia de Extensão e SPI](docs/EXTENDING_BRHEALTH.md)** | Engenheiros, Arquitetos | Como criar novos adaptadores `HealthDataSourceSPI`, Country Packs e decodificadores. |
 | 📐 **[Documento de Design de Software (SDD)](docs/architecture/sdd_brhealth.md)** | Arquitetos de Sistemas | Modelo C4, especificação matemática, layout de memória contígua e W3C PROV-O. |
 
