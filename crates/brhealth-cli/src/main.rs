@@ -77,7 +77,7 @@ enum Commands {
 
     /// Executa pipeline analítico colunar completo (ingestão, H3, CSAP, FAIR W3C PROV-O).
     Fetch {
-        /// Identificador da fonte de dados (ex: datasus_sim, datasus_sih, ibge_censo, copernicus_era5).
+        /// Identificador da fonte de dados (ex: datasus.sim, datasus.sih, ibge.censo, global.copernicus_era5).
         #[arg(short, long)]
         source: String,
 

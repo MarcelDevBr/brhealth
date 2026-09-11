@@ -37,7 +37,6 @@ serde_yaml = "0.9"
 opt-level = 3
 lto = "fat"
 codegen-units = 1
-panic = "abort"
 strip = "symbols"
 
 [profile.bench]

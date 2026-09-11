@@ -194,7 +194,7 @@ Para análises massivas de bases estaduais e nacionais, utilize a CLI para extra
 
 ```bash
 # Executa extração colunar com harmonização e persistência no cache da HOME (~/.brhealth)
-brhealth fetch --source datasus_sih --uf SP --year 2023 --month 5 --enrich-csap --out-parquet ~/.brhealth/data/sih_sp.parquet
+brhealth fetch --source datasus.sih --uf SP --year 2023 --month 5 --enrich-csap --out-parquet ~/.brhealth/data/sih_sp.parquet
 ```
 
 No R:

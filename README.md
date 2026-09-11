@@ -274,7 +274,7 @@ brhealth roi --avoidable-cost 500000 --investment 100000 --attributable-fraction
 brhealth apvp 35 42 18 55 62 --cutoff 70 --population 100000
 
 # Baixar, enriquecer e exportar Parquet do SIH (gravando em ~/.brhealth/data/)
-brhealth fetch --source datasus_sih --uf RJ --year 2023 --month 3 --enrich-csap --out-parquet ~/.brhealth/data/sih_rj.parquet
+brhealth fetch --source datasus.sih --uf RJ --year 2023 --month 3 --enrich-csap --out-parquet ~/.brhealth/data/sih_rj.parquet
 ```
 
 ---

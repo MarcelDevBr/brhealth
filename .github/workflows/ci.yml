@@ -33,8 +33,12 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
 
   test:
-    name: Test Suite & Doc-Tests
-    runs-on: ubuntu-latest
+    name: Test Suite & Doc-Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -50,6 +54,55 @@ jobs:
 
       - name: Run Executable Doc-Tests
         run: cargo test --workspace --doc
+
+  python-sanity:
+    name: Python Package & Symbol Sanity Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Maturin
+        run: pip install maturin
+
+      - name: Build Python Extension in Development Mode
+        run: maturin develop --manifest-path crates/brhealth-python/Cargo.toml
+
+      - name: Verify Exported Symbols & Python API Sanity
+        run: |
+          python -c "import brhealth; print('Versao:', brhealth.__version__)"
+          python -c "import brhealth; assert hasattr(brhealth, 'read_dbc'), 'read_dbc ausente no modulo Python'"
+          python -c "import brhealth; assert hasattr(brhealth, 'read_dbf'), 'read_dbf ausente no modulo Python'"
+          python -c "import brhealth; assert hasattr(brhealth, 'decompress_dbc'), 'decompress_dbc ausente no modulo Python'"
+          python -c "import brhealth; assert hasattr(brhealth, 'check_environment'), 'check_environment ausente no modulo Python'"
+          python -c "import brhealth; assert hasattr(brhealth, 'BRHealthError'), 'BRHealthError ausente no modulo Python'"
+          python -c "import brhealth; assert hasattr(brhealth, 'SourceNotFoundError'), 'SourceNotFoundError ausente no modulo Python'"
+          python -c "import brhealth; e = brhealth.Engine(); assert 'datasus.sih' in e.list_sources()"
+          python -c "import brhealth; e = brhealth.Engine(); batch = e.fetch(source_id='datasus_sih'); print('Alias datasus_sih OK')"
+
+  security-audit:
+    name: Supply Chain Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Cargo Audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run Cargo Audit
+        run: cargo audit
 
   bench-check:
     name: Benchmarks Compilation Check

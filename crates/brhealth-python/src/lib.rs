@@ -10,6 +10,7 @@
 //! e exportação Zero-Copy de `RecordBatch` para Polars, PyArrow, Pandas e PyTorch via DLPack.
 
 #![allow(clippy::useless_conversion)]
+#![allow(unexpected_cfgs)]
 
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -19,9 +20,36 @@ use arrow::array::{Array, ArrayData, StructArray};
 use arrow::compute::concat_batches;
 use arrow::ffi::to_ffi;
 use arrow::record_batch::RecordBatch;
+use pyo3::create_exception;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyCapsule, PyDict};
+
+create_exception!(brhealth, BRHealthError, pyo3::exceptions::PyException);
+create_exception!(brhealth, SourceNotFoundError, BRHealthError);
+create_exception!(brhealth, TransportError, BRHealthError);
+create_exception!(brhealth, ValidationError, BRHealthError);
+
+pub fn safe_catch_panic<F, T>(f: F) -> PyResult<T>
+where
+    F: FnOnce() -> PyResult<T> + std::panic::UnwindSafe,
+{
+    match std::panic::catch_unwind(f) {
+        Ok(res) => res,
+        Err(cause) => {
+            let msg = if let Some(s) = cause.downcast_ref::<&str>() {
+                s.to_string()
+            } else if let Some(s) = cause.downcast_ref::<String>() {
+                s.clone()
+            } else {
+                "Panic interno não identificado no motor Rust".to_string()
+            };
+            Err(BRHealthError::new_err(format!(
+                "Erro crítico no motor BRHealth: {msg}"
+            )))
+        }
+    }
+}
 
 use brhealth_core::decoders::{DbcDecompressor, DbfDecoder};
 use brhealth_core::domain::analytics::csap::{
@@ -1335,6 +1363,17 @@ pub fn fetch(
     )
 }
 
+/// Diagnóstico do ambiente Python: verifica a disponibilidade das bibliotecas 'pyarrow', 'polars', 'pandas' e 'torch'.
+#[pyfunction]
+pub fn check_environment<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new_bound(py);
+    dict.set_item("pyarrow", py.import_bound("pyarrow").is_ok())?;
+    dict.set_item("polars", py.import_bound("polars").is_ok())?;
+    dict.set_item("pandas", py.import_bound("pandas").is_ok())?;
+    dict.set_item("torch", py.import_bound("torch").is_ok())?;
+    Ok(dict)
+}
+
 // ---------------------------------------------------------------------------
 // Registro de Módulo PyO3
 // ---------------------------------------------------------------------------
@@ -1343,6 +1382,21 @@ pub fn fetch(
 #[pymodule]
 fn brhealth(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Exceções Tipadas
+    m.add("BRHealthError", m.py().get_type_bound::<BRHealthError>())?;
+    m.add(
+        "SourceNotFoundError",
+        m.py().get_type_bound::<SourceNotFoundError>(),
+    )?;
+    m.add("TransportError", m.py().get_type_bound::<TransportError>())?;
+    m.add(
+        "ValidationError",
+        m.py().get_type_bound::<ValidationError>(),
+    )?;
+
+    // Diagnóstico
+    m.add_function(wrap_pyfunction!(check_environment, m)?)?;
 
     // Decodificadores
     m.add_function(wrap_pyfunction!(read_dbc, m)?)?;
