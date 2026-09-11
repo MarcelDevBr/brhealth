@@ -17,7 +17,8 @@ use arrow::record_batch::RecordBatch;
 use brhealth_core::domain::analytics::csap::{classify_cid10, compute_primary_care_roi};
 use brhealth_core::domain::spatial::coord_to_h3_index;
 use brhealth_core::domain::transforms::ibge::calculate_ibge_dv;
-use brhealth_core::ffi::export_record_batch_to_c;
+pub mod c_data;
+pub use c_data::{export_record_batch_to_c, import_record_batch_from_c};
 
 /// Código de sucesso retornado pelas funções FFI.
 pub const BRHEALTH_SUCCESS: i32 = 0;

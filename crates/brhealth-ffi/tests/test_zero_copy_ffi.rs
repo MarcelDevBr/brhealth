@@ -11,9 +11,9 @@ use arrow::datatypes::{DataType, Field, Schema};
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::record_batch::RecordBatch;
 
-use brhealth_core::ffi::{
-    BRHEALTH_ERR_NULL_POINTER, BRHEALTH_SUCCESS, brhealth_export_arrow_batch,
-    export_record_batch_to_c, import_record_batch_from_c,
+use brhealth_ffi::{
+    BRHEALTH_ERR_NULL_PTR, BRHEALTH_SUCCESS, brhealth_export_arrow_batch, export_record_batch_to_c,
+    import_record_batch_from_c,
 };
 
 #[test]
@@ -76,9 +76,20 @@ fn test_ffi_zero_copy_roundtrip_with_large_payload() {
 }
 
 #[test]
-fn test_c_abi_error_conditions() {
+fn test_c_abi_export_error_conditions() {
     let mut ffi_array = FFI_ArrowArray::empty();
     let mut ffi_schema = FFI_ArrowSchema::empty();
+
+    // 0. Exportação válida vazia
+    let batch_empty = RecordBatch::new_empty(Arc::new(Schema::empty()));
+    let res0 = unsafe {
+        brhealth_export_arrow_batch(
+            &batch_empty as *const _,
+            &mut ffi_array as *mut _,
+            &mut ffi_schema as *mut _,
+        )
+    };
+    assert_eq!(res0, BRHEALTH_SUCCESS);
 
     // 1. Passar ponteiro nulo para o lote
     let res1 = unsafe {
@@ -88,7 +99,7 @@ fn test_c_abi_error_conditions() {
             &mut ffi_schema as *mut _,
         )
     };
-    assert_eq!(res1, BRHEALTH_ERR_NULL_POINTER);
+    assert_eq!(res1, BRHEALTH_ERR_NULL_PTR);
 
     // 2. Passar ponteiro nulo para out_array
     let batch = RecordBatch::new_empty(Arc::new(Schema::empty()));
@@ -99,15 +110,15 @@ fn test_c_abi_error_conditions() {
             &mut ffi_schema as *mut _,
         )
     };
-    assert_eq!(res2, BRHEALTH_ERR_NULL_POINTER);
+    assert_eq!(res2, BRHEALTH_ERR_NULL_PTR);
 
-    // 3. Exportação válida de batch vazio
+    // 3. Passar ponteiro nulo para out_schema
     let res3 = unsafe {
         brhealth_export_arrow_batch(
             &batch as *const _,
             &mut ffi_array as *mut _,
-            &mut ffi_schema as *mut _,
+            std::ptr::null_mut(),
         )
     };
-    assert_eq!(res3, BRHEALTH_SUCCESS);
+    assert_eq!(res3, BRHEALTH_ERR_NULL_PTR);
 }
