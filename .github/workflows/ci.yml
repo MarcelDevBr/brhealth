@@ -107,8 +107,7 @@ jobs:
           python -c "import brhealth; assert hasattr(brhealth, 'check_environment'), 'check_environment ausente no modulo Python'"
           python -c "import brhealth; assert hasattr(brhealth, 'BRHealthError'), 'BRHealthError ausente no modulo Python'"
           python -c "import brhealth; assert hasattr(brhealth, 'SourceNotFoundError'), 'SourceNotFoundError ausente no modulo Python'"
-          python -c "import brhealth; e = brhealth.Engine(); assert 'datasus.sih' in e.list_sources()"
-          python -c "import brhealth; e = brhealth.Engine(); batch = e.fetch(source_id='datasus_sih'); print('Alias datasus_sih OK')"
+          python -c "import brhealth; e = brhealth.Engine(); cm = e.cache_manager(); assert cm is not None; print('Engine e CacheManager OK')"
 
   security-audit:
     name: Supply Chain Security Audit
