@@ -318,6 +318,7 @@ brhealth/
 │   ├── INSTALLATION.md                # Guia de instalação multiplataforma
 │   ├── USAGE_GUIDE.md                 # Manual de utilização e fórmulas científicas
 │   ├── EXTENDING_BRHEALTH.md          # Guia de extensão de fontes e SPI
+│   ├── CICD_AND_WORKFLOWS.md          # Engenharia de CI/CD, esteiras e automação
 │   └── architecture/                  # SDD e backlog arquitetural
 ├── bindings/
 │   ├── cpp/include/brhealth.hpp       # Header C++20 RAII
