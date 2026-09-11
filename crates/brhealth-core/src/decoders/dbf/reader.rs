@@ -49,21 +49,12 @@ impl ColumnBuilder {
     fn append_value(&mut self, raw_bytes: &[u8]) {
         match self {
             Self::Utf8(builder) => {
-                if let Ok(s) = std::str::from_utf8(raw_bytes) {
-                    let trimmed = s.trim_end();
-                    if trimmed.is_empty() {
-                        builder.append_null();
-                    } else {
-                        builder.append_value(trimmed);
-                    }
+                let text = String::from_utf8_lossy(raw_bytes);
+                let trimmed = text.trim_end();
+                if trimmed.is_empty() {
+                    builder.append_null();
                 } else {
-                    let text = String::from_utf8_lossy(raw_bytes);
-                    let trimmed = text.trim_end();
-                    if trimmed.is_empty() {
-                        builder.append_null();
-                    } else {
-                        builder.append_value(trimmed);
-                    }
+                    builder.append_value(trimmed);
                 }
             }
             Self::Int64(builder) => {

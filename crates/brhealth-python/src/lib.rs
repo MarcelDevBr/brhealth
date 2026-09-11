@@ -455,10 +455,9 @@ pub fn decompress_dbc<'py>(
     output_path: Option<String>,
 ) -> PyResult<Bound<'py, PyBytes>> {
     let input_path_str = input_path.to_string();
-    let out_path_clone = output_path.clone();
 
     let dbf_bytes = py
-        .allow_threads(|| -> Result<Vec<u8>, String> {
+        .allow_threads(move || -> Result<Vec<u8>, String> {
             let input = std::fs::read(&input_path_str)
                 .map_err(|e| format!("Erro ao ler arquivo '{input_path_str}': {e}"))?;
             let decompressor = DbcDecompressor::new()
@@ -467,7 +466,7 @@ pub fn decompress_dbc<'py>(
                 .decompress_dbc(&input)
                 .map_err(|e| format!("Falha na descompressão Blast do DBC: {e}"))?;
 
-            if let Some(ref out_path) = out_path_clone {
+            if let Some(ref out_path) = output_path {
                 std::fs::write(out_path, &dbf_bytes)
                     .map_err(|e| format!("Erro ao gravar DBF em '{out_path}': {e}"))?;
             }
