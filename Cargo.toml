@@ -17,8 +17,8 @@ repository = "https://github.com/MarcelDevBr/brhealth"
 homepage = "https://github.com/MarcelDevBr/brhealth"
 
 [workspace.dependencies]
-arrow = { version = "54.3", features = ["ffi", "ipc", "chrono-tz"] }
-parquet = { version = "54.3", features = ["arrow"] }
+arrow = { version = "59.3", features = ["ffi", "ipc", "chrono-tz"] }
+parquet = { version = "59.3", features = ["arrow"] }
 tokio = { version = "1.40", features = ["full"] }
 async-trait = "0.1"
 serde = { version = "1.0", features = ["derive"] }
